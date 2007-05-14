@@ -146,12 +146,9 @@ class HTMLTokenizer
             charAsInt = 65533
         end
 
-        begin
-            # XXX We should have a separate function that does "int" to
-            # "unicodestring" conversion since this doesn't always work
-            # according to hsivonen. Also, unichr has a limitation of 65535
+        if charAsInt <= 0x10FFF
             char = [charAsInt].pack('U')
-        rescue
+        else
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Numeric entity couldn't be converted to character.")})
         end
