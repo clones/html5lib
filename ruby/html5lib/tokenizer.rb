@@ -22,8 +22,8 @@ class HTMLTokenizer
 
     # XXX need to fix documentation
 
-    def initialize(stream, encoding=nil, parseMeta=true)
-        @stream = HTMLInputStream.new(stream, encoding, parseMeta)
+    def initialize(stream, options={})
+        @stream = HTMLInputStream.new(stream, options)
 
         @states = {
             :data => :dataState,

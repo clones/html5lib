@@ -8,7 +8,7 @@ module HTML5lib
 # incorrect byte-sequences and also provides column and line tracking.
 
 class HTMLInputStream
-    attr_accessor :queue
+    attr_accessor :queue, :charEncoding
 
     # Initialises the HTMLInputStream.
     # 
@@ -24,7 +24,12 @@ class HTMLInputStream
     #  
     # parseMeta - Look for a <meta> element containing encoding information
 
-    def initialize(source, encoding=nil, parseMeta=true, chardet=true)
+    def initialize source, options={}
+        @encoding=nil
+        @parseMeta=true
+        @chardet=true
+
+        options.each {|name,value| instance_variable_set('@'+name.to_s,value)}
 
         # List of where new lines occur
         @newLines = []
@@ -40,16 +45,20 @@ class HTMLInputStream
         @DEFAULT_ENCODING = "windows-1252"
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if encoding == nil or not HTML5lib.isValidEncoding(encoding)
-            encoding = detectEncoding(parseMeta, chardet)
+        if @encoding == nil or not HTML5lib.isValidEncoding(@encoding)
+            @charEncoding = detectEncoding
+        else
+            @charEncoding = @encoding
         end
-        @charEncoding = encoding
 
         # Read bytes from stream decoding them into Unicode
-        uString = @rawStream.read()
+        uString = @rawStream.read
         if @charEncoding != 'utf-8'
-            require 'iconv'
-            uString = Iconv.iconv('utf-8',@charEncoding,uString)[0]
+            begin
+                require 'iconv'
+                uString = Iconv.iconv('utf-8',@encoding,uString)[0]
+            rescue
+            end
         end
 
         # Normalize new ipythonlines and null characters
@@ -62,7 +71,7 @@ class HTMLInputStream
         @queue = []
 
         # Reset position in the list to read from
-        reset()
+        reset
     end
 
     # Produces a file object from source.
@@ -80,22 +89,22 @@ class HTMLInputStream
         return @stream
     end
 
-    def detectEncoding(parseMeta=true, chardet=true)
+    def detectEncoding
 
         #First look for a BOM
         #This will also read past the BOM if present
-        encoding = detectBOM()
+        encoding = detectBOM
         #If there is no BOM need to look for meta elements with encoding 
         #information
-        if encoding == nil and parseMeta
-            encoding = detectEncodingMeta()
+        if encoding == nil and @parseMeta
+            encoding = detectEncodingMeta
         end
         #Guess with chardet, if avaliable
-        if encoding == nil and chardet
+        if encoding == nil and @chardet
             begin
                 require 'rubygems'
                 require 'UniversalDetector' # gem install chardet
-                buffer = @rawStream.read()
+                buffer = @rawStream.read
                 encoding = UniversalDetector::chardet(buffer)['encoding']
                 @rawStream = openStream(buffer)
             rescue LoadError
@@ -107,7 +116,10 @@ class HTMLInputStream
         end
         
         #Substitute for equivalent encodings:
-        encodingSub = {"iso-8859-1" => "windows-1252"}
+        encodingSub = {
+             "ascii" => "windows-1252",
+             "iso-8859-1" => "windows-1252"
+        }
 
         if encodingSub.include? encoding.downcase
             encoding = encodingSub[encoding.downcase]
@@ -156,7 +168,7 @@ class HTMLInputStream
     def detectEncodingMeta
         parser = EncodingParser.new(@rawStream.read(@NUM_BYTES_META))
         @rawStream.seek(0)
-        return parser.getEncoding()
+        return parser.getEncoding
     end
 
     def determineNewLines
@@ -174,7 +186,7 @@ class HTMLInputStream
     def position
         # Generate list of new lines first time around
         if not @newLines
-            determineNewLines()
+            determineNewLines
         end
 
         line = 0
@@ -214,7 +226,7 @@ class HTMLInputStream
     # including any character in characters or EOF. characters can be
     # any container that supports the in method being called on it.
     def charsUntil(characters, opposite = false)
-        charStack = [char()]
+        charStack = [char]
 
         if charStack[0] != :EOF
             while (characters.include? charStack[-1]) == opposite
@@ -237,7 +249,7 @@ class HTMLInputStream
 
         # Put the character stopped on back to the front of the queue
         # from where it came.
-        @queue.insert(0, charStack.pop())
+        @queue.insert(0, charStack.pop)
         return charStack.join('')
     end
 end
@@ -278,13 +290,9 @@ class EncodingBytes < String
     # match. Otherwise return false and leave the position alone
     def matchBytes(bytes, lower=false)
         data = self[position ... position+bytes.length]
-        if lower
-            data = data.downcase
-        end
-        rv = (data[0 ... bytes.length] == bytes)
-        if rv == true
-            @position += bytes.length
-        end
+        data.downcase! if lower
+        rv = (data == bytes)
+        @position += bytes.length if rv == true
         return rv
     end
     
@@ -339,7 +347,7 @@ class EncodingParser
             end
         }
         if @encoding != nil
-            @encoding = @encoding.strip()
+            @encoding = @encoding.strip
         end
         return @encoding
     end
@@ -350,14 +358,13 @@ class EncodingParser
     end
 
     def handleMeta
-        if not SPACE_CHARACTERS.include? @data.currentByte
-            #if we have <meta not followed by a space so just keep going
-            return true
-        end
+        # if we have <meta not followed by a space so just keep going
+        return true unless SPACE_CHARACTERS.include? @data.currentByte
+
         #We have a valid meta element we want to search for attributes
         while true
             #Try to find the next attribute after the current position
-            attr = getAttribute()
+            attr = getAttribute
             if attr == nil
                 return true
             else
@@ -370,7 +377,7 @@ class EncodingParser
                 elsif attr[0] == "content"
                     contentParser = ContentAttrParser.new(
                         EncodingBytes.new(attr[1]))
-                    tentativeEncoding = contentParser.parse()
+                    tentativeEncoding = contentParser.parse
                     if HTML5lib.isValidEncoding(tentativeEncoding)
                         @encoding = tentativeEncoding    
                         return false
@@ -396,7 +403,7 @@ class EncodingParser
             #handleOther
             if endTag
                 @data.position -= 1
-                handleOther()
+                handleOther
             end
             return true
         end
@@ -408,9 +415,9 @@ class EncodingParser
             @data.position -= 1    
         else
             #Read all attributes
-            attr = getAttribute()
+            attr = getAttribute
             while attr != nil
-                attr = getAttribute()
+                attr = getAttribute
             end
         end
         return true
@@ -441,9 +448,9 @@ class EncodingParser
                 spaceFound=true
                 break
             elsif ["/", "<", ">"].include? @data.currentByte
-                return ["".join(attrName), ""]
+                return [attrName.join(''), ""]
             elsif ASCII_UPPERCASE.include? @data.currentByte
-                attrName.push(@data.currentByte.lower())
+                attrName.push(@data.currentByte.downcase)
             else
                 attrName.push(@data.currentByte)
             end
@@ -452,18 +459,18 @@ class EncodingParser
         end
         #Step 7
         if spaceFound
-            @data.skip()
+            @data.skip
             #Step 8
             if @data.currentByte != "="
                 @data.position -= 1
-                return "".join(attrName), ""
+                return [attrName.join(''), ""]
             end
         end
         #XXX need to advance position in both spaces and value case
         #Step 9
         @data.position += 1
         #Step 10
-        @data.skip()
+        @data.skip
         #Step 11
         if ["'", '"'].include? @data.currentByte
             #11.1
@@ -485,7 +492,7 @@ class EncodingParser
         elsif [">", '<'].include? @data.currentByte
                 return [attrName.join(''), ""]
         elsif ASCII_UPPERCASE.include? @data.currentByte
-            attrValue.push(@data.currentByte.lower())
+            attrValue.push(@data.currentByte.downcase)
         else
             attrValue.push(@data.currentByte)
         end
@@ -494,9 +501,9 @@ class EncodingParser
             if (SPACE_CHARACTERS + [">", '<']).include? @data.currentByte
                 return [attrName.join(''), attrValue.join('')]
             elsif ASCII_UPPERCASE.include? @data.currentByte
-                attrValue.extend(@data.currentByte.lower())
+                attrValue.push(@data.currentByte.downcase)
             else
-                attrValue.extend(@data.currentByte)
+                attrValue.push(@data.currentByte)
             end
         end
     end
@@ -509,20 +516,21 @@ class ContentAttrParser
     def parse
         begin
             #Skip to the first ";"
+            @data.position = 0
             @data.jumpTo(";")
             @data.position += 1
-            @data.skip()
+            @data.skip
             #Check if the attr name is charset 
             #otherwise return
             @data.jumpTo("charset")
             @data.position += 1
-            @data.skip()
+            @data.skip
             if not @data.currentByte == "="
                 #If there is no = sign keep looking for attrs
                 return nil
             end
             @data.position += 1
-            @data.skip()
+            @data.skip
             #Look for an encoding between matching quote marks
             if ['"', "'"].include? @data.currentByte
                 quoteMark = @data.currentByte
@@ -549,8 +557,8 @@ end
 
 # Determine if a string is a supported encoding
 def HTML5lib.isValidEncoding(encoding)
-    return (encoding != nil and type(encoding) == types.StringType and
-            encodings.include? encoding.lower().strip())
+    return (encoding != nil and encoding.kind_of? String and
+            ENCODINGS.include? encoding.downcase.strip)
 end
 
 end
