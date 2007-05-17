@@ -79,6 +79,7 @@ class Element < Node
         tree = "\n|#{' ' * indent}<#{name}>"
         indent += 2
         for name, value in attributes
+            next if name == 'xmlns'
             tree += "\n|#{' ' * indent}#{name}=\"#{value}\""
         end
         for child in childNodes

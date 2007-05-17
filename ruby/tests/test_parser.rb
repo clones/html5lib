@@ -77,6 +77,11 @@ for name, cls in treeTypes
                     p.parse(StringIO.new(input))
                 end
                 output = convertTreeDump(p.tree.testSerializer(p.tree.document))
+
+                sortattrs = Proc.new {|match| match.split("\n").sort.join("\n")}
+                output.gsub!(/^(\s+)\w+=.*(\n\1\w+=.*)+/, &sortattrs)
+                expected.gsub!(/^(\s+)\w+=.*(\n\1\w+=.*)+/, &sortattrs)
+
                 errorMsg = ["\nInput:", input,
                             "\nExpected:", expected,
                             "\nRecieved:", output].join("\n")
