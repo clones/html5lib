@@ -19,6 +19,7 @@ module HTML5lib
 
 class HTMLTokenizer
     attr_accessor :contentModelFlag, :currentToken
+    attr_reader :stream
 
     # XXX need to fix documentation
 
@@ -310,7 +311,7 @@ class HTMLTokenizer
                 @state = @states[:markupDeclarationOpen]
             elsif data == "/"
                 @state = @states[:closeTagOpen]
-            elsif ASCII_LETTERS.include? data
+            elsif data != :EOF and ASCII_LETTERS.include? data
                 @currentToken =\
                   {:type => :StartTag, :name => data, :data => []}
                 @state = @states[:tagName]
@@ -395,18 +396,18 @@ class HTMLTokenizer
 
         if @contentModelFlag == :PCDATA
             data = @stream.char
-            if ASCII_LETTERS.include? data
+            if data == :EOF
+                @tokenQueue.push({:type => :ParseError, :data =>
+                  _("Expected closing tag. Unexpected end of file.")})
+                @tokenQueue.push({:type => :Characters, :data => "</"})
+                @state = @states[:data]
+            elsif ASCII_LETTERS.include? data
                 @currentToken =\
                   {:type => :EndTag, :name => data, :data => []}
                 @state = @states[:tagName]
             elsif data == ">"
                 @tokenQueue.push({:type => :ParseError, :data =>
                   _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
-                @state = @states[:data]
-            elsif data == :EOF
-                @tokenQueue.push({:type => :ParseError, :data =>
-                  _("Expected closing tag. Unexpected end of file.")})
-                @tokenQueue.push({:type => :Characters, :data => "</"})
                 @state = @states[:data]
             else
                 # XXX data can be _'_...
@@ -423,6 +424,10 @@ class HTMLTokenizer
         data = @stream.char
         if SPACE_CHARACTERS.include? data
             @state = @states[:beforeAttributeName]
+        elsif data == :EOF
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Unexpected end of file in the tag name.")})
+            emitCurrentToken
         elsif ASCII_LETTERS.include? data
             @currentToken[:name] += data +\
               @stream.charsUntil(ASCII_LETTERS, true)
@@ -432,10 +437,6 @@ class HTMLTokenizer
             @stream.queue.push(data)
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Unexpected < character when getting the tag name.")})
-            emitCurrentToken
-        elsif data == :EOF
-            @tokenQueue.push({:type => :ParseError, :data =>
-              _("Unexpected end of file in the tag name.")})
             emitCurrentToken
         elsif data == "/"
             processSolidusInTag
@@ -478,6 +479,11 @@ class HTMLTokenizer
         leavingThisState = true
         if data == "="
             @state = @states[:beforeAttributeValue]
+        elsif data == :EOF
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Unexpected end of file in attribute name.")})
+            emitCurrentToken
+            leavingThisState = false
         elsif ASCII_LETTERS.include? data
             @currentToken[:data][-1][0] += data +\
               @stream.charsUntil(ASCII_LETTERS, true)
@@ -495,11 +501,6 @@ class HTMLTokenizer
             @stream.queue.push(data)
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Unexpected < character in attribute name.")})
-            emitCurrentToken
-            leavingThisState = false
-        elsif data == :EOF
-            @tokenQueue.push({:type => :ParseError, :data =>
-              _("Unexpected end of file in attribute name.")})
             emitCurrentToken
             leavingThisState = false
         else
@@ -636,8 +637,8 @@ class HTMLTokenizer
               _("Unexpected end of file in attribute value.")})
             emitCurrentToken
         else
-            @currentToken[:data][-1][1] += data + @stream.charsUntil( \
-              frozenset(["&", ">","<"]) | SPACE_CHARACTERS)
+            @currentToken[:data][-1][1] += data + 
+              @stream.charsUntil(["&", ">","<"] + SPACE_CHARACTERS)
         end
         return true
     end
@@ -647,7 +648,7 @@ class HTMLTokenizer
         # until the first > or :EOF (charsUntil checks for :EOF automatically)
         # and emit it.
         @tokenQueue.push(
-          {:type => "Comment", :data => @stream.charsUntil((">"))})
+          {:type => :Comment, :data => @stream.charsUntil((">"))})
 
         # Eat the character directly after the bogus comment which is either a
         # ">" or an :EOF.
@@ -659,7 +660,7 @@ class HTMLTokenizer
     def markupDeclarationOpenState
         charStack = [@stream.char, @stream.char]
         if charStack == ["-", "-"]
-            @currentToken = {:type => "Comment", :data => ""}
+            @currentToken = {:type => :Comment, :data => ""}
             @state = @states[:comment]
         else
             5.times { charStack.push(@stream.char) }
@@ -667,7 +668,7 @@ class HTMLTokenizer
             if ((not charStack.include? :EOF) and
                 charStack.join("").upcase == "DOCTYPE")
                 @currentToken =\
-                  {:type => "Doctype", :name => "", :data => true}
+                  {:type => :Doctype, :name => "", :data => true}
                 @state = @states[:doctype]
             else
                 @tokenQueue.push({:type => :ParseError, :data =>

@@ -117,13 +117,11 @@ TABLE_INSERT_MODE_ELEMENTS = %w[
     tr
 ]
 
-ASCII_LOWERCASE = 'a'..'z'
-ASCII_UPPERCASE = 'A'..'Z'
-ASCII_LETTERS = ASCII_LOWERCASE.to_a + ASCII_UPPERCASE.to_a
+ASCII_LOWERCASE = ('a'..'z').to_a.join('')
+ASCII_UPPERCASE = ('A'..'Z').to_a.join('')
+ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE
 DIGITS = '0'..'9'
 HEX_DIGITS = DIGITS.to_a + ('a'..'f').to_a + ('A'..'F').to_a
-
-ASCII_UPPER2LOWER = Hash[*ASCII_LOWERCASE.zip(ASCII_UPPERCASE).flatten]
 
 # Heading elements need to be ordered 
 HEADING_ELEMENTS = %w[

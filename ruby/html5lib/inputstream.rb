@@ -143,6 +143,7 @@ class HTMLInputStream
         # Go to beginning of file and read in 4 bytes
         @rawStream.seek(0)
         string = @rawStream.read(4)
+        return nil unless string
 
         # Try detecting the BOM using bytes from the string
         encoding = bomDict[string[0...3]]      # UTF-8
@@ -175,8 +176,8 @@ class HTMLInputStream
         # Looks through the stream to find where new lines occur so
         # the position method can tell where it is.
         @newLines.push(0)
-        for i in xrange(len(@dataStream))
-            if @dataStream[i] == "\n"
+        for i in 0 ... @dataStream.length
+            if @dataStream[i] == ?\n
                 @newLines.push(i)
             end
         end
@@ -185,7 +186,7 @@ class HTMLInputStream
     # Returns (line, col) of the current position in the stream.
     def position
         # Generate list of new lines first time around
-        if not @newLines
+        if @newLines.length == 0
             determineNewLines
         end
 
