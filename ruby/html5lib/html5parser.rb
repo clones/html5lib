@@ -212,9 +212,9 @@ class HTMLParser
             nodeName = node.name
             if node == @tree.openElements[0]
                 last = true
-                if ['td', 'th'].include? nodeName
+                unless ['td', 'th'].include? nodeName
                     # XXX
-                    assert @innerHTML
+                    # assert @innerHTML
                     nodeName = @innerHTML
                 end
             end
@@ -222,7 +222,7 @@ class HTMLParser
             # case
             if ["select", "colgroup", "head", "frameset"].include? nodeName
                 # XXX
-                assert @innerHTML
+                # assert @innerHTML
             end
             if newModes.include? nodeName
                 @phase = @phases[newModes[nodeName]]
