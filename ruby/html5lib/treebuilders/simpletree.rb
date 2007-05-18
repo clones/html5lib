@@ -118,7 +118,18 @@ class DocumentType < Node
     end
 end
 
-class DocumentFragment < Document
+class DocumentFragment < Element
+    def initialize
+        super nil
+    end
+
+    def printTree indent=0
+        tree = ""
+        for child in childNodes
+            tree += child.printTree(indent+2)
+        end
+        return tree
+    end
 end
 
 class TextNode < Node
@@ -154,6 +165,11 @@ class TreeBuilder < Base::TreeBuilder
 
     def testSerializer node
         node.printTree()
+    end
+
+    def getFragment
+        @document = super
+        return @document.childNodes
     end
 end
 
