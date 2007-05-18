@@ -142,6 +142,10 @@ class TextNode < Node
     def self.rxclass
         REXML::Text
     end
+ 
+    def initialize data
+        @rxobj = self.class.rxclass.new(data, true)
+    end
 
     def printTree indent=0
         "\n|#{' ' * indent}\"#{value}\""
