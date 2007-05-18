@@ -451,6 +451,10 @@ class HTMLTokenizer
         data = @stream.char
         if SPACE_CHARACTERS.include? data
             @stream.charsUntil(SPACE_CHARACTERS, true)
+        elsif data == :EOF
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Unexpected end of file. Expected attribute name instead.")})
+            emitCurrentToken
         elsif ASCII_LETTERS.include? data
             @currentToken[:data].push([data, ""])
             @state = @states[:attributeName]
@@ -462,10 +466,6 @@ class HTMLTokenizer
             @stream.queue.push(data)
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Unexpected < character. Expected attribute name instead.")})
-            emitCurrentToken
-        elsif data == :EOF
-            @tokenQueue.push({:type => :ParseError, :data =>
-              _("Unexpected end of file. Expected attribute name instead.")})
             emitCurrentToken
         else
             @currentToken[:data].push([data, ""])
