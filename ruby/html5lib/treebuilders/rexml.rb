@@ -8,7 +8,7 @@ module REXMLTree
 
 class Node < Base::Node
     extend Forwardable
-    def_delegators :@rxobj, :name, :attributes, :value, :value=
+    def_delegators :@rxobj, :name, :attributes
     attr_accessor :rxobj
 
     def initialize name
@@ -19,7 +19,9 @@ class Node < Base::Node
     def appendChild node
         if node.kind_of? TextNode and 
           childNodes.length>0 and childNodes[-1].kind_of? TextNode
-            childNodes[-1].value += node.value
+            childNodes[-1].rxobj.value =
+              childNodes[-1].rxobj.to_s + node.rxobj.to_s
+            childNodes[-1].rxobj.raw = true
         else
             childNodes.push node
             rxobj.add node.rxobj
@@ -45,7 +47,9 @@ class Node < Base::Node
         index = childNodes.index(refNode)
         if node.kind_of? TextNode and index>0 and 
           childNodes[index-1].kind_of? TextNode
-            childNodes[index-1].value += node.value
+            childNodes[index-1].rxobj.value =
+              childNodes[index-1].rxobj.to_s + node.rxobj.to_s
+            childNodes[index-1].rxobj.raw = true
         else
             childNodes.insert index, node
         end
@@ -139,16 +143,13 @@ class DocumentFragment < Element
 end
 
 class TextNode < Node
-    def self.rxclass
-        REXML::Text
-    end
- 
     def initialize data
-        @rxobj = self.class.rxclass.new(data, true)
+        raw=data.gsub('&','&amp;').gsub('<','&lt;').gsub('>','&gt;')
+        @rxobj = REXML::Text.new(raw, true, nil, true)
     end
 
     def printTree indent=0
-        "\n|#{' ' * indent}\"#{value}\""
+        "\n|#{' ' * indent}\"#{rxobj.value}\""
     end
 end
 
