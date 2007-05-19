@@ -1242,7 +1242,8 @@ class InBodyPhase < Phase
 
             # Step 12
             @tree.activeFormattingElements.delete(afeElement)
-            @tree.activeFormattingElements.insert(bookmark, clone)
+            @tree.activeFormattingElements.insert(
+              [bookmark,@tree.activeFormattingElements.length].min, clone)
 
             # Step 13
             @tree.openElements.delete(afeElement)
