@@ -21,13 +21,13 @@ def parseTestcase(testString)
     output = []
     errors = []
     currentList = input
-    for line in testString:
+    for line in testString
         def line.startswith string; self[0...string.length] == string; end
-        if line and not (line.startswith("#errors") or
-          line.startswith("#document") or line.startswith("#data") or
-          line.startswith("#document-fragment")):
-            if currentList == output:
-                if line.startswith("|"):
+        if !line.empty? and !line.startswith("#errors") and
+          !line.startswith("#document") and !line.startswith("#data") and
+          !line.startswith("#document-fragment")
+            if currentList == output
+                if line.startswith("|")
                     currentList.push(line[2..-1])
                 else
                     currentList.push(line)
