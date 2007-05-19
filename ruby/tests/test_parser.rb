@@ -5,7 +5,7 @@ require 'stringio'
 
 # add back in simpletree when errors => 0
 treeTypes = {
-  # "simpletree" => HTML5lib::TreeBuilders.getTreeBuilder("simpletree"),
+  "simpletree" => HTML5lib::TreeBuilders.getTreeBuilder("simpletree"),
   "rexml" => HTML5lib::TreeBuilders.getTreeBuilder("rexml")
 }
 
@@ -61,15 +61,15 @@ tests = 0
 base = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__))))
 testpath = File.join(File.join(base, 'tests'),'tree-construction')
 
-for name, cls in treeTypes
-    for filename in Dir[File.join(testpath,'*.dat')]
-        f = File.open(filename)
-        f.read().split("#data\n").each {|test|
-            next if test == ""
-            tests += 1
-           
-            innerHTML, input, expected, errors = parseTestcase(test)
-            HTML5ParserTestCase.send :define_method, ('test_%d' % tests) do
+for filename in Dir[File.join(testpath,'*.dat')]
+    f = File.open(filename)
+    f.read().split("#data\n").each {|test|
+        next if test == ""
+        tests += 1
+       
+        innerHTML, input, expected, errors = parseTestcase(test)
+        HTML5ParserTestCase.send :define_method, ('test_%d' % tests) do
+            for name, cls in treeTypes
                 p = HTML5lib::HTMLParser.new(:tree => cls)
                 if innerHTML
                     p.parseFragment(StringIO.new(input), innerHTML)
@@ -87,13 +87,14 @@ for name, cls in treeTypes
                             "\nRecieved:", output].join("\n")
                 assert_equal expected, output, errorMsg
                 errStr = p.errors.map {|linecol,message|
-                    line,col=linecol; "Line: %i Col: %i %s"%[line, col, message]}
+                    line,col=linecol; "Line: %i Col: %i %s"%[line, col, message]
+                }
                 if checkParseErrors
                     errorMsg2 = ["\n\nInput errors:\n" + errors.join("\n"),
                         "Actual errors:\n" + errStr.join("\n")].join("\n")
                     assert_equal p.errors.length, errors.length, errorMsg2
                 end
             end
-        }
-    end
+        end
+    }
 end
