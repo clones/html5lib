@@ -1,5 +1,3 @@
-require 'stringio'
-
 require File.join(File.dirname(__FILE__), 'preamble')
 
 require 'html5lib/treebuilders'
@@ -73,9 +71,9 @@ class Html5ParserTestCase < Test::Unit::TestCase
                     parser = HTML5lib::HTMLParser.new(:tree => HTML5lib::TreeBuilders.getTreeBuilder(tree_name))
                 
                     if innerHTML
-                        parser.parseFragment(StringIO.new(input), innerHTML)
+                        parser.parseFragment(input, innerHTML)
                     else
-                        parser.parse(StringIO.new(input))
+                        parser.parse(input)
                     end
                 
                     actual_output = convertTreeDump(parser.tree.testSerializer(parser.tree.document))
