@@ -263,33 +263,28 @@ class Phase
     # * EndTag
     #   - endTag* methods
 
-    class TagHandlerMap
-        def initialize(default, array)
-            @default = default
-
-            @map = array.inject({}) do |map, (names, value)|
-                names = [names] unless Array === names
-                names.each { |name| map[name] = value }
-                map
-            end
-        end
-        def [](tag_name)
-            @map.has_key?(tag_name) ? @map[tag_name] : @default
+   def self.tag_handler_map(default,array)
+        array.inject(Hash.new(default)) do |map, (names, value)|
+            names = [names] unless Array === names
+            names.each { |name| map[name] = value }
+            map
         end
     end
 
     def self.start_tag_handlers
         @start_tag_handlers
     end
+
     def self.handle_start(tags)
-        @start_tag_handlers = TagHandlerMap.new(:startTagOther, tags)
+        @start_tag_handlers = tag_handler_map(:startTagOther, tags)
     end
 
     def self.end_tag_handlers
         @end_tag_handlers
     end
+
     def self.handle_end(tags)
-        @end_tag_handlers = TagHandlerMap.new(:endTagOther, tags)
+        @end_tag_handlers = tag_handler_map(:endTagOther, tags)
     end
 
     def initialize(parser, tree)
