@@ -360,6 +360,15 @@ class Phase
         @tree.elementInScope(*args)
     end
 
+    def remove_open_elements_until(name = nil)
+        finished = false
+        until finished
+            element = @tree.openElements.pop
+            finished = name.nil?? yield(element) : element.name == name
+        end
+        return element
+    end
+
 end
 
 
@@ -842,14 +851,12 @@ class InBodyPhase < Phase
     end
 
     def startTagHeading(name, attributes)
-        if in_scope?('p')
-            endTagP('p')
-        end
-        for item in HEADING_ELEMENTS
-            if in_scope?(item)
+        endTagP('p') if in_scope?('p')
+        HEADING_ELEMENTS.each do |element|
+            if in_scope?(element)
                 @parser.parseError(_("Unexpected start tag (#{name})."))
                 
-                {} until HEADING_ELEMENTS.include?(@tree.openElements.pop.name)
+                remove_open_elements_until { |element| HEADING_ELEMENTS.include?(element.name) }
 
                 break
              end
@@ -990,15 +997,9 @@ class InBodyPhase < Phase
     end
 
     def endTagP(name)
-        if in_scope?('p')
-            @tree.generateImpliedEndTags('p')
-        end
-        unless @tree.openElements[-1].name == 'p'
-            @parser.parseError('Unexpected end tag (p).')
-        end
-        while in_scope?('p')
-            @tree.openElements.pop
-        end
+        @tree.generateImpliedEndTags('p') if in_scope?('p')
+        @parser.parseError('Unexpected end tag (p).') unless @tree.openElements[-1].name == 'p'
+        @tree.openElements.pop while in_scope?('p')
     end
 
     def endTagBody(name)
@@ -1023,22 +1024,16 @@ class InBodyPhase < Phase
 
     def endTagBlock(name)
         #Put us back in the right whitespace handling mode
-        if name == 'pre'
-            @processSpaceCharactersPre = false
-        end
+        @processSpaceCharactersPre = false if name == 'pre'
 
-        inScope = in_scope?(name)
-
-        if inScope
-            @tree.generateImpliedEndTags
-        end
+        @tree.generateImpliedEndTags if in_scope?(name)
 
         unless @tree.openElements[-1].name == name
             @parser.parseError(("End tag (#{name}) seen too early. Expected other end tag."))
         end
 
-        if inScope
-            {} until @tree.openElements.pop.name == name
+        if in_scope?(name)
+            remove_open_elements_until(name)
         end
     end
 
@@ -1057,9 +1052,7 @@ class InBodyPhase < Phase
             end
         end
 
-        if in_scope?(name)
-            {} until @tree.openElements.pop.name == name
-        end
+        remove_open_elements_until(name) if in_scope?(name)
     end    
 
     def endTagHeading(name)
@@ -1074,9 +1067,9 @@ class InBodyPhase < Phase
             @parser.parseError(("Unexpected end tag (#{name}). Expected other end tag."))
         end
 
-        for item in HEADING_ELEMENTS
-            if in_scope?(item)
-                {} until HEADING_ELEMENTS.include?(@tree.openElements.pop.name)
+        HEADING_ELEMENTS.each do |element|
+            if in_scope?(element)
+                remove_open_elements_until { |element| HEADING_ELEMENTS.include?(element.name) }
                 break
             end
         end
@@ -1116,8 +1109,8 @@ class InBodyPhase < Phase
             end
 
             # Step 3
-            if furthestBlock == nil
-                {} until (element = @tree.openElements.pop) == afeElement
+            if furthestBlock.nil?
+                element = remove_open_elements_until { |element| element == afeElement }
                 @tree.activeFormattingElements.delete(element)
                 return
             end
@@ -1195,16 +1188,14 @@ class InBodyPhase < Phase
     end
 
     def endTagButtonMarqueeObject(name)
-        if in_scope?(name)
-            @tree.generateImpliedEndTags
-        end
+        @tree.generateImpliedEndTags if in_scope?(name)
 
         unless @tree.openElements[-1].name == name
             @parser.parseError(_("Unexpected end tag (#{name}). Expected other end tag first."))
         end
 
         if in_scope?(name)
-            {} until @tree.openElements.pop.name == name
+            remove_open_elements_until(name)
             
             @tree.clearActiveFormattingElements
         end
@@ -1238,7 +1229,7 @@ class InBodyPhase < Phase
 
     def endTagOther(name)
         # XXX This logic should be moved into the treebuilder
-        for node in @tree.openElements.reverse
+        @tree.openElements.reverse.each do |node|
             if node.name == name
                 @tree.generateImpliedEndTags
 
@@ -1246,7 +1237,7 @@ class InBodyPhase < Phase
                     @parser.parseError(_("Unexpected end tag (#{name})."))
                 end
 
-                {} until @tree.openElements.pop == node
+                remove_open_elements_until { |element| element == node }
 
                 break
             else
@@ -1349,7 +1340,7 @@ class InTablePhase < Phase
                 @parser.parseError(_("Unexpected end tag (table). Expected end tag (#{@tree.openElements[-1].name})."))
             end
             
-            {} until @tree.openElements.pop.name == 'table'
+            remove_open_elements_until('table')
 
             @parser.resetInsertionMode
         else
@@ -1421,7 +1412,7 @@ class InCaptionPhase < Phase
                 @parser.parseError(_("Unexpected end tag (caption). Missing end tags."))
             end
 
-            {} until @tree.openElements.pop.name == 'caption'
+            remove_open_elements_until('caption')
 
             @tree.clearActiveFormattingElements
             @parser.phase = @parser.phases[:inTable]
@@ -1545,9 +1536,7 @@ class InTableBodyPhase < Phase
 
     def startTagTableOther(name, attributes)
         # XXX AT Any ideas on how to share this with endTagTable?
-        if (in_scope?('tbody', true) or
-            in_scope?('thead', true) or
-            in_scope?('tfoot', true))
+        if in_scope?('tbody', true) or in_scope?('thead', true) or in_scope?('tfoot', true)
             clearStackToTableBodyContext
             endTagTableRowGroup(@tree.openElements[-1].name)
             @parser.phase.processStartTag(name, attributes)
@@ -1572,9 +1561,7 @@ class InTableBodyPhase < Phase
     end
 
     def endTagTable(name)
-        if (in_scope?('tbody', true) or
-            in_scope?('thead', true) or
-            in_scope?('tfoot', true))
+        if in_scope?('tbody', true) or in_scope?('thead', true) or in_scope?('tfoot', true)
             clearStackToTableBodyContext
             endTagTableRowGroup(@tree.openElements[-1].name)
             @parser.phase.processEndTag(name)
@@ -1732,7 +1719,7 @@ class InCellPhase < Phase
             if @tree.openElements[-1].name != name
                 @parser.parseError("Got table cell end tag (#{name}) while required end tags are missing.")
 
-                {} until @tree.openElements.pop.name == name
+                remove_open_elements_until(name)
             else
                 @tree.openElements.pop
             end
@@ -1829,7 +1816,7 @@ class InSelectPhase < Phase
 
     def endTagSelect(name)
         if in_scope?('select', true)
-            {} until @tree.openElements.pop.name == 'select'
+            remove_open_elements_until('select')
 
             @parser.resetInsertionMode
         else
@@ -1840,6 +1827,7 @@ class InSelectPhase < Phase
 
     def endTagTableElements(name)
         @parser.parseError(_("Unexpected table end tag (#{name}) in the select phase."))
+
         if in_scope?(name, true)
             endTagSelect('select')
             @parser.phase.processEndTag(name)
@@ -1880,8 +1868,7 @@ class AfterBodyPhase < Phase
         else
             # XXX: This may need to be done, not sure
             # Don't set lastPhase to the current phase but to the inBody phase
-            # instead. No need for extra parse errors if there's something
-            # after </html>.
+            # instead. No need for extra parse errors if there's something after </html>.
             # Try "<!doctype html>X</html>X" for instance.
             @parser.lastPhase = @parser.phase
             @parser.phase = @parser.phases[:trailingEnd]
