@@ -1,100 +1,104 @@
-require 'test/unit'
-require 'html5lib/treebuilders'
-require 'html5lib/html5parser'
 require 'stringio'
 
-# add back in simpletree when errors => 0
-treeTypes = {
-  "simpletree" => HTML5lib::TreeBuilders.getTreeBuilder("simpletree"),
-  "rexml" => HTML5lib::TreeBuilders.getTreeBuilder("rexml")
-}
+require File.join(File.dirname(__FILE__), 'preamble')
 
-puts 'Testing trees '+ treeTypes.keys.join(' ')
+require 'html5lib/treebuilders'
+require 'html5lib/html5parser'
 
-#Run the parse error checks
-checkParseErrors = false
 
-def parseTestcase(testString)
-    testString = testString.split("\n")
-    innerHTML = false
-    input = []
-    output = []
-    errors = []
-    currentList = input
-    for line in testString
-        def line.startswith string; self[0...string.length] == string; end
-        if !line.empty? and !line.startswith("#errors") and
-          !line.startswith("#document") and !line.startswith("#data") and
-          !line.startswith("#document-fragment")
-            if currentList == output
-                if line.startswith("|")
+$TREE_TYPES_TO_TEST = ['simpletree', 'rexml']
+
+$CHECK_PARSER_ERRORS = false
+
+puts 'Testing: ' + $TREE_TYPES_TO_TEST * ', '
+
+
+class Html5ParserTestCase < Test::Unit::TestCase
+
+    def self.startswith?(a, b)
+        b[0... a.length] == a
+    end
+
+    def self.parseTestcase(data)
+        innerHTML = nil
+        input = []
+        output = []
+        errors = []
+        currentList = input
+        data.split(/\n/).each do |line|
+            if !line.empty? and !startswith?("#errors", line) and
+              !startswith?("#document", line) and
+              !startswith?("#data", line) and
+              !startswith?("#document-fragment", line)
+
+                if currentList == output and startswith?("|", line)
                     currentList.push(line[2..-1])
                 else
                     currentList.push(line)
                 end
-            else
-                currentList.push(line)
+            elsif line == "#errors"
+                currentList = errors
+            elsif line == "#document" or startswith?("#document-fragment", line)
+                if startswith?("#document-fragment", line)
+                    innerHTML = line[19..-1]
+                    raise AssertionError unless innerHTML
+                end
+                currentList = output
             end
-        elsif line == "#errors"
-            currentList = errors
-        elsif line == "#document" or line.startswith("#document-fragment")
-            if line.startswith("#document-fragment")
-                innerHTML = line[19..-1]
-                raise AssertionError unless innerHTML
+        end
+        return innerHTML, input.join("\n"), output.join("\n"), errors
+    end
+    
+    # convert the output of str(document) to the format used in the testcases
+    def convertTreeDump(treedump)
+        treedump.split(/\n/)[1..-1].map { |line| (line.length > 2 and line[0] == ?|) ? line[3..-1] : line }.join("\n")
+    end
+
+    def sortattrs(output)
+        output.gsub(/^(\s+)\w+=.*(\n\1\w+=.*)+/) { |match| match.split("\n").sort.join("\n") }
+    end
+
+    html5lib_test_files('tree-construction').each do |test_file|
+
+        test_name = File.basename(test_file).sub('.dat', '')
+
+        File.read(test_file).split("#data\n").each_with_index do |data, index|
+            next if data.empty?
+       
+            innerHTML, input, expected_output, expected_errors = parseTestcase(data)
+
+            $TREE_TYPES_TO_TEST.each do |tree_name|
+                define_method 'test_%s_%d_%s' % [ test_name, index + 1, tree_name ] do
+
+                    parser = HTML5lib::HTMLParser.new(:tree => HTML5lib::TreeBuilders.getTreeBuilder(tree_name))
+                
+                    if innerHTML
+                        parser.parseFragment(StringIO.new(input), innerHTML)
+                    else
+                        parser.parse(StringIO.new(input))
+                    end
+                
+                    actual_output = convertTreeDump(parser.tree.testSerializer(parser.tree.document))
+
+                    assert_equal sortattrs(expected_output), sortattrs(actual_output), [
+                        'Input:', input,
+                        'Expected:', expected_output,
+                        'Recieved:', actual_output
+                    ].join("\n")
+
+                    if $CHECK_PARSER_ERRORS
+                        actual_errors = parser.errors.map do |(line, col), message|
+                            'Line: %i Col: %i %s' % [line, col, message]
+                        end
+                        assert_equal parser.errors.length, expected_errors.length, [
+                            'Expected errors:', expected_errors.join("\n"),
+                            'Actual errors:', actual_errors.join("\n") 
+                        ].join("\n")
+                    end
+                    
+                end
             end
-            currentList = output
         end
     end
-    return innerHTML, input.join("\n"), output.join("\n"), errors
-end
 
-# convert the output of str(document) to the format used in the testcases
-def convertTreeDump(treedump)
-    treedump.split("\n")[1..-1].map {|line|
-       (line.length>2 and line[0] == ?|) ? line[3..-1] : line
-    }.join("\n")
-end
-
-class HTML5ParserTestCase < Test::Unit::TestCase; end
-
-tests = 0
-base = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__))))
-testpath = File.join(File.join(base, 'tests'),'tree-construction')
-
-for filename in Dir[File.join(testpath,'*.dat')]
-    f = File.open(filename)
-    f.read().split("#data\n").each {|test|
-        next if test == ""
-        tests += 1
-       
-        innerHTML, input, expected, errors = parseTestcase(test)
-        HTML5ParserTestCase.send :define_method, ('test_%d' % tests) do
-            for name, cls in treeTypes
-                p = HTML5lib::HTMLParser.new(:tree => cls)
-                if innerHTML
-                    p.parseFragment(StringIO.new(input), innerHTML)
-                else
-                    p.parse(StringIO.new(input))
-                end
-                output = convertTreeDump(p.tree.testSerializer(p.tree.document))
-
-                sortattrs = Proc.new {|match| match.split("\n").sort.join("\n")}
-                output.gsub!(/^(\s+)\w+=.*(\n\1\w+=.*)+/, &sortattrs)
-                expected.gsub!(/^(\s+)\w+=.*(\n\1\w+=.*)+/, &sortattrs)
-
-                errorMsg = ["\nInput:", input,
-                            "\nExpected:", expected,
-                            "\nRecieved:", output].join("\n")
-                assert_equal expected, output, errorMsg
-                errStr = p.errors.map {|linecol,message|
-                    line,col=linecol; "Line: %i Col: %i %s"%[line, col, message]
-                }
-                if checkParseErrors
-                    errorMsg2 = ["\n\nInput errors:\n" + errors.join("\n"),
-                        "Actual errors:\n" + errStr.join("\n")].join("\n")
-                    assert_equal p.errors.length, errors.length, errorMsg2
-                end
-            end
-        end
-    }
 end
