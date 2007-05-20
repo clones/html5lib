@@ -301,13 +301,11 @@ class Phase
     def processEOF
         @tree.generateImpliedEndTags
         if @tree.openElements.length > 2
-            @parser.parseError(_("Unexpected end of file. " +
-              "Missing closing tags."))
+            @parser.parseError(_("Unexpected end of file. Missing closing tags."))
         elsif @tree.openElements.length == 2 and\
           @tree.openElements[1].name != "body"
             # This happens for framesets or something?
-            @parser.parseError(_("Unexpected end of file. Expected end " +
-              "tag (" + @tree.openElements[1].name + ") first."))
+            @parser.parseError(_("Unexpected end of file. Expected end tag (#{@tree.openElements[1].name}) first."))
         elsif @parser.innerHTML and @tree.openElements.length > 1 
             # XXX This is not what the specification says. Not sure what to do
             # here.
@@ -391,22 +389,19 @@ class InitialPhase < Phase
     end
 
     def processCharacters(data)
-        @parser.parseError(_("Unexpected non-space characters. " +
-          "Expected DOCTYPE."))
+        @parser.parseError(_("Unexpected non-space characters. Expected DOCTYPE."))
         @parser.phase = @parser.phases[:rootElement]
         @parser.phase.processCharacters(data)
     end
 
     def processStartTag(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name +\
-          "). Expected DOCTYPE."))
+        @parser.parseError(_("Unexpected start tag (#{name}). Expected DOCTYPE."))
         @parser.phase = @parser.phases[:rootElement]
         @parser.phase.processStartTag(name, attributes)
     end
 
     def processEndTag(name)
-        @parser.parseError(_("Unexpected end tag (" + name +\
-          "). Expected DOCTYPE."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Expected DOCTYPE."))
         @parser.phase = @parser.phases[:rootElement]
         @parser.phase.processEndTag(name)
     end
@@ -494,8 +489,7 @@ class BeforeHeadPhase < Phase
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag (" + name +\
-          ") after the (implied) root element."))
+        @parser.parseError(_("Unexpected end tag (#{name}) after the (implied) root element."))
     end
 end
 
@@ -529,8 +523,7 @@ class InHeadPhase < Phase
     # the real thing
     def processEOF
         if ["title", "style", "script"].include?  @tree.openElements[-1].name
-            @parser.parseError(_("Unexpected end of file. " +
-              "Expected end tag (" + @tree.openElements[-1].name + ")."))
+            @parser.parseError(_("Unexpected end of file. Expected end tag (#{@tree.openElements[-1].name})."))
             @tree.openElements.pop
         end
         anythingElse
@@ -611,14 +604,12 @@ class InHeadPhase < Phase
         if @tree.openElements[-1].name == name
             @tree.openElements.pop
         else
-            @parser.parseError(_("Unexpected end tag (" + name +\
-              "). Ignored."))
+            @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
         end
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag (" + name +\
-          "). Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def anythingElse
@@ -660,8 +651,7 @@ class AfterHeadPhase < Phase
     end
 
     def startTagFromHead(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name +\
-          ") that can be in head. Moved."))
+        @parser.parseError(_("Unexpected start tag (#{name}) that can be in head. Moved."))
         @parser.phase = @parser.phases[:inHead]
         @parser.phase.processStartTag(name, attributes)
     end
@@ -794,8 +784,7 @@ class InBodyPhase < Phase
     end
 
     def startTagFromHead(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name +\
-          ") that belongs in the head. Moved."))
+        @parser.parseError(_("Unexpected start tag (#{name}) that belongs in the head. Moved."))
         @parser.phases[:inHead].processStartTag(name, attributes)
     end
 
@@ -871,8 +860,7 @@ class InBodyPhase < Phase
         end
         for item in HEADING_ELEMENTS
             if @tree.elementInScope(item)
-                @parser.parseError(_("Unexpected start tag (" + name +\
-                  ")."))
+                @parser.parseError(_("Unexpected start tag (#{name})."))
                 item = @tree.openElements.pop
                 while not HEADING_ELEMENTS.include? item.name
                     item = @tree.openElements.pop
@@ -886,8 +874,7 @@ class InBodyPhase < Phase
     def startTagA(name, attributes)
         afeAElement = @tree.elementInActiveFormattingElements("a")
         if afeAElement
-            @parser.parseError(_("Unexpected start tag (a) implies " +
-              "end tag (a)."))
+            @parser.parseError(_("Unexpected start tag (a) implies end tag (a)."))
             endTagFormatting("a")
             if @tree.openElements.include? afeAElement
                 @tree.openElements.delete(afeAElement)
@@ -907,8 +894,7 @@ class InBodyPhase < Phase
 
     def startTagButton(name, attributes)
         if @tree.elementInScope("button")
-            @parser.parseError(_("Unexpected start tag (button) implied " +
-              "end tag (button)."))
+            @parser.parseError(_("Unexpected start tag (button) implied end tag (button)."))
             processEndTag("button")
             @parser.phase.processStartTag(name, attributes)
         else
@@ -1010,13 +996,13 @@ class InBodyPhase < Phase
         # "caption", "col", "colgroup", "frame", "frameset", "head",
         # "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
         # "tr", "noscript"
-        @parser.parseError(_("Unexpected start tag (" + name + "). Ignored."))
+        @parser.parseError(_("Unexpected start tag (#{name}). Ignored."))
     end
 
     def startTagNew(name, attributes)
         # New HTML5 elements, "event-source", "section", "nav",
         # "article", "aside", "header", "footer", "datagrid", "command"
-        sys.stderr.write("Warning: Undefined behaviour for start tag %s"%name)
+        sys.stderr.write("Warning: Undefined behaviour for start tag #{name}")
         startTagOther(name, attributes)
         #raise NotImplementedError
     end
@@ -1048,8 +1034,7 @@ class InBodyPhase < Phase
             return
         end
         if @tree.openElements[-1].name != "body"
-            @parser.parseError(_("Unexpected end tag (body). Missing " +
-              "end tag (" + @tree.openElements[-1].name + ")."))
+            @parser.parseError(_("Unexpected end tag (body). Missing end tag (#{@tree.openElements[-1].name})."))
         end
         @parser.phase = @parser.phases[:afterBody]
     end
@@ -1069,8 +1054,7 @@ class InBodyPhase < Phase
             @tree.generateImpliedEndTags
         end
         if @tree.openElements[-1].name != name
-             @parser.parseError(("End tag (" + name + ") seen too "
-               "early. Expected other end tag."))
+             @parser.parseError(("End tag (#{name}) seen too early. Expected other end tag."))
         end
         if inScope
             node = @tree.openElements.pop
@@ -1090,8 +1074,7 @@ class InBodyPhase < Phase
         if @tree.elementInScope(name)
             @tree.generateImpliedEndTags(name)
             if @tree.openElements[-1].name != name
-                @parser.parseError(("End tag (" + name + ") seen too "
-                  "early. Expected other end tag."))
+                @parser.parseError(("End tag (#{name}) seen too early. Expected other end tag."))
             end
         end
 
@@ -1111,8 +1094,7 @@ class InBodyPhase < Phase
             end
         end
         if @tree.openElements[-1].name != name
-            @parser.parseError(("Unexpected end tag (" + name + "). "
-                  "Expected other end tag."))
+            @parser.parseError(("Unexpected end tag (#{name}). Expected other end tag."))
         end
 
         for item in HEADING_ELEMENTS
@@ -1135,13 +1117,13 @@ class InBodyPhase < Phase
             afeElement = @tree.elementInActiveFormattingElements(name)
             if not afeElement or (@tree.openElements.include? afeElement and
               not @tree.elementInScope(afeElement.name))
-                @parser.parseError(_("End tag (" + name + ") violates " +
+                @parser.parseError(_("End tag (#{name}) violates " +
                   " step 1, paragraph 1 of the adoption agency algorithm."))
                 return
 
             # Step 1 paragraph 2
             elsif not @tree.openElements.include? afeElement
-                @parser.parseError(_("End tag (" + name + ") violates " +
+                @parser.parseError(_("End tag (#{name}) violates " +
                   " step 1, paragraph 2 of the adoption agency algorithm."))
                 @tree.activeFormattingElements.delete(afeElement)
                 return
@@ -1149,7 +1131,7 @@ class InBodyPhase < Phase
 
             # Step 1 paragraph 3
             if afeElement != @tree.openElements[-1]
-                @parser.parseError(_("End tag (" + name + ") violates " +
+                @parser.parseError(_("End tag (#{name}) violates " +
                   " step 1, paragraph 3 of the adoption agency algorithm."))
             end
 
@@ -1264,7 +1246,7 @@ class InBodyPhase < Phase
             @tree.generateImpliedEndTags
         end
         if @tree.openElements[-1].name != name
-            @parser.parseError(_("Unexpected end tag (" + name + "). Expected other end tag first."))
+            @parser.parseError(_("Unexpected end tag (#{name}). Expected other end tag first."))
         end
 
         if @tree.elementInScope(name)
@@ -1278,28 +1260,26 @@ class InBodyPhase < Phase
 
     def endTagMisplaced(name)
         # This handles elements with end tags in other insertion modes.
-        @parser.parseError(_("Unexpected end tag (" + name +\
-          "). Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def endTagNone(name)
         # This handles elements with no end tag.
-        @parser.parseError(_("This tag (" + name + ") has no end tag"))
+        @parser.parseError(_("This tag (#{name}) has no end tag"))
     end
 
     def endTagCdataTextAreaXmp(name)
         if @tree.openElements[-1].name == name
             @tree.openElements.pop
         else
-            @parser.parseError(_("Unexpected end tag (" + name +\
-              "). Ignored."))
+            @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
         end
     end
 
     def endTagNew(name)
         # New HTML5 elements, "event-source", "section", "nav",
         # "article", "aside", "header", "footer", "datagrid", "command"
-        sys.stderr.write("Warning: Undefined behaviour for end tag %s"%name)
+        sys.stderr.write("Warning: Undefined behaviour for end tag #{name}")
         endTagOther(name)
         #raise NotImplementedError
     end
@@ -1310,15 +1290,13 @@ class InBodyPhase < Phase
             if node.name == name
                 @tree.generateImpliedEndTags
                 if @tree.openElements[-1].name != name
-                    @parser.parseError(_("Unexpected end tag (" + name +\
-                      ")."))
+                    @parser.parseError(_("Unexpected end tag (#{name})."))
                 end
                 {} until @tree.openElements.pop == node
                 break
             else
                 if (SPECIAL_ELEMENTS + SCOPING_ELEMENTS).include? node.name
-                    @parser.parseError(_("Unexpected end tag (" + name +\
-                      "). Ignored."))
+                    @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
                     break
                 end
             end
@@ -1349,8 +1327,7 @@ class InTablePhase < Phase
     def clearStackToTableContext
         # "clear the stack back to a table context"
         while not ["table", "html"].include? @tree.openElements[-1].name
-            @parser.parseError(_("Unexpected implied end tag (" +\
-              @tree.openElements[-1].name + ") in the table phase."))
+            @parser.parseError(_("Unexpected implied end tag (#{@tree.openElements[-1].name}) in the table phase."))
             @tree.openElements.pop
         end
         # When the current node is <html> it's an innerHTML case
@@ -1404,8 +1381,7 @@ class InTablePhase < Phase
     end
 
     def startTagOther(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name + ") in " +
-          "table context caused voodoo mode."))
+        @parser.parseError(_("Unexpected start tag (#{name}) in table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
         @tree.insertFromTable = true
         # Process the start tag in the "in body" mode
@@ -1417,9 +1393,7 @@ class InTablePhase < Phase
         if @tree.elementInScope("table", true)
             @tree.generateImpliedEndTags
             if @tree.openElements[-1].name != "table"
-                @parser.parseError(_("Unexpected end tag (table). " +
-                  "Expected end tag (" + @tree.openElements[-1].name +
-                  ")."))
+                @parser.parseError(_("Unexpected end tag (table). Expected end tag (#{@tree.openElements[-1].name})."))
             end
             while @tree.openElements[-1].name != "table"
                 @tree.openElements.pop
@@ -1434,11 +1408,11 @@ class InTablePhase < Phase
     end
 
     def endTagIgnore(name)
-        @parser.parseError(_("Unexpected end tag (" + name + "). Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag (" + name + ") in table context caused voodoo mode."))
+        @parser.parseError(_("Unexpected end tag (#{name}) in table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
         @parser.insertFromTable = true
         # Process the end tag in the "in body" mode
@@ -1513,7 +1487,7 @@ class InCaptionPhase < Phase
     end
 
     def endTagIgnore(name)
-        @parser.parseError(_("Unexpected end tag (" + name + "). Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def endTagOther(name)
@@ -1599,8 +1573,7 @@ class InTableBodyPhase < Phase
     def clearStackToTableBodyContext
         while not ["tbody", "tfoot", "thead", "html"].include? \
           @tree.openElements[-1].name
-            @parser.parseError(_("Unexpected implied end tag (" +\
-              @tree.openElements[-1].name + ") in the table body phase."))
+            @parser.parseError(_("Unexpected implied end tag (#{@tree.openElements[-1].name}) in the table body phase."))
             @tree.openElements.pop
         end
     end
@@ -1617,8 +1590,7 @@ class InTableBodyPhase < Phase
     end
 
     def startTagTableCell(name, attributes)
-        @parser.parseError(_("Unexpected table cell start tag (" +\
-          name + ") in the table body phase."))
+        @parser.parseError(_("Unexpected table cell start tag (#{name}) in the table body phase."))
         startTagTr("tr", {})
         @parser.phase.processStartTag(name, attributes)
     end
@@ -1647,7 +1619,7 @@ class InTableBodyPhase < Phase
             @tree.openElements.pop
             @parser.phase = @parser.phases[:inTable]
         else
-            @parser.parseError(_("Unexpected end tag (" + name + ") in the table body phase. Ignored."))
+            @parser.parseError(_("Unexpected end tag (#{name}) in the table body phase. Ignored."))
         end
     end
 
@@ -1665,7 +1637,7 @@ class InTableBodyPhase < Phase
     end
 
     def endTagIgnore(name)
-        @parser.parseError(_("Unexpected end tag (" + name + ") in the table body phase. Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}) in the table body phase. Ignored."))
     end
 
     def endTagOther(name)
@@ -1757,7 +1729,7 @@ class InRowPhase < Phase
     end
 
     def endTagIgnore(name)
-        @parser.parseError(_("Unexpected end tag (" + name + ") in the row phase. Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}) in the row phase. Ignored."))
     end
 
     def endTagOther(name)
@@ -1812,8 +1784,7 @@ class InCellPhase < Phase
         if @tree.elementInScope(name, true)
             @tree.generateImpliedEndTags(name)
             if @tree.openElements[-1].name != name
-                @parser.parseError("Got table cell end tag (" + name +\
-                  ") while required end tags are missing.")
+                @parser.parseError("Got table cell end tag (#{name}) while required end tags are missing.")
                 while true
                     node = @tree.openElements.pop
                     break if node.name == name
@@ -1824,12 +1795,12 @@ class InCellPhase < Phase
             @tree.clearActiveFormattingElements
             @parser.phase = @parser.phases[:inRow]
         else
-            @parser.parseError(_("Unexpected end tag (" + name + "). Ignored."))
+            @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
         end
     end
 
     def endTagIgnore(name)
-        @parser.parseError(_("Unexpected end tag (" + name + "). Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def endTagImply(name)
@@ -1893,7 +1864,7 @@ class InSelectPhase < Phase
     end
 
     def startTagOther(name, attributes)
-        @parser.parseError(_("Unexpected start tag token (" + name + ") in the select phase. Ignored."))
+        @parser.parseError(_("Unexpected start tag token (#{name}) in the select phase. Ignored."))
     end
 
     def endTagOption(name)
@@ -1932,7 +1903,7 @@ class InSelectPhase < Phase
     end
 
     def endTagTableElements(name)
-        @parser.parseError(_("Unexpected table end tag (" + name + ") in the select phase."))
+        @parser.parseError(_("Unexpected table end tag (#{name}) in the select phase."))
         if @tree.elementInScope(name, true)
             endTagSelect("select")
             @parser.phase.processEndTag(name)
@@ -1940,7 +1911,7 @@ class InSelectPhase < Phase
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag token (" + name + ") in the select phase. Ignored."))
+        @parser.parseError(_("Unexpected end tag token (#{name}) in the select phase. Ignored."))
     end
 end
 
@@ -1962,7 +1933,7 @@ class AfterBodyPhase < Phase
     end
 
     def processStartTag(name, attributes)
-        @parser.parseError(_("Unexpected start tag token (" + name + ") in the after body phase."))
+        @parser.parseError(_("Unexpected start tag token (#{name}) in the after body phase."))
         @parser.phase = @parser.phases[:inBody]
         @parser.phase.processStartTag(name, attributes)
     end
@@ -1982,7 +1953,7 @@ class AfterBodyPhase < Phase
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag token (" + name + ") in the after body phase."))
+        @parser.parseError(_("Unexpected end tag token (#{name}) in the after body phase."))
         @parser.phase = @parser.phases[:inBody]
         @parser.phase.processEndTag(name)
     end
@@ -2021,7 +1992,7 @@ class InFramesetPhase < Phase
     end
 
     def startTagOther(name, attributes)
-        @parser.parseError(_("Unexpected start tag token (" + name + ") in the frameset phase. Ignored"))
+        @parser.parseError(_("Unexpected start tag token (#{name}) in the frameset phase. Ignored"))
     end
 
     def endTagFrameset(name)
@@ -2044,7 +2015,7 @@ class InFramesetPhase < Phase
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag token (" + name + ") in the frameset phase. Ignored."))
+        @parser.parseError(_("Unexpected end tag token (#{name}) in the frameset phase. Ignored."))
     end
 end
 
@@ -2062,8 +2033,7 @@ class AfterFramesetPhase < Phase
     ]
 
     def processCharacters(data)
-        @parser.parseError(_("Unexpected non-space characters in the " +
-          "after frameset phase. Ignored."))
+        @parser.parseError(_("Unexpected non-space characters in the after frameset phase. Ignored."))
     end
 
     def startTagNoframes(name, attributes)
@@ -2071,8 +2041,7 @@ class AfterFramesetPhase < Phase
     end
 
     def startTagOther(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name +\
-          ") in the after frameset phase. Ignored."))
+        @parser.parseError(_("Unexpected start tag (#{name}) in the after frameset phase. Ignored."))
     end
 
     def endTagHtml(name)
@@ -2081,7 +2050,7 @@ class AfterFramesetPhase < Phase
     end
 
     def endTagOther(name)
-        @parser.parseError(_("Unexpected end tag (" + name + ") in the after frameset phase. Ignored."))
+        @parser.parseError(_("Unexpected end tag (#{name}) in the after frameset phase. Ignored."))
     end
 end
 
@@ -2105,13 +2074,13 @@ class TrailingEndPhase < Phase
     end
 
     def processStartTag(name, attributes)
-        @parser.parseError(_("Unexpected start tag (" + name + "). Expected end of file."))
+        @parser.parseError(_("Unexpected start tag (#{name}). Expected end of file."))
         @parser.phase = @parser.lastPhase
         @parser.phase.processStartTag(name, attributes)
     end
 
     def processEndTag(name)
-        @parser.parseError(_("Unexpected end tag (" + name + "). Expected end of file."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Expected end of file."))
         @parser.phase = @parser.lastPhase
         @parser.phase.processEndTag(name)
     end
