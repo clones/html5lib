@@ -264,6 +264,35 @@ class Phase
     # * EndTag
     #   - endTag* methods
 
+    class TagHandlerMap
+        def initialize(default, array)
+            @default = default
+
+            @map = array.inject({}) do |map, (names, value)|
+                names = [names] unless Array === names
+                names.each { |name| map[name] = value }
+                map
+            end
+        end
+        def [](tag_name)
+            @map.has_key?(tag_name) ? @map[tag_name] : @default
+        end
+    end
+
+    def self.start_tag_handlers
+        @start_tag_handlers
+    end
+    def self.handle_start(tags)
+        @start_tag_handlers = TagHandlerMap.new(:startTagOther, tags)
+    end
+
+    def self.end_tag_handlers
+        @end_tag_handlers
+    end
+    def self.handle_end(tags)
+        @end_tag_handlers = TagHandlerMap.new(:endTagOther, tags)
+    end
+
     def initialize(parser, tree)
         @parser = parser
         @tree = tree
@@ -302,7 +331,7 @@ class Phase
     end
 
     def processStartTag(name, attributes)
-        send @startTagHandler[name], name, attributes
+        send self.class.start_tag_handlers[name], name, attributes
     end
 
     def startTagHtml(name, attributes)
@@ -320,23 +349,13 @@ class Phase
     end
 
     def processEndTag(name)
-        send @endTagHandler[name], name
-    end
-
-    def methodDispatcher listofLists
-        result = {}
-        for names, value in listofLists
-            if names.respond_to? :[]
-                names.each {|name| result[name] = value}
-            else
-                result[names] = value
-            end
-        end
-        result
+        send self.class.end_tag_handlers[name], name
     end
 
     def _(string); string; end
+
     def assert value; throw AssertionError.new unless value; end
+
 end
 
 
@@ -434,20 +453,15 @@ end
 
 
 class BeforeHeadPhase < Phase
-    def initialize parser, tree
-        super parser, tree
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["head", :startTagHead]
-        ]
-        @startTagHandler.default = :startTagOther
+    handle_start [
+        ['html', :startTagHtml],
+        ['head', :startTagHead]
+    ]
 
-        @endTagHandler = methodDispatcher [
-            ["html", :endTagHtml]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['html', :endTagHtml]
+    ]
 
     def processEOF
         startTagHead("head", {})
@@ -482,26 +496,21 @@ class BeforeHeadPhase < Phase
 end
 
 class InHeadPhase < Phase
-    def initialize parser, tree
-        super parser, tree
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["title", :startTagTitle],
-            ["style", :startTagStyle],
-            ["script", :startTagScript],
-            [["base", "link", "meta"], :startTagBaseLinkMeta],
-            ["head", :startTagHead]
-        ]
-        @startTagHandler.default = :startTagOther
+    handle_start [
+        ['html', :startTagHtml],
+        ['title', :startTagTitle],
+        ['style', :startTagStyle],
+        ['script', :startTagScript],
+        [['base', 'link', 'meta'], :startTagBaseLinkMeta],
+        ['head', :startTagHead]
+    ]
 
-        @endTagHandler = methodDispatcher [
-            ["head", :endTagHead],
-            ["html", :endTagHtml],
-            [["title", "style", "script"], :endTagTitleStyleScript]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['head', :endTagHead],
+        ['html', :endTagHtml],
+        [['title', 'style', 'script'], :endTagTitleStyleScript]
+    ]
 
     # helper
     def appendToHead element
@@ -618,18 +627,13 @@ class InHeadPhase < Phase
 end
 
 class AfterHeadPhase < Phase
-    def initialize parser, tree
-        super parser, tree
-
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["body", :startTagBody],
-            ["frameset", :startTagFrameset],
-            [["base", "link", "meta", "script", "style", "title"],
-              :startTagFromHead]
-        ]
-        @startTagHandler.default = :startTagOther
-    end
+    
+    handle_start [
+        ['html', :startTagHtml],
+        ['body', :startTagBody],
+        ['frameset', :startTagFrameset],
+        [['base', 'link', 'meta', 'script', 'style', 'title'], :startTagFromHead]
+    ]
 
     def processEOF
         anythingElse
@@ -678,73 +682,71 @@ end
 class InBodyPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
+
+    handle_start [
+        ['html', :startTagHtml],
+        [['script', 'style'], :startTagScriptStyle],
+        [['base', 'link', 'meta', 'title'], :startTagFromHead],
+        ['body', :startTagBody],
+        [['address', 'blockquote', 'center', 'dir', 'div', 'dl',
+          'fieldset', 'listing', 'menu', 'ol', 'p', 'pre', 'ul'],
+          :startTagCloseP],
+        ['form', :startTagForm],
+        [['li', 'dd', 'dt'], :startTagListItem],
+        ['plaintext',:startTagPlaintext],
+        [HEADING_ELEMENTS, :startTagHeading],
+        ['a', :startTagA],
+        [['b', 'big', 'em', 'font', 'i', 'nobr', 's', 'small', 'strike',
+          'strong', 'tt', 'u'],:startTagFormatting],
+        ['button', :startTagButton],
+        [['marquee', 'object'], :startTagMarqueeObject],
+        ['xmp', :startTagXmp],
+        ['table', :startTagTable],
+        [['area', 'basefont', 'bgsound', 'br', 'embed', 'img', 'param',
+          'spacer', 'wbr'], :startTagVoidFormatting],
+        ['hr', :startTagHr],
+        ['image', :startTagImage],
+        ['input', :startTagInput],
+        ['isindex', :startTagIsIndex],
+        ['textarea', :startTagTextarea],
+        [['iframe', 'noembed', 'noframes', 'noscript'], :startTagCdata],
+        ['select', :startTagSelect],
+        [['caption', 'col', 'colgroup', 'frame', 'frameset', 'head',
+          'option', 'optgroup', 'tbody', 'td', 'tfoot', 'th', 'thead',
+          'tr'], :startTagMisplaced],
+        [['event-source', 'section', 'nav', 'article', 'aside', 'header',
+          'footer', 'datagrid', 'command'], :startTagNew]
+    ]
+
+    handle_end [
+        ['p',:endTagP],
+        ['body',:endTagBody],
+        ['html',:endTagHtml],
+        [['address', 'blockquote', 'center', 'div', 'dl', 'fieldset',
+          'listing', 'menu', 'ol', 'pre', 'ul'], :endTagBlock],
+        ['form', :endTagForm],
+        [['dd', 'dt', 'li'], :endTagListItem],
+        [HEADING_ELEMENTS, :endTagHeading],
+        [['a', 'b', 'big', 'em', 'font', 'i', 'nobr', 's', 'small',
+          'strike', 'strong', 'tt', 'u'], :endTagFormatting],
+        [['marquee', 'object', 'button'], :endTagButtonMarqueeObject],
+        [['head', 'frameset', 'select', 'optgroup', 'option', 'table',
+          'caption', 'colgroup', 'col', 'thead', 'tfoot', 'tbody', 'tr',
+          'td', 'th'], :endTagMisplaced],
+        [['area', 'basefont', 'bgsound', 'br', 'embed', 'hr', 'image',
+          'img', 'input', 'isindex', 'param', 'spacer', 'wbr', 'frame'],
+          :endTagNone],
+        [['noframes', 'noscript', 'noembed', 'textarea', 'xmp', 'iframe'],
+          :endTagCdataTextAreaXmp],
+        [['event-source', 'section', 'nav', 'article', 'aside', 'header',
+          'footer', 'datagrid', 'command'], :endTagNew]
+    ]
+
     def initialize parser, tree
         super parser, tree
 
         # for special handling of whitespace in <pre>
         @processSpaceCharactersPre = false
-
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            [["script", "style"], :startTagScriptStyle],
-            [["base", "link", "meta", "title"],
-              :startTagFromHead],
-            ["body", :startTagBody],
-            [["address", "blockquote", "center", "dir", "div", "dl",
-              "fieldset", "listing", "menu", "ol", "p", "pre", "ul"],
-              :startTagCloseP],
-            ["form", :startTagForm],
-            [["li", "dd", "dt"], :startTagListItem],
-            ["plaintext",:startTagPlaintext],
-            [HEADING_ELEMENTS, :startTagHeading],
-            ["a", :startTagA],
-            [["b", "big", "em", "font", "i", "nobr", "s", "small", "strike",
-              "strong", "tt", "u"],:startTagFormatting],
-            ["button", :startTagButton],
-            [["marquee", "object"], :startTagMarqueeObject],
-            ["xmp", :startTagXmp],
-            ["table", :startTagTable],
-            [["area", "basefont", "bgsound", "br", "embed", "img", "param",
-              "spacer", "wbr"], :startTagVoidFormatting],
-            ["hr", :startTagHr],
-            ["image", :startTagImage],
-            ["input", :startTagInput],
-            ["isindex", :startTagIsIndex],
-            ["textarea", :startTagTextarea],
-            [["iframe", "noembed", "noframes", "noscript"], :startTagCdata],
-            ["select", :startTagSelect],
-            [["caption", "col", "colgroup", "frame", "frameset", "head",
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
-              "tr"], :startTagMisplaced],
-            [["event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"], :startTagNew]
-        ]
-        @startTagHandler.default = :startTagOther
-
-        @endTagHandler = methodDispatcher [
-            ["p",:endTagP],
-            ["body",:endTagBody],
-            ["html",:endTagHtml],
-            [["address", "blockquote", "center", "div", "dl", "fieldset",
-              "listing", "menu", "ol", "pre", "ul"], :endTagBlock],
-            ["form", :endTagForm],
-            [["dd", "dt", "li"], :endTagListItem],
-            [HEADING_ELEMENTS, :endTagHeading],
-            [["a", "b", "big", "em", "font", "i", "nobr", "s", "small",
-              "strike", "strong", "tt", "u"], :endTagFormatting],
-            [["marquee", "object", "button"], :endTagButtonMarqueeObject],
-            [["head", "frameset", "select", "optgroup", "option", "table",
-              "caption", "colgroup", "col", "thead", "tfoot", "tbody", "tr",
-              "td", "th"], :endTagMisplaced],
-            [["area", "basefont", "bgsound", "br", "embed", "hr", "image",
-              "img", "input", "isindex", "param", "spacer", "wbr", "frame"],
-              :endTagNone],
-            [["noframes", "noscript", "noembed", "textarea", "xmp", "iframe"],
-              :endTagCdataTextAreaXmp],
-            [["event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"], :endTagNew]
-            ]
-        @endTagHandler.default = :endTagOther
     end
 
     # helper
@@ -1329,26 +1331,22 @@ end
 
 class InTablePhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
-    def initialize parser, tree
-        super parser, tree
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["caption", :startTagCaption],
-            ["colgroup", :startTagColgroup],
-            ["col", :startTagCol],
-            [["tbody", "tfoot", "thead"], :startTagRowGroup],
-            [["td", "th", "tr"], :startTagImplyTbody],
-            ["table", :startTagTable]
-        ]
-        @startTagHandler.default = :startTagOther
 
-        @endTagHandler = methodDispatcher [
-            ["table", :endTagTable],
-            [["body", "caption", "col", "colgroup", "html", "tbody", "td",
-              "tfoot", "th", "thead", "tr"], :endTagIgnore]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_start [
+        ['html', :startTagHtml],
+        ['caption', :startTagCaption],
+        ['colgroup', :startTagColgroup],
+        ['col', :startTagCol],
+        [['tbody', 'tfoot', 'thead'], :startTagRowGroup],
+        [['td', 'th', 'tr'], :startTagImplyTbody],
+        ['table', :startTagTable]
+    ]
+
+    handle_end [
+        ['table', :endTagTable],
+        [['body', 'caption', 'col', 'colgroup', 'html', 'tbody', 'td',
+          'tfoot', 'th', 'thead', 'tr'], :endTagIgnore]
+    ]
 
     # helper methods
     def clearStackToTableContext
@@ -1459,24 +1457,19 @@ end
 
 class InCaptionPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
-    def initialize parser, tree
-        super parser, tree
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            [["caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
-              "thead", "tr"], :startTagTableElement]
-        ]
-        @startTagHandler.default = :startTagOther
+    handle_start [
+        ['html', :startTagHtml],
+        [['caption', 'col', 'colgroup', 'tbody', 'td', 'tfoot', 'th',
+          'thead', 'tr'], :startTagTableElement]
+    ]
 
-        @endTagHandler = methodDispatcher [
-            ["caption", :endTagCaption],
-            ["table", :endTagTable],
-            [["body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
-              "thead", "tr"], :endTagIgnore]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['caption', :endTagCaption],
+        ['table', :endTagTable],
+        [['body', 'col', 'colgroup', 'html', 'tbody', 'td', 'tfoot', 'th',
+          'thead', 'tr'], :endTagIgnore]
+    ]
 
     def ignoreEndTagCaption
         return (not @tree.elementInScope("caption", true))
@@ -1544,21 +1537,15 @@ end
 class InColumnGroupPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
-    def initialize parser, tree
-        super parser, tree
+    handle_start [
+        ['html', :startTagHtml],
+        ['col', :startTagCol]
+    ]
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["col", :startTagCol]
-        ]
-        @startTagHandler.default = :startTagOther
-
-        @endTagHandler = methodDispatcher [
-            ["colgroup", :endTagColgroup],
-            ["col", :endTagCol]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['colgroup', :endTagColgroup],
+        ['col', :endTagCol]
+    ]
 
     def ignoreEndTagColgroup
         return @tree.openElements[-1].name == "html"
@@ -1613,24 +1600,19 @@ end
 
 class InTableBodyPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
-    def initialize parser, tree
-        super parser, tree
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["tr", :startTagTr],
-            [["td", "th"], :startTagTableCell],
-            [["caption", "col", "colgroup", "tbody", "tfoot", "thead"], :startTagTableOther]
-        ]
-        @startTagHandler.default = :startTagOther
 
-        @endTagHandler = methodDispatcher [
-            [["tbody", "tfoot", "thead"], :endTagTableRowGroup],
-            ["table", :endTagTable],
-            [["body", "caption", "col", "colgroup", "html", "td", "th",
-              "tr"], :endTagIgnore]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_start [
+        ['html', :startTagHtml],
+        ['tr', :startTagTr],
+        [['td', 'th'], :startTagTableCell],
+        [['caption', 'col', 'colgroup', 'tbody', 'tfoot', 'thead'], :startTagTableOther]
+    ]
+
+    handle_end [
+        [['tbody', 'tfoot', 'thead'], :endTagTableRowGroup],
+        ['table', :endTagTable],
+        [['body', 'caption', 'col', 'colgroup', 'html', 'td', 'th', 'tr'], :endTagIgnore]
+    ]
 
     # helper methods
     def clearStackToTableBodyContext
@@ -1715,25 +1697,19 @@ end
 
 class InRowPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
-    def initialize parser, tree
-        super parser, tree
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            [["td", "th"], :startTagTableCell],
-            [["caption", "col", "colgroup", "tbody", "tfoot", "thead",
-              "tr"], :startTagTableOther]
-        ]
-        @startTagHandler.default = :startTagOther
 
-        @endTagHandler = methodDispatcher [
-            ["tr", :endTagTr],
-            ["table", :endTagTable],
-            [["tbody", "tfoot", "thead"], :endTagTableRowGroup],
-            [["body", "caption", "col", "colgroup", "html", "td", "th"],
-              :endTagIgnore]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_start [
+        ['html', :startTagHtml],
+        [['td', 'th'], :startTagTableCell],
+        [['caption', 'col', 'colgroup', 'tbody', 'tfoot', 'thead', 'tr'], :startTagTableOther]
+    ]
+
+    handle_end [
+        ['tr', :endTagTr],
+        ['table', :endTagTable],
+        [['tbody', 'tfoot', 'thead'], :endTagTableRowGroup],
+        [['body', 'caption', 'col', 'colgroup', 'html', 'td', 'th'], :endTagIgnore]
+    ]
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext
@@ -1817,22 +1793,17 @@ end
 
 class InCellPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
-    def initialize parser, tree
-        super parser, tree
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            [["caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
-              "thead", "tr"], :startTagTableOther]
-        ]
-        @startTagHandler.default = :startTagOther
 
-        @endTagHandler = methodDispatcher [
-            [["td", "th"], :endTagTableCell],
-            [["body", "caption", "col", "colgroup", "html"], :endTagIgnore],
-            [["table", "tbody", "tfoot", "thead", "tr"], :endTagImply]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_start [
+        ['html', :startTagHtml],
+        [['caption', 'col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'], :startTagTableOther]
+    ]
+
+    handle_end [
+        [['td', 'th'], :endTagTableCell],
+        [['body', 'caption', 'col', 'colgroup', 'html'], :endTagIgnore],
+        [['table', 'tbody', 'tfoot', 'thead', 'tr'], :endTagImply]
+    ]
 
     # helper
     def closeCell
@@ -1906,28 +1877,22 @@ end
 
 
 class InSelectPhase < Phase
-    def initialize parser, tree
-        super parser, tree
-
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["option", :startTagOption],
-            ["optgroup", :startTagOptgroup],
-            ["select", :startTagSelect]
-        ]
-        @startTagHandler.default = :startTagOther
-
-        @endTagHandler = methodDispatcher [
-            ["option", :endTagOption],
-            ["optgroup", :endTagOptgroup],
-            ["select", :endTagSelect],
-            [["caption", "table", "tbody", "tfoot", "thead", "tr", "td",
-              "th"], :endTagTableElements]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
-
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
+
+    handle_start [
+        ['html', :startTagHtml],
+        ['option', :startTagOption],
+        ['optgroup', :startTagOptgroup],
+        ['select', :startTagSelect]
+    ]
+
+    handle_end [
+        ['option', :endTagOption],
+        ['optgroup', :endTagOptgroup],
+        ['select', :endTagSelect],
+        [['caption', 'table', 'tbody', 'tfoot', 'thead', 'tr', 'td', 'th'], :endTagTableElements]
+    ]
+
     def processCharacters data
         @tree.insertText(data)
     end
@@ -2016,13 +1981,8 @@ end
 
 
 class AfterBodyPhase < Phase
-    def initialize parser, tree
-        super parser, tree
 
-        # XXX We should prolly add a handler for "html" here as well...
-        @endTagHandler = methodDispatcher [["html", :endTagHtml]]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [['html', :endTagHtml]]
 
     def processComment data
         # This is needed because data is to be appended to the <html> element
@@ -2068,23 +2028,18 @@ end
 
 class InFramesetPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
-    def initialize parser, tree
-        super parser, tree
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["frameset", :startTagFrameset],
-            ["frame", :startTagFrame],
-            ["noframes", :startTagNoframes]
-        ]
-        @startTagHandler.default = :startTagOther
+    handle_start [
+        ['html', :startTagHtml],
+        ['frameset', :startTagFrameset],
+        ['frame', :startTagFrame],
+        ['noframes', :startTagNoframes]
+    ]
 
-        @endTagHandler = methodDispatcher [
-            ["frameset", :endTagFrameset],
-            ["noframes", :endTagNoframes]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['frameset', :endTagFrameset],
+        ['noframes', :endTagNoframes]
+    ]
 
     def processCharacters data
         @parser.parseError(_("Unepxected characters in " +
@@ -2138,20 +2093,15 @@ end
 
 class AfterFramesetPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
-    def initialize parser, tree
-        super parser, tree
 
-        @startTagHandler = methodDispatcher [
-            ["html", :startTagHtml],
-            ["noframes", :startTagNoframes]
-        ]
-        @startTagHandler.default = :startTagOther
+    handle_start [
+        ['html', :startTagHtml],
+        ['noframes', :startTagNoframes]
+    ]
 
-        @endTagHandler = methodDispatcher [
-            ["html", :endTagHtml]
-        ]
-        @endTagHandler.default = :endTagOther
-    end
+    handle_end [
+        ['html', :endTagHtml]
+    ]
 
     def processCharacters data
         @parser.parseError(_("Unexpected non-space characters in the " +
