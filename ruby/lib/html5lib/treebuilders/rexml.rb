@@ -1,4 +1,4 @@
-require 'html5lib/treebuilders/_base'
+require 'html5lib/treebuilders/base'
 require 'rexml/document'
 require 'forwardable'
 

@@ -1,4 +1,4 @@
-require 'html5lib/treebuilders/_base'
+require 'html5lib/treebuilders/base'
 
 module HTML5lib
 module TreeBuilders
