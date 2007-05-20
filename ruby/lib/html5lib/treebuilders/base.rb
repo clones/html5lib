@@ -1,14 +1,14 @@
 require 'html5lib/constants'
 
+#XXX - TODO; make the default interface more ElementTree-like rather than DOM-like
+
+module HTML5lib
+
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
 # from "leaking" into tables, buttons, object elements, and marquees.
 Marker = nil
 
-#XXX - TODO; make the default interface more ElementTree-like
-#            rather than DOM-like
-
-module HTML5lib
 module TreeBuilders
 module Base
 
