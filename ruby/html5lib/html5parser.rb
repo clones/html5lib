@@ -7,59 +7,64 @@ module HTML5lib
 # HTML parser. Generates a tree structure from a stream of (possibly
 # malformed) HTML
 class HTMLParser
-    attr_accessor :phase, :firstStartTag, :innerHTML, :lastPhase
-    attr_accessor :insertFromTable
+
+    attr_accessor :phase, :firstStartTag, :innerHTML, :lastPhase, :insertFromTable
+
     attr_reader :phases, :tokenizer, :tree, :errors
 
     # convenience method
-    def self.parse stream, options={}
-        encoding = options[:encoding]
-        options.delete :encoding
+    def self.parse(stream, options = {})
+        encoding = options.delete(:encoding)
         HTMLParser.new(options).parse(stream,encoding)
     end
+
+    @@phases = [
+        :initial,
+        :rootElement,
+        :beforeHead,
+        :inHead,
+        :afterHead,
+        :inBody,
+        :inTable,
+        :inCaption,
+        :inColumnGroup,
+        :inTableBody,
+        :inRow,
+        :inCell,
+        :inSelect,
+        :afterBody,
+        :inFrameset,
+        :afterFrameset,
+        :trailingEnd
+    ]
 
     # :strict - raise an exception when a parse error is encountered
     # :tree - a treebuilder class controlling the type of tree that will be
     # returned. Built in treebuilders can be accessed through
     # html5lib.treebuilders.getTreeBuilder(treeType)
-    def initialize options={}
-
+    def initialize(options = {})
         @strict = false
-        @tree = TreeBuilders::REXMLTree::TreeBuilder
-        options.each {|name,value| instance_variable_set('@'+name.to_s,value)}
-
-        @tree = @tree.new
         @errors = []
 
-        @phases = {
-            :initial => InitialPhase.new(self, @tree),
-            :rootElement => RootElementPhase.new(self, @tree),
-            :beforeHead => BeforeHeadPhase.new(self, @tree),
-            :inHead => InHeadPhase.new(self, @tree),
-            :afterHead => AfterHeadPhase.new(self, @tree),
-            :inBody => InBodyPhase.new(self, @tree),
-            :inTable => InTablePhase.new(self, @tree),
-            :inCaption => InCaptionPhase.new(self, @tree),
-            :inColumnGroup => InColumnGroupPhase.new(self, @tree),
-            :inTableBody => InTableBodyPhase.new(self, @tree),
-            :inRow => InRowPhase.new(self, @tree),
-            :inCell => InCellPhase.new(self, @tree),
-            :inSelect => InSelectPhase.new(self, @tree),
-            :afterBody => AfterBodyPhase.new(self, @tree),
-            :inFrameset => InFramesetPhase.new(self, @tree),
-            :afterFrameset => AfterFramesetPhase.new(self, @tree),
-            :trailingEnd => TrailingEndPhase.new(self, @tree)
-        }
+        @tree = TreeBuilders::REXMLTree::TreeBuilder
+ 
+        options.each { |name, value| instance_variable_set("@#{name}", value) }
+
+        @tree = @tree.new
+
+        @phases = @@phases.inject({}) do |phases, symbol|
+            class_name = symbol.to_s.sub(/(.)/) { $1.upcase } + 'Phase'
+            phases[symbol] = HTML5lib.const_get(class_name).new(self, @tree)
+            phases 
+        end
     end
 
-    def _parse(stream, innerHTML, encoding, container="div")
-        
+    def _parse(stream, innerHTML, encoding, container = 'div')
         @tree.reset
         @firstStartTag = false
         @errors = []
 
-        @tokenizer = HTMLTokenizer.new(stream, 
-            encoding=>encoding, :parseMeta=>innerHTML)
+        @tokenizer = HTMLTokenizer.new(stream, :encoding => encoding, :parseMeta => innerHTML)
 
         if innerHTML
             @innerHTML = container.downcase
@@ -89,7 +94,7 @@ class HTMLParser
 
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
-        for token in @tokenizer
+        @tokenizer.each do |token|
             token = normalizeToken(token)
             type = token[:type]
             method = "process%s" % type
@@ -116,7 +121,7 @@ class HTMLParser
      # the encoding.  If specified, that encoding will be used,
      # regardless of any BOM or later declaration (such as in a meta
      # element)
-    def parse(stream, encoding=nil)
+    def parse(stream, encoding = nil)
         _parse(stream, false, encoding)
         return @tree.getDocument
     end
@@ -132,12 +137,12 @@ class HTMLParser
     # the encoding.  If specified, that encoding will be used,
     # regardless of any BOM or later declaration (such as in a meta
     # element)
-    def parseFragment(stream, container="div", encoding=nil)
+    def parseFragment(stream, container = 'div', encoding = nil)
         _parse(stream, true, encoding, container)
         return @tree.getFragment
     end
 
-    def parseError(data="XXX ERROR MESSAGE NEEDED")
+    def parseError(data = 'XXX ERROR MESSAGE NEEDED')
         # XXX The idea is to make data mandatory.
         @errors.push([@tokenizer.stream.position, data])
         raise ParseError if @strict
@@ -156,10 +161,10 @@ class HTMLParser
             # element.  If it matches a void element atheists did the wrong
             # thing and if it doesn't it's wrong for everyone.
 
-            if VOID_ELEMENTS.include? token[:name]
+            if VOID_ELEMENTS.include?(token[:name])
                 atheistParseError
             else
-                parseError(_("Solidus (/) incorrectly placed in tag."))
+                parseError(_('Solidus (/) incorrectly placed in tag.'))
             end
 
             token[:type] = :StartTag
@@ -181,7 +186,7 @@ class HTMLParser
 
         elsif token[:type] == :EndTag
             if token[:data]
-               parseError(_("End tag contains unexpected attributes."))
+               parseError(_('End tag contains unexpected attributes.'))
             end
             token[:name] = token[:name].downcase
         end
@@ -189,55 +194,57 @@ class HTMLParser
         return token
     end
 
+    @@new_modes = {
+        'select' => :inSelect,
+        'td' => :inCell,
+        'th' => :inCell,
+        'tr' => :inRow,
+        'tbody' => :inTableBody,
+        'thead' => :inTableBody,
+        'tfoot' => :inTableBody,
+        'caption' => :inCaption,
+        'colgroup' => :inColumnGroup,
+        'table' => :inTable,
+        'head' => :inBody,
+        'body' => :inBody,
+        'frameset' => :inFrameset
+    }
+
     def resetInsertionMode
         # The name of this method is mostly historical. (It's also used in the
         # specification.)
         last = false
-        newModes = {
-            "select" => :inSelect,
-            "td" => :inCell,
-            "th" => :inCell,
-            "tr" => :inRow,
-            "tbody" => :inTableBody,
-            "thead" => :inTableBody,
-            "tfoot" => :inTableBody,
-            "caption" => :inCaption,
-            "colgroup" => :inColumnGroup,
-            "table" => :inTable,
-            "head" => :inBody,
-            "body" => :inBody,
-            "frameset" => :inFrameset
-        }
-        for node in @tree.openElements.reverse
+
+        @tree.openElements.reverse.each do |node|
             nodeName = node.name
+
             if node == @tree.openElements[0]
                 last = true
-                unless ['td', 'th'].include? nodeName
+                unless ['td', 'th'].include?(nodeName)
                     # XXX
                     # assert @innerHTML
                     nodeName = @innerHTML
                 end
             end
+
             # Check for conditions that should only happen in the innerHTML
             # case
-            if ["select", "colgroup", "head", "frameset"].include? nodeName
+            if ['select', 'colgroup', 'head', 'frameset'].include?(nodeName)
                 # XXX
                 # assert @innerHTML
             end
-            if newModes.include? nodeName
-                @phase = @phases[newModes[nodeName]]
-                break
-            elsif nodeName == "html"
-                if @tree.headPointer == nil
-                    @phase = @phases[:beforeHead]
-                else
-                   @phase = @phases[:afterHead]
-                end
-                break
+
+            if @@new_modes.has_key?(nodeName)
+                @phase = @phases[@@new_modes[nodeName]]
+            elsif nodeName == 'html'
+                @phase = @phases[@tree.headPointer.nil?? :beforeHead : :afterHead]
             elsif last
                 @phase = @phases[:inBody]
-                break
+            else
+                next
             end
+
+            break
         end
     end
 
