@@ -516,8 +516,8 @@ class InHeadPhase < Phase
 
     # the real thing
     def processEOF
-        if ['title', 'style', 'script'].include?(@tree.openElements[-1].name)
-            @parser.parseError(_("Unexpected end of file. Expected end tag (#{@tree.openElements[-1].name})."))
+        if ['title', 'style', 'script'].include?(name = @tree.openElements[-1].name)
+            @parser.parseError(_("Unexpected end of file. Expected end tag (#{name})."))
             @tree.openElements.pop
         end
         anythingElse
@@ -1089,7 +1089,7 @@ class InBodyPhase < Phase
                 @parser.parseError(_("End tag (#{name}) violates step 1, paragraph 1 of the adoption agency algorithm."))
                 return
             # Step 1 paragraph 2
-            elsif not @tree.openElements.include? afeElement
+            elsif not @tree.openElements.include?(afeElement)
                 @parser.parseError(_("End tag (#{name}) violates step 1, paragraph 2 of the adoption agency algorithm."))
                 @tree.activeFormattingElements.delete(afeElement)
                 return
@@ -1246,7 +1246,7 @@ class InBodyPhase < Phase
 
                 break
             else
-                if (SPECIAL_ELEMENTS + SCOPING_ELEMENTS).include? node.name
+                if (SPECIAL_ELEMENTS + SCOPING_ELEMENTS).include?(node.name)
                     @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
                     break
                 end
@@ -1276,8 +1276,8 @@ class InTablePhase < Phase
     # helper methods
     def clearStackToTableContext
         # "clear the stack back to a table context"
-        until ['table', 'html'].include?(@tree.openElements[-1].name)
-            @parser.parseError(_("Unexpected implied end tag (#{@tree.openElements[-1].name}) in the table phase."))
+        until ['table', 'html'].include?(name = @tree.openElements[-1].name)
+            @parser.parseError(_("Unexpected implied end tag (#{name}) in the table phase."))
             @tree.openElements.pop
         end
         # When the current node is <html> it's an innerHTML case
@@ -1516,8 +1516,8 @@ class InTableBodyPhase < Phase
 
     # helper methods
     def clearStackToTableBodyContext
-        until ['tbody', 'tfoot', 'thead', 'html'].include?(@tree.openElements[-1].name)
-            @parser.parseError(_("Unexpected implied end tag (#{@tree.openElements[-1].name}) in the table body phase."))
+        until ['tbody', 'tfoot', 'thead', 'html'].include?(name = @tree.openElements[-1].name)
+            @parser.parseError(_("Unexpected implied end tag (#{name}) in the table body phase."))
             @tree.openElements.pop
         end
     end
@@ -1608,8 +1608,8 @@ class InRowPhase < Phase
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext
-        until ['tr', 'html'].include?(@tree.openElements[-1].name)
-            @parser.parseError(_("Unexpected implied end tag (#{@tree.openElements[-1].name}) in the row phase."))
+        until ['tr', 'html'].include?(name = @tree.openElements[-1].name)
+            @parser.parseError(_("Unexpected implied end tag (#{name}) in the row phase."))
             @tree.openElements.pop
         end
     end
