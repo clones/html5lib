@@ -671,12 +671,6 @@ ENCODINGS = %w[
     windows-1258
     tis-620
     hz-gb-2312
-    ]
-
-private
-
-  def HTML5lib.U n
-    [n].pack('U')
-  end
+]
 
 end
