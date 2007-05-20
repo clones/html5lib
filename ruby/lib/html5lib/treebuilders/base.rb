@@ -23,43 +23,41 @@ class Node
     # A list of miscellaneous flags that can be set on the node
     attr_accessor :_flags
 
-    def initialize name
+    def initialize(name)
         @parent = nil
         @childNodes = []
         @_flags = []
     end
 
     # Insert node as a child of the current node
-    def appendChild node
+    def appendChild(node)
         raise NotImplementedError
     end
 
     # Insert data as text in the current node, positioned before the 
     # start of node insertBefore or to the end of the node's text.
-    def insertText data, insertBefore=nil
+    def insertText(data, insertBefore = nil)
         raise NotImplementedError
     end
 
     # Insert node as a child of the current node, before refNode in the 
     # list of child nodes. Raises ValueError if refNode is not a child of 
     # the current node
-    def insertBefore node, refNode
+    def insertBefore(node, refNode)
         raise NotImplementedError
     end
 
     # Remove node from the children of the current node
-    def removeChild node
+    def removeChild(node)
         raise NotImplementedError
     end
 
     # Move all the children of the current node to newParent. 
     # This is needed so that trees that don't store text as nodes move the 
     # text in the correct way
-    def reparentChildren newParent
+    def reparentChildren(newParent)
         #XXX - should this method be made more general?
-        for child in @childNodes
-            newParent.appendChild(child)
-        end
+        @childNodes.each { |child| newParent.appendChild(child) }
         @childNodes = []
     end
 
@@ -76,30 +74,31 @@ class Node
 end
 
 # Base treebuilder implementation
-# documentClass - the class to use for the bottommost node of a document
-# elementClass - the class to use for HTML Elements
-# commentClass - the class to use for comments
-# doctypeClass - the class to use for doctypes
 class TreeBuilder
+
     attr_accessor :openElements
+
     attr_accessor :activeFormattingElements
+
     attr_accessor :document
+
     attr_accessor :headPointer
+
     attr_accessor :formPointer
 
-    #Document class
+    # Class to use for document root
     documentClass = nil
 
-    #The class to use for creating a node
+    # Class to use for HTML elements
     elementClass = nil
 
-    #The class to use for creating comments
+    # Class to use for comments
     commentClass = nil
 
-    #The class to use for creating doctypes
+    # Class to use for doctypes
     doctypeClass = nil
     
-    #Fragment class
+    # Fragment class
     fragmentClass = nil
 
     def initialize
@@ -119,20 +118,20 @@ class TreeBuilder
         @document = @documentClass.new
     end
 
-    def elementInScope target, tableVariant=false
+    def elementInScope(target, tableVariant = false)
         # Exit early when possible.
         return true if @openElements[-1].name == target
 
         # AT How about while true and simply set node to [-1] and set it to
         # [-2] at the end...
-        for node in @openElements.reverse
-            if node.name == target
+        @openElements.reverse.each do |element|
+            if element.name == target
                 return true
-            elsif node.name == "table"
+            elsif element.name == 'table'
                 return false
-            elsif not tableVariant and SCOPING_ELEMENTS.include? node.name
+            elsif not tableVariant and SCOPING_ELEMENTS.include?(element.name)
                 return false
-            elsif node.name == "html"
+            elsif element.name == 'html'
                 return false
             end
         end
@@ -145,15 +144,15 @@ class TreeBuilder
         # code. It should still do the same though.
 
         # Step 1: stop the algorithm when there's nothing to do.
-        return if not @activeFormattingElements
+        return unless @activeFormattingElements
 
         # Step 2 and step 3: we start with the last element. So i is -1.
         i = -1
         entry = @activeFormattingElements[i]
-        return if entry == Marker or @openElements.include? entry
+        return if entry == Marker or @openElements.include?(entry)
 
         # Step 6
-        while entry != Marker and not @openElements.include? entry
+        until entry == Marker or @openElements.include?(entry)
             # Step 5: let entry be one earlier in the list.
             i -= 1
             begin
@@ -183,67 +182,50 @@ class TreeBuilder
     end
 
     def clearActiveFormattingElements
-        entry = @activeFormattingElements.pop
-        while @activeFormattingElements and entry != Marker
-            entry = @activeFormattingElements.pop
-        end
+        {} until @activeFormattingElements.empty? || @activeFormattingElements.pop == Marker
     end
 
     # Check if an element exists between the end of the active
     # formatting elements and the last marker. If it does, return it, else
     # return false
-    def elementInActiveFormattingElements name
-
-        for item in @activeFormattingElements.reverse
+    def elementInActiveFormattingElements(name)
+        @activeFormattingElements.reverse.each do |element|
             # Check for Marker first because if it's a Marker it doesn't have a
             # name attribute.
-            if item == Marker
-                break
-            elsif item.name == name
-                return item
-            end
+            break if element == Marker
+            return element if element.name == name
         end
         return false
     end
 
-    def insertDoctype name
+    def insertDoctype(name)
         @document.appendChild(@doctypeClass.new(name))
     end
 
-    def insertComment data, parent=nil
-        if parent == nil
-            parent = @openElements[-1]
-        end
+    def insertComment(data, parent = nil)
+        parent = @openElements[-1] if parent.nil?
         parent.appendChild(@commentClass.new(data))
     end
                            
     # Create an element but don't insert it anywhere
-    def createElement name, attributes
+    def createElement(name, attributes)
         element = @elementClass.new(name)
         element.attributes = attributes
         return element
     end
 
-    def insertFromTable
-        return insertFromTable
-    end
-
     # Switch the function used to insert an element from the
     # normal one to the misnested table one and back again
-    def insertFromTable= value
+    def insertFromTable=(value)
         @insertFromTable = value
-        if value
-            @insertElement = :insertElementTable
-        else
-            @insertElement = :insertElementNormal
-        end
+        @insertElement = value ? :insertElementTable : :insertElementNormal
     end
 
-    def insertElement name, attributes
-        send @insertElement, name, attributes
+    def insertElement(name, attributes)
+        send(@insertElement, name, attributes)
     end
 
-    def insertElementNormal name, attributes
+    def insertElementNormal(name, attributes)
         element = @elementClass.new(name)
         element.attributes = attributes
         @openElements[-1].appendChild(element)
@@ -252,33 +234,29 @@ class TreeBuilder
     end
 
     # Create an element and insert it into the tree
-    def insertElementTable name, attributes
+    def insertElementTable(name, attributes)
         element = @elementClass.new(name)
         element.attributes = attributes
-        if not TABLE_INSERT_MODE_ELEMENTS.include? @openElements[-1].name
-            return insertElementNormal(name, attributes)
-        else
+        if TABLE_INSERT_MODE_ELEMENTS.include?(@openElements[-1].name)
             #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
             parent, insertBefore = getTableMisnestedNodePosition
-            if insertBefore == nil
+            if insertBefore.nil?
                 parent.appendChild(element)
             else
                 parent.insertBefore(element, insertBefore)
             end
             @openElements.push(element)
+        else
+            return insertElementNormal(name, attributes)
         end
         return element
     end
 
-    def insertText data, parent=nil
-        """Insert text data."""
-        if parent == nil
-            parent = @openElements[-1]
-        end
+    def insertText(data, parent = nil)
+        parent = @openElements[-1] if parent.nil?
 
-        if (not(@insertFromTable) or (@insertFromTable and
-                not TABLE_INSERT_MODE_ELEMENTS.include?  @openElements[-1].name))
+        if (not(@insertFromTable) or (@insertFromTable and not TABLE_INSERT_MODE_ELEMENTS.include?(@openElements[-1].name)))
             parent.insertText(data)
         else
             #We should be in the InTable mode. This means we want to do
@@ -294,12 +272,12 @@ class TreeBuilder
         #The foster parent element is the one which comes before the most
         #recently opened table element
         #XXX - this is really inelegant
-        lastTable=nil
+        lastTable = nil
         fosterParent = nil
         insertBefore = nil
-        for elm in @openElements.reverse
-            if elm.name == "table"
-                lastTable = elm
+        @openElements.reverse.each do |element|
+            if element.name == "table"
+                lastTable = element
                 break
             end
         end
@@ -310,8 +288,7 @@ class TreeBuilder
                 fosterParent = lastTable.parent
                 insertBefore = lastTable
             else
-                fosterParent = @openElements[
-                    @openElements.index(lastTable) - 1]
+                fosterParent = @openElements[@openElements.index(lastTable) - 1]
             end
         else
             fosterParent = @openElements[0]
@@ -319,10 +296,10 @@ class TreeBuilder
         return fosterParent, insertBefore
     end
 
-    def generateImpliedEndTags exclude=nil
+    def generateImpliedEndTags(exclude = nil)
         name = @openElements[-1].name
-        if (["dd", "dt", "li", "p", "td", "th", "tr"].include? name and
-            name != exclude)
+
+        if (['dd', 'dt', 'li', 'p', 'td', 'th', 'tr'].include?(name) and name != exclude)
             @openElements.pop
             # XXX This is not entirely what the specification says. We should
             # investigate it more closely.
@@ -331,12 +308,10 @@ class TreeBuilder
     end
 
     def getDocument
-        "Return the final tree"
-        return @document
+        @document
     end
     
     def getFragment
-        "Return the final fragment"
         #assert @innerHTML
         fragment = @fragmentClass.new
         @openElements[0].reparentChildren(fragment)
@@ -345,11 +320,11 @@ class TreeBuilder
 
     # Serialize the subtree of node in the format required by unit tests
     # node - the node from which to start serializing
-    def testSerializer node
+    def testSerializer(node)
         raise NotImplementedError
     end
-end
 
+end
 end
 end
 end
