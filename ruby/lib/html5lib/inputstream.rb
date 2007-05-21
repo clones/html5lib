@@ -144,14 +144,15 @@ class HTMLInputStream
         return nil unless string
 
         # Try detecting the BOM using bytes from the string
-        encoding = bomDict[string[0...3]]      # UTF-8
+        encoding = bomDict[string[0...3]]          # UTF-8
         seek = 3
         unless encoding
-            encoding = bomDict[string[0...2]]  # UTF-16
-            seek = 2
+            # Need to detect UTF-32 before UTF-16
+            encoding = bomDict[string]             # UTF-32
+            seek = 4
             unless encoding
-                encoding = bomDict[string]    # UTF-32
-                seek = 4
+                encoding = bomDict[string[0...2]]  # UTF-16
+                seek = 2
             end
         end
 
