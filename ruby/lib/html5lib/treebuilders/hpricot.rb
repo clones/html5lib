@@ -84,7 +84,7 @@ class Element < Node
             @hpricot = hpricot
         end
         def []=(k, v)
-            @hpricot.stag.raw_attributes[k] = v
+            @hpricot.stag.attributes[k] = v
         end
         def method_missing(*a, &b)
             @hpricot.attributes.send(*a, &b)
@@ -145,7 +145,7 @@ end
 
 class DocumentFragment < Element
     def initialize
-        super(nil)
+        super('')
     end
 
     def printTree(indent = 0)
