@@ -4,11 +4,17 @@ require 'html5lib/treebuilders'
 require 'html5lib/html5parser'
 
 
-$TREE_TYPES_TO_TEST = ['simpletree', 'rexml', 'hpricot']
+$tree_types_to_test = ['simpletree', 'rexml']
+
+begin
+    require 'hpricot'
+    $tree_types_to_test.push('hpricot')
+rescue LoadError
+end
 
 $CHECK_PARSER_ERRORS = false
 
-puts 'Testing: ' + $TREE_TYPES_TO_TEST * ', '
+puts 'Testing: ' + $tree_types_to_test * ', '
 
 
 class Html5ParserTestCase < Test::Unit::TestCase
@@ -65,7 +71,7 @@ class Html5ParserTestCase < Test::Unit::TestCase
        
             innerHTML, input, expected_output, expected_errors = parseTestcase(data)
 
-            $TREE_TYPES_TO_TEST.each do |tree_name|
+            $tree_types_to_test.each do |tree_name|
                 define_method 'test_%s_%d_%s' % [ test_name, index + 1, tree_name ] do
 
                     parser = HTML5lib::HTMLParser.new(:tree => HTML5lib::TreeBuilders.getTreeBuilder(tree_name))
