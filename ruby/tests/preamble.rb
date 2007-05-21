@@ -2,7 +2,7 @@ require 'test/unit'
 
 HTML5LIB_BASE = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__))))
 
-$:.unshift File.dirname(File.dirname(__FILE__))
+$:.unshift File.join(File.dirname(File.dirname(__FILE__)),'lib')
 
 $:.unshift File.dirname(__FILE__)
 
