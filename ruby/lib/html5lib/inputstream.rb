@@ -103,6 +103,7 @@ class HTMLInputStream
         #Guess with chardet, if avaliable
         if encoding.nil? and @chardet
             begin
+                require 'rubygems'
                 require 'UniversalDetector' # gem install chardet
                 buffer = @rawStream.read
                 encoding = UniversalDetector::chardet(buffer)['encoding']

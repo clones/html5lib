@@ -5,6 +5,7 @@ require 'html5lib/inputstream'
 class Html5EncodingTestCase < Test::Unit::TestCase
 
 begin
+    require 'rubygems'
     require 'UniversalDetector'
 
     def test_chardet
