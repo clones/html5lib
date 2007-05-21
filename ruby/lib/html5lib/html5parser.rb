@@ -332,7 +332,7 @@ class Phase
         # XXX Need a check here to see if the first start tag token emitted is
         # this token... If it's not, invoke @parser.parseError.
         attributes.each do |attr, value|
-            unless @tree.openElements[0].attributes.include?(attr)
+            unless @tree.openElements[0].attributes.has_key?(attr)
                 @tree.openElements[0].attributes[attr] = value
             end
         end
@@ -795,7 +795,7 @@ class InBodyPhase < Phase
             assert @parser.innerHTML
         else
             attributes.each do |attr, value|
-                unless @tree.openElements[1].attributes.include?(attr)
+                unless @tree.openElements[1].attributes.has_key?(attr)
                     @tree.openElements[1].attributes[attr] = value
                 end
             end
