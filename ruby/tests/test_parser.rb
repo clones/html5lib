@@ -4,7 +4,7 @@ require 'html5lib/treebuilders'
 require 'html5lib/html5parser'
 
 
-$TREE_TYPES_TO_TEST = ['simpletree', 'rexml']
+$TREE_TYPES_TO_TEST = ['simpletree', 'rexml', 'hpricot']
 
 $CHECK_PARSER_ERRORS = false
 
