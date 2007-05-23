@@ -63,9 +63,9 @@ class HTMLInputStream
             end
         end
 
-        # Normalize new ipythonlines and null characters
-        uString.sub!(/\r\n?/, "\n")
-        uString.sub!("\x00", [0xFFFD].pack('U'))
+        # Normalize newlines and null characters
+        uString.gsub!(/\r\n?/, "\n")
+        uString.gsub!("\x00", [0xFFFD].pack('U'))
 
         # Convert the unicode string into a list to be used as the data stream
         @dataStream = uString
@@ -312,7 +312,7 @@ class EncodingParser
 
     # string - the data to work on for encoding detection
     def initialize(data)
-        @data = EncodingBytes.new(data)
+        @data = EncodingBytes.new(data.to_s)
         @encoding = nil
     end
 

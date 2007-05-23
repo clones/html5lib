@@ -12,10 +12,16 @@ class HTMLParser
 
     attr_reader :phases, :tokenizer, :tree, :errors
 
-    # convenience method
+    # convenience methods
     def self.parse(stream, options = {})
         encoding = options.delete(:encoding)
         HTMLParser.new(options).parse(stream,encoding)
+    end
+
+    def self.parseFragment(stream, options = {})
+        container = options.delete(:container) || 'div'
+        encoding = options.delete(:encoding)
+        HTMLParser.new(options).parseFragment(stream,container,encoding)
     end
 
     @@phases = [
@@ -45,7 +51,8 @@ class HTMLParser
     def initialize(options = {})
         @strict = false
         @errors = []
-
+       
+        @tokenizer =  HTMLTokenizer
         @tree = TreeBuilders::REXMLTree::TreeBuilder
  
         options.each { |name, value| instance_variable_set("@#{name}", value) }
@@ -64,7 +71,8 @@ class HTMLParser
         @firstStartTag = false
         @errors = []
 
-        @tokenizer = HTMLTokenizer.new(stream, :encoding => encoding, :parseMeta => innerHTML)
+        @tokenizer = @tokenizer.class unless Class === @tokenizer
+        @tokenizer = @tokenizer.new(stream, :encoding => encoding, :parseMeta => innerHTML)
 
         if innerHTML
             case @innerHTML = container.downcase
