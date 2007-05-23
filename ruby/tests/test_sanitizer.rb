@@ -9,7 +9,7 @@ class SanitizeTest < Test::Unit::TestCase
   include HTML5lib
 
   def sanitize_html stream
-    HTMLParser.parseFragment(stream, :tokenizer => HTMLSanitizer).map {|node| node.to_s}.join('').gsub(/'/,'"')
+    HTMLParser.parseFragment(stream, :tokenizer => HTMLSanitizer).join('').gsub(/'/,'"')
   end
 
   HTMLSanitizer::ALLOWED_ELEMENTS.each do |tag_name|
@@ -151,7 +151,7 @@ class SanitizeTest < Test::Unit::TestCase
   end
 
   def test_platypus
-    assert_equal %(<a href=\"http://www.ragingplatypus.com/\" style=\"display: block; width: 100%; height: 100%; background-color: black; background-image: ; background-x: center; background-y: center;\">never trust your upstream platypus</a>),
+    assert_equal %(<a href=\"http://www.ragingplatypus.com/\" style=\"display: block; width: 100%; height: 100%; background-color: black; background-x: center; background-y: center;\">never trust your upstream platypus</a>),
        sanitize_html(%(<a href="http://www.ragingplatypus.com/" style="display:block; position:absolute; left:0; top:0; width:100%; height:100%; z-index:1; background-color:black; background-image:url(http://www.ragingplatypus.com/i/cam-full.jpg); background-x:center; background-y:center; background-repeat:repeat;">never trust your upstream platypus</a>))
   end
 

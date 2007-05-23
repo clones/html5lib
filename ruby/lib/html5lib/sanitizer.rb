@@ -158,6 +158,7 @@ class HTMLSanitizer < HTMLTokenizer
 
           clean = []
           style.scan(/([-\w]+)\s*:\s*([^:;]*)/) do |prop,val|
+              next if val.empty?
               prop.downcase!
               if ALLOWED_CSS_PROPERTIES.include?(prop)
                   clean << "#{prop}: #{val};"
