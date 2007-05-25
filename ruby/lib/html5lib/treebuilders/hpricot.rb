@@ -79,12 +79,22 @@ class Element < Node
         end
     end
 
+    # A call to Hpricot::Elem#raw_attributes is built dynamically,
+    # so alterations to the returned value (a hash) will be lost.
+    #
+    # AttributeProxy works around this by forwarding :[]= calls
+    # to the raw_attributes accessor on the element start tag.
+    #
     class AttributeProxy
         def initialize(hpricot)
             @hpricot = hpricot
         end
         def []=(k, v)
-            @hpricot.stag.attributes[k] = v
+            @hpricot.stag.send(stag_attributes_method)[k] = v
+        end
+        def stag_attributes_method
+            # STag#attributes changed to STag#raw_attributes after Hpricot 0.5
+            @hpricot.stag.respond_to?(:raw_attributes) ? :raw_attributes : :attributes
         end
         def method_missing(*a, &b)
             @hpricot.attributes.send(*a, &b)
