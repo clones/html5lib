@@ -4,9 +4,14 @@ require File.join(File.dirname(__FILE__), 'preamble')
 
 require 'html5lib/sanitizer'
 require 'html5lib/html5parser'
+require 'html5lib/liberalxmlparser'
 
 class SanitizeTest < Test::Unit::TestCase
   include HTML5lib
+
+  def sanitize_xhtml stream
+    XHTMLParser.parseFragment(stream, :tokenizer => HTMLSanitizer).join('').gsub(/'/,'"')
+  end
 
   def sanitize_html stream
     HTMLParser.parseFragment(stream, :tokenizer => HTMLSanitizer).join('').gsub(/'/,'"')
@@ -14,7 +19,6 @@ class SanitizeTest < Test::Unit::TestCase
 
   HTMLSanitizer::ALLOWED_ELEMENTS.each do |tag_name|
     next if %w[caption col colgroup optgroup option table tbody td tfoot th thead tr].include?(tag_name) ### TODO
-    next unless tag_name == tag_name.downcase ### TODO
     define_method "test_should_allow_#{tag_name}_tag" do
       if tag_name == 'image'
         assert_equal "<img title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
@@ -23,8 +27,10 @@ class SanitizeTest < Test::Unit::TestCase
         assert_equal "<#{tag_name} title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
           sanitize_html("<#{tag_name} title='1'>foo <bad>bar</bad> baz</#{tag_name}>")
       else
-        assert_equal "<#{tag_name} title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name}>",
+        assert_equal "<#{tag_name.downcase} title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name.downcase}>",
           sanitize_html("<#{tag_name} title='1'>foo <bad>bar</bad> baz</#{tag_name}>")
+        assert_equal "<#{tag_name} title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name}>",
+          sanitize_xhtml("<#{tag_name} title='1'>foo <bad>bar</bad> baz</#{tag_name}>")
       end
     end
   end
@@ -37,11 +43,12 @@ class SanitizeTest < Test::Unit::TestCase
   end
 
   HTMLSanitizer::ALLOWED_ATTRIBUTES.each do |attribute_name|
-    next unless attribute_name == attribute_name.downcase ### TODO
     next if attribute_name == 'style'
     define_method "test_should_allow_#{attribute_name}_attribute" do
-      assert_equal "<p #{attribute_name}=\"foo\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>",
+      assert_equal "<p #{attribute_name.downcase}=\"foo\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>",
         sanitize_html("<p #{attribute_name}='foo'>foo <bad>bar</bad> baz</p>")
+      assert_equal "<p #{attribute_name}=\"foo\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>",
+        sanitize_xhtml("<p #{attribute_name}='foo'>foo <bad>bar</bad> baz</p>")
     end
   end
 
