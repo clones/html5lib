@@ -6,7 +6,7 @@ XMLELEM = /<(\w+\s*)((?:[-:\w]+="[^"]*"\s*)+)(\/?)>/
 SORTATTRS = '<#{$1+$2.split.sort.join(' ')+$3}>'
 
 def assert_xml_equal(input, expected=nil, parser=HTML5lib::XMLParser)
-    document = parser.new.parse(input.chomp).root
+    document = parser.parse(input.chomp).root
     if not expected
         expected = input.chomp.gsub(XMLELEM,SORTATTRS)
         expected = expected.gsub(/&#(\d+);/) {[$1.to_i].pack('U')}

@@ -15,13 +15,13 @@ class HTMLParser
     # convenience methods
     def self.parse(stream, options = {})
         encoding = options.delete(:encoding)
-        HTMLParser.new(options).parse(stream,encoding)
+        new(options).parse(stream,encoding)
     end
 
     def self.parseFragment(stream, options = {})
         container = options.delete(:container) || 'div'
         encoding = options.delete(:encoding)
-        HTMLParser.new(options).parseFragment(stream,container,encoding)
+        new(options).parseFragment(stream,container,encoding)
     end
 
     @@phases = [
