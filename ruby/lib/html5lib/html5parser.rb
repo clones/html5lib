@@ -12,7 +12,6 @@ module HTML5lib
 
     attr_reader :phases, :tokenizer, :tree, :errors
 
-    # convenience methods
     def self.parse(stream, options = {})
       encoding = options.delete(:encoding)
       new(options).parse(stream,encoding)
@@ -55,7 +54,7 @@ module HTML5lib
       @tokenizer =  HTMLTokenizer
       @tree = TreeBuilders::REXMLTree::TreeBuilder
  
-      options.each {|name, value| instance_variable_set("@#{name}", value) }
+      options.each { |name, value| instance_variable_set("@#{name}", value) }
 
       @tree = @tree.new
 
@@ -122,14 +121,14 @@ module HTML5lib
       @phase.processEOF
     end
 
-     # Parse a HTML document into a well-formed tree
-     #
-     # stream - a filelike object or string containing the HTML to be parsed
-     #
-     # The optional encoding parameter must be a string that indicates
-     # the encoding.  If specified, that encoding will be used,
-     # regardless of any BOM or later declaration (such as in a meta
-     # element)
+    # Parse a HTML document into a well-formed tree
+    #
+    # stream - a filelike object or string containing the HTML to be parsed
+    #
+    # The optional encoding parameter must be a string that indicates
+    # the encoding.  If specified, that encoding will be used,
+    # regardless of any BOM or later declaration (such as in a meta
+    # element)
     def parse(stream, encoding=nil)
       _parse(stream, false, encoding)
       return @tree.getDocument
@@ -185,12 +184,9 @@ module HTML5lib
         # We need to remove the duplicate attributes and convert attributes
         # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
-        if token[:data].length
-          token[:data] = Hash[*token[:data].reverse.map {|attr,value|
-            [attr.tr(ASCII_UPPERCASE,ASCII_LOWERCASE),value]
-          }.flatten]
-        else
-          token[:data] = {}
+        unless token[:data].empty?
+          data = token[:data].reverse.map { |attr, value| [attr.tr(ASCII_UPPERCASE, ASCII_LOWERCASE), value] }
+          token[:data] = Hash[*data.flatten]
         end
 
       elsif token[:type] == :EndTag
