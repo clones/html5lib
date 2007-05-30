@@ -49,9 +49,9 @@ module HTML5lib
 
       @tree = @tree.new
 
-      @phases = @@phases.inject({}) do |phases, symbol|
-        class_name = symbol.to_s.sub(/(.)/) { $1.upcase } + 'Phase'
-        phases[symbol] = HTML5lib.const_get(class_name).new(self, @tree)
+      @phases = @@phases.inject({}) do |phases, phase_name|
+        phase_class_name = phase_name.sub(/(.)/) { $1.upcase } + 'Phase'
+        phases[phase_name.to_sym] = HTML5lib.const_get(phase_class_name).new(self, @tree)
         phases 
       end
     end
