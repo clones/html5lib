@@ -31,25 +31,8 @@ module HTML5lib
       new(options).parseFragment(stream,container,encoding)
     end
 
-    @@phases = [
-      :initial,
-      :rootElement,
-      :beforeHead,
-      :inHead,
-      :afterHead,
-      :inBody,
-      :inTable,
-      :inCaption,
-      :inColumnGroup,
-      :inTableBody,
-      :inRow,
-      :inCell,
-      :inSelect,
-      :afterBody,
-      :inFrameset,
-      :afterFrameset,
-      :trailingEnd
-    ]
+    @@phases = %w( initial rootElement beforeHead inHead afterHead inBody inTable inCaption
+      inColumnGroup inTableBody inRow inCell inSelect afterBody inFrameset afterFrameset trailingEnd )
 
     # :strict - raise an exception when a parse error is encountered
     # :tree - a treebuilder class controlling the type of tree that will be
