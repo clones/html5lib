@@ -283,10 +283,10 @@ module HTML5lib
         # XXX need to check if we don't need a special "spaces" flag on
         # characters.
         @tokenQueue.push({:type => :SpaceCharacters, :data =>
-          data + @stream.charsUntil(SPACE_CHARACTERS, true)})
+          data + @stream.chars_until(SPACE_CHARACTERS, true)})
       else
         @tokenQueue.push({:type => :Characters, :data => 
-          data + @stream.charsUntil(["&", "<"])})
+          data + @stream.chars_until(["&", "<"])})
       end
       return true
     end
@@ -428,7 +428,7 @@ module HTML5lib
         emitCurrentToken
       elsif ASCII_LETTERS.include? data
         @currentToken[:name] += data +\
-          @stream.charsUntil(ASCII_LETTERS, true)
+          @stream.chars_until(ASCII_LETTERS, true)
       elsif data == ">"
         emitCurrentToken
       elsif data == "<"
@@ -448,7 +448,7 @@ module HTML5lib
     def beforeAttributeNameState
       data = @stream.char
       if SPACE_CHARACTERS.include? data
-        @stream.charsUntil(SPACE_CHARACTERS, true)
+        @stream.chars_until(SPACE_CHARACTERS, true)
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file. Expected attribute name instead.")})
@@ -484,7 +484,7 @@ module HTML5lib
         leavingThisState = false
       elsif ASCII_LETTERS.include? data
         @currentToken[:data][-1][0] += data +\
-          @stream.charsUntil(ASCII_LETTERS, true)
+          @stream.chars_until(ASCII_LETTERS, true)
         leavingThisState = false
       elsif data == ">"
         # XXX If we emit here the attributes are converted to a dict
@@ -527,7 +527,7 @@ module HTML5lib
     def afterAttributeNameState
       data = @stream.char
       if SPACE_CHARACTERS.include? data
-        @stream.charsUntil(SPACE_CHARACTERS, true)
+        @stream.chars_until(SPACE_CHARACTERS, true)
       elsif data == "="
         @state = @states[:beforeAttributeValue]
       elsif data == ">"
@@ -557,7 +557,7 @@ module HTML5lib
     def beforeAttributeValueState
       data = @stream.char
       if SPACE_CHARACTERS.include? data
-        @stream.charsUntil(SPACE_CHARACTERS, true)
+        @stream.chars_until(SPACE_CHARACTERS, true)
       elsif data == "\""
         @state = @states[:attributeValueDoubleQuoted]
       elsif data == "&"
@@ -595,7 +595,7 @@ module HTML5lib
         emitCurrentToken
       else
         @currentToken[:data][-1][1] += data +\
-          @stream.charsUntil(["\"", "&"])
+          @stream.chars_until(["\"", "&"])
       end
       return true
     end
@@ -612,7 +612,7 @@ module HTML5lib
         emitCurrentToken
       else
         @currentToken[:data][-1][1] += data +\
-          @stream.charsUntil(["'", "&"])
+          @stream.chars_until(["'", "&"])
       end
       return true
     end
@@ -636,17 +636,17 @@ module HTML5lib
         emitCurrentToken
       else
         @currentToken[:data][-1][1] += data + 
-          @stream.charsUntil(["&", ">","<"] + SPACE_CHARACTERS)
+          @stream.chars_until(["&", ">","<"] + SPACE_CHARACTERS)
       end
       return true
     end
 
     def bogusCommentState
       # Make a new comment token and give it as value all the characters
-      # until the first > or :EOF (charsUntil checks for :EOF automatically)
+      # until the first > or :EOF (chars_until checks for :EOF automatically)
       # and emit it.
       @tokenQueue.push(
-        {:type => :Comment, :data => @stream.charsUntil((">"))})
+        {:type => :Comment, :data => @stream.chars_until((">"))})
 
       # Eat the character directly after the bogus comment which is either a
       # ">" or an :EOF.
@@ -688,7 +688,7 @@ module HTML5lib
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       else
-        @currentToken[:data] += data + @stream.charsUntil("-")
+        @currentToken[:data] += data + @stream.chars_until("-")
       end
       return true
     end
@@ -704,7 +704,7 @@ module HTML5lib
         @state = @states[:data]
       else
         @currentToken[:data] += "-" + data +\
-          @stream.charsUntil("-")
+          @stream.chars_until("-")
         # Consume the next character which is either a "-" or an :EOF as
         # well so if there's a "-" directly after the "-" we go nicely to
         # the "comment end state" without emitting a ParseError there.
