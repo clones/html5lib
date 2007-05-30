@@ -4,8 +4,8 @@ require 'html5lib/treebuilders/rexml'
 
 module HTML5lib
 
-  # HTML parser. Generates a tree structure from a stream of (possibly
-  # malformed) HTML
+  # HTML parser. Generates a tree structure from a stream of (possibly malformed) HTML
+  #
   class HTMLParser
 
     attr_accessor :phase, :firstStartTag, :innerHTML, :lastPhase, :insertFromTable
@@ -410,10 +410,11 @@ module HTML5lib
   end
 
   class InitialPhase < Phase
+
     # This phase deals with error handling as well which is currently not
     # covered in the specification. The error handling is typically known as
-    # "quirks mode". It is expected that a future version of HTML5 will defin
-    # this.
+    # "quirks mode". It is expected that a future version of HTML5 will define this.
+
     def processEOF
       @parser.parseError(_('Unexpected End of file. Expected DOCTYPE.'))
       @parser.phase = @parser.phases[:rootElement]
@@ -451,18 +452,11 @@ module HTML5lib
       @parser.phase = @parser.phases[:rootElement]
       @parser.phase.processEndTag(name)
     end
+
   end
 
   class RootElementPhase < Phase
-    # helper methods
-    def insertHtmlElement
-      element = @tree.createElement('html', {})
-      @tree.openElements.push(element)
-      @tree.document.appendChild(element)
-      @parser.phase = @parser.phases[:beforeHead]
-    end
 
-    # other
     def processEOF
       insertHtmlElement
       @parser.phase.processEOF
@@ -491,6 +485,14 @@ module HTML5lib
       insertHtmlElement
       @parser.phase.processEndTag(name)
     end
+
+    def insertHtmlElement
+      element = @tree.createElement('html', {})
+      @tree.openElements.push(element)
+      @tree.document.appendChild(element)
+      @parser.phase = @parser.phases[:beforeHead]
+    end
+
   end
 
   class BeforeHeadPhase < Phase
@@ -528,6 +530,7 @@ module HTML5lib
     def endTagOther(name)
       @parser.parseError(_("Unexpected end tag (#{name}) after the (implied) root element."))
     end
+
   end
 
   class InHeadPhase < Phase
@@ -536,17 +539,6 @@ module HTML5lib
 
     handle_end 'head', 'html', %w( title style script )
 
-    # helper
-    def appendToHead(element)
-      if @tree.headPointer.nil?
-        assert @parser.innerHTML
-        @tree.openElements[-1].appendChild(element)
-      else
-        @tree.headPointer.appendChild(element)
-      end
-    end
-
-    # the real thing
     def processEOF
       if ['title', 'style', 'script'].include?(name = @tree.openElements[-1].name)
         @parser.parseError(_("Unexpected end of file. Expected end tag (#{name})."))
@@ -644,6 +636,18 @@ module HTML5lib
         @parser.phase = @parser.phases[:afterHead]
       end
     end
+
+    protected
+
+    def appendToHead(element)
+      if @tree.headPointer.nil?
+        assert @parser.innerHTML
+        @tree.openElements[-1].appendChild(element)
+      else
+        @tree.headPointer.appendChild(element)
+      end
+    end
+
   end
 
   class AfterHeadPhase < Phase
@@ -690,11 +694,12 @@ module HTML5lib
       @tree.insertElement('body', {})
       @parser.phase = @parser.phases[:inBody]
     end
+
   end
 
   class InBodyPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
-    # the crazy mode
 
     handle_start 'html', 'body', 'form', 'plaintext', 'a', 'button', 'xmp', 'table', 'hr', 'image'
 
@@ -735,13 +740,6 @@ module HTML5lib
       @processSpaceCharactersPre = false
     end
 
-    # helper
-    def addFormattingElement(name, attributes)
-      @tree.insertElement(name, attributes)
-      @tree.activeFormattingElements.push(@tree.openElements[-1])
-    end
-
-    # the real deal
     def processSpaceCharactersPre(data)
       #Sometimes (start of <pre> blocks) we want to drop leading newlines
       @processSpaceCharactersPre = false
@@ -1234,9 +1232,18 @@ module HTML5lib
         end
       end
     end
+
+    protected
+
+    def addFormattingElement(name, attributes)
+      @tree.insertElement(name, attributes)
+      @tree.activeFormattingElements.push(@tree.openElements[-1])
+    end
+
   end
 
   class InTablePhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
 
     handle_start 'html', 'caption', 'colgroup', 'col', 'table'
@@ -1245,17 +1252,6 @@ module HTML5lib
 
     handle_end 'table', %w( body caption col colgroup html tbody td tfoot th thead tr ) => 'Ignore'
 
-    # helper methods
-    def clearStackToTableContext
-      # "clear the stack back to a table context"
-      until ['table', 'html'].include?(name = @tree.openElements[-1].name)
-        @parser.parseError(_("Unexpected implied end tag (#{name}) in the table phase."))
-        @tree.openElements.pop
-      end
-      # When the current node is <html> it's an innerHTML case
-    end
-
-    # processing methods
     def processCharacters(data)
       @parser.parseError(_("Unexpected non-space characters in table context caused voodoo mode."))
       # Make all the special element rearranging voodoo kick in
@@ -1339,9 +1335,22 @@ module HTML5lib
       @parser.phases[:inBody].processEndTag(name)
       @parser.insertFromTable = false
     end
+
+    protected
+
+    def clearStackToTableContext
+      # "clear the stack back to a table context"
+      until ['table', 'html'].include?(name = @tree.openElements[-1].name)
+        @parser.parseError(_("Unexpected implied end tag (#{name}) in the table phase."))
+        @tree.openElements.pop
+      end
+      # When the current node is <html> it's an innerHTML case
+    end
+
   end
 
   class InCaptionPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
 
     handle_start 'html', %w( caption col colgroup tbody td tfoot th thead tr ) => 'TableElement'
@@ -1402,9 +1411,11 @@ module HTML5lib
     def endTagOther(name)
       @parser.phases[:inBody].processEndTag(name)
     end
+
   end
 
   class InColumnGroupPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
     handle_start 'html', 'col'
@@ -1452,24 +1463,17 @@ module HTML5lib
       endTagColgroup('colgroup')
       @parser.phase.processEndTag(name) unless ignoreEndTag
     end
+
   end
 
   class InTableBodyPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
 
     handle_start 'html', 'tr', %w( td th ) => 'TableCell', %w( caption col colgroup tbody tfoot thead ) => 'TableOther'
 
     handle_end 'table', %w( tbody tfoot thead ) => 'TableRowGroup', %w( body caption col colgroup html td th tr ) => 'Ingore'
 
-    # helper methods
-    def clearStackToTableBodyContext
-      until ['tbody', 'tfoot', 'thead', 'html'].include?(name = @tree.openElements[-1].name)
-        @parser.parseError(_("Unexpected implied end tag (#{name}) in the table body phase."))
-        @tree.openElements.pop
-      end
-    end
-
-    # the rest
     def processCharacters(data)
       @parser.phases[:inTable].processCharacters(data)
     end
@@ -1530,28 +1534,26 @@ module HTML5lib
     def endTagOther(name)
       @parser.phases[:inTable].processEndTag(name)
     end
+
+    protected
+
+    def clearStackToTableBodyContext
+      until ['tbody', 'tfoot', 'thead', 'html'].include?(name = @tree.openElements[-1].name)
+        @parser.parseError(_("Unexpected implied end tag (#{name}) in the table body phase."))
+        @tree.openElements.pop
+      end
+    end
+
   end
 
   class InRowPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
 
     handle_start 'html', %w( td th ) => 'TableCell', %w( caption col colgroup tbody tfoot thead tr ) => 'TableOther'
 
     handle_end 'tr', 'table', %w( tbody tfoot thead ) => 'TableRowGroup', %w( body caption col colgroup html td th ) => 'Ignore'
 
-    # helper methods (XXX unify this with other table helper methods)
-    def clearStackToTableRowContext
-      until ['tr', 'html'].include?(name = @tree.openElements[-1].name)
-        @parser.parseError(_("Unexpected implied end tag (#{name}) in the row phase."))
-        @tree.openElements.pop
-      end
-    end
-
-    def ignoreEndTagTr
-      not in_scope?('tr', :tableVariant => true)
-    end
-
-    # the rest
     def processCharacters(data)
       @parser.phases[:inTable].processCharacters(data)
     end
@@ -1611,9 +1613,25 @@ module HTML5lib
     def endTagOther(name)
       @parser.phases[:inTable].processEndTag(name)
     end
+
+    protected
+
+    # XXX unify this with other table helper methods
+    def clearStackToTableRowContext
+      until ['tr', 'html'].include?(name = @tree.openElements[-1].name)
+        @parser.parseError(_("Unexpected implied end tag (#{name}) in the row phase."))
+        @tree.openElements.pop
+      end
+    end
+
+    def ignoreEndTagTr
+      not in_scope?('tr', :tableVariant => true)
+    end
+
   end
 
   class InCellPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
 
     handle_start 'html', %w( caption col colgroup tbody td tfoot th thead tr ) => 'TableOther'
@@ -1622,16 +1640,6 @@ module HTML5lib
 
     handle_end %w( table tbody tfoot thead tr ) => 'Imply'
 
-    # helper
-    def closeCell
-      if in_scope?('td', true)
-        endTagTableCell('td')
-      elsif in_scope?('th', true)
-        endTagTableCell('th')
-      end
-    end
-
-    # the rest
     def processCharacters(data)
       @parser.phases[:inBody].processCharacters(data)
     end
@@ -1684,9 +1692,21 @@ module HTML5lib
     def endTagOther(name)
       @parser.phases[:inBody].processEndTag(name)
     end
+
+    protected
+
+    def closeCell
+      if in_scope?('td', true)
+        endTagTableCell('td')
+      elsif in_scope?('th', true)
+        endTagTableCell('th')
+      end
+    end
+
   end
 
   class InSelectPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
 
     handle_start 'html', 'option', 'optgroup', 'select'
@@ -1805,9 +1825,11 @@ module HTML5lib
       @parser.phase = @parser.phases[:inBody]
       @parser.phase.processEndTag(name)
     end
+
   end
 
   class InFramesetPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
 
     handle_start 'html', 'frameset', 'frame', 'noframes'
@@ -1857,9 +1879,11 @@ module HTML5lib
     def endTagOther(name)
       @parser.parseError(_("Unexpected end tag token (#{name}) in the frameset phase. Ignored."))
     end
+
   end
 
   class AfterFramesetPhase < Phase
+
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
 
     handle_start 'html', 'noframes'
@@ -1886,9 +1910,11 @@ module HTML5lib
     def endTagOther(name)
       @parser.parseError(_("Unexpected end tag (#{name}) in the after frameset phase. Ignored."))
     end
+
   end
 
   class TrailingEndPhase < Phase
+
     def processEOF
     end
 
@@ -1917,6 +1943,7 @@ module HTML5lib
       @parser.phase = @parser.lastPhase
       @parser.phase.processEndTag(name)
     end
+
   end
 
   # Error in parsed document
