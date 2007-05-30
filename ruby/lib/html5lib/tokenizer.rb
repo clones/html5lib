@@ -147,7 +147,7 @@ module HTML5lib
         charAsInt = 65533
       end
 
-      if charAsInt <= 0x10FFF
+      if charAsInt <= 0x10FFFF
         char = [charAsInt].pack('U')
       else
         @tokenQueue.push({:type => :ParseError, :data =>
