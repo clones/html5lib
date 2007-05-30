@@ -258,46 +258,85 @@ module HTML5lib
     def _(string); string; end
   end
 
-  # Base class for helper object that implements each phase of processing
+  # Base class for helper objects that implement each phase of processing.
+  #
+  # Handler methods should be in the following order (they can be omitted):
+  #
+  #   * EOF
+  #   * Comment
+  #   * Doctype
+  #   * SpaceCharacters
+  #   * Characters
+  #   * StartTag
+  #     - startTag* methods
+  #   * EndTag
+  #     - endTag* methods
+  #
   class Phase
-    # Order should be (they can be omitted)
-    # * EOF
-    # * Comment
-    # * Doctype
-    # * SpaceCharacters
-    # * Characters
-    # * StartTag
-    #   - startTag* methods
-    # * EndTag
-    #   - endTag* methods
 
-     def self.tag_handler_map(default,array)
-      array.inject(Hash.new(default)) do |map, (names, value)|
-        names = [names] unless Array === names
-        names.each { |name| map[name] = value }
-        map
+    # The following example call:
+    #
+    #   tag_handlers('startTag', 'html', %( base link meta ), %( li dt dd ) => 'ListItem')
+    #
+    # ...would return a hash equal to this:
+    #
+    #   { 'html' => 'startTagHtml',
+    #     'base' => 'startTagBaseLinkMeta',
+    #     'link' => 'startTagBaseLinkMeta',
+    #     'meta' => 'startTagBaseLinkMeta',
+    #     'li'   => 'startTagListItem',
+    #     'dt'   => 'startTagListItem',
+    #     'dd'   => 'startTagListItem'  }
+    #
+    def self.tag_handlers(prefix, *tags)
+      mapping = {}
+      if tags.last.is_a?(Hash)
+        tags.pop.each do |names, handler_method_suffix|
+          handler_method = prefix + handler_method_suffix
+          Array(names).each { |name| mapping[name] = handler_method }
+        end
       end
+      tags.each do |names|
+        names = Array(names)
+        handler_method = prefix + names.map { |name| name.capitalize }.join
+        names.each { |name| mapping[name] = handler_method }
+      end
+      return mapping
     end
 
     def self.start_tag_handlers
-      @start_tag_handlers
+      @start_tag_handlers ||= Hash.new('startTagOther')
     end
 
-    def self.handle_start(tags)
-      @start_tag_handlers = tag_handler_map(:startTagOther, tags)
+    # Declare what start tags this Phase handles. Can be called more than once.
+    #
+    # Example usage:
+    #
+    #   handle_start 'html'
+    #   # html start tags will be handled by a method named 'startTagHtml'
+    #
+    #   handle_start %( base link meta )
+    #   # base, link and meta start tags will be handled by a method named 'startTagBaseLinkMeta'
+    #
+    #   handle_start %( li dt dd ) => 'ListItem'
+    #   # li, dt, and dd start tags will be handled by a method named 'startTagListItem'
+    #
+    def self.handle_start(*tags)
+      start_tag_handlers.update tag_handlers('startTag', *tags)
     end
 
     def self.end_tag_handlers
-      @end_tag_handlers
+      @end_tag_handlers ||= Hash.new('endTagOther')
     end
 
-    def self.handle_end(tags)
-      @end_tag_handlers = tag_handler_map(:endTagOther, tags)
+    # Declare what end tags this Phase handles. Behaves like handle_start.
+    #
+    def self.handle_end(*tags)
+      end_tag_handlers.update tag_handlers('endTag', *tags)
     end
 
     def initialize(parser, tree)
-      @parser = parser
-      @tree = tree
+      @parser, @tree = parser, tree
     end
 
     def processEOF
@@ -460,14 +499,9 @@ module HTML5lib
 
   class BeforeHeadPhase < Phase
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['head', :startTagHead]
-    ]
+    handle_start 'html', 'head'
 
-    handle_end [
-      ['html', :endTagHtml]
-    ]
+    handle_end 'html'
 
     def processEOF
       startTagHead('head', {})
@@ -502,20 +536,9 @@ module HTML5lib
 
   class InHeadPhase < Phase
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['title', :startTagTitle],
-      ['style', :startTagStyle],
-      ['script', :startTagScript],
-      [['base', 'link', 'meta'], :startTagBaseLinkMeta],
-      ['head', :startTagHead]
-    ]
+    handle_start 'html', 'head', 'title', 'style', 'script', %w( base link meta )
 
-    handle_end [
-      ['head', :endTagHead],
-      ['html', :endTagHtml],
-      [['title', 'style', 'script'], :endTagTitleStyleScript]
-    ]
+    handle_end 'head', 'html', %w( title style script )
 
     # helper
     def appendToHead(element)
@@ -629,12 +652,7 @@ module HTML5lib
 
   class AfterHeadPhase < Phase
   
-    handle_start [
-      ['html', :startTagHtml],
-      ['body', :startTagBody],
-      ['frameset', :startTagFrameset],
-      [['base', 'link', 'meta', 'script', 'style', 'title'], :startTagFromHead]
-    ]
+    handle_start 'html', 'body', 'frameset', %w( base link meta script style title ) => 'FromHead'
 
     def processEOF
       anythingElse
@@ -682,64 +700,37 @@ module HTML5lib
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
 
-    handle_start [
-      ['html', :startTagHtml],
-      [['script', 'style'], :startTagScriptStyle],
-      [['base', 'link', 'meta', 'title'], :startTagFromHead],
-      ['body', :startTagBody],
-      [['address', 'blockquote', 'center', 'dir', 'div', 'dl',
-        'fieldset', 'listing', 'menu', 'ol', 'p', 'pre', 'ul'],
-        :startTagCloseP],
-      ['form', :startTagForm],
-      [['li', 'dd', 'dt'], :startTagListItem],
-      ['plaintext',:startTagPlaintext],
-      [HEADING_ELEMENTS, :startTagHeading],
-      ['a', :startTagA],
-      [['b', 'big', 'em', 'font', 'i', 'nobr', 's', 'small', 'strike',
-        'strong', 'tt', 'u'],:startTagFormatting],
-      ['button', :startTagButton],
-      [['marquee', 'object'], :startTagMarqueeObject],
-      ['xmp', :startTagXmp],
-      ['table', :startTagTable],
-      [['area', 'basefont', 'bgsound', 'br', 'embed', 'img', 'param',
-        'spacer', 'wbr'], :startTagVoidFormatting],
-      ['hr', :startTagHr],
-      ['image', :startTagImage],
-      ['input', :startTagInput],
-      ['isindex', :startTagIsIndex],
-      ['textarea', :startTagTextarea],
-      [['iframe', 'noembed', 'noframes', 'noscript'], :startTagCdata],
-      ['select', :startTagSelect],
-      [['caption', 'col', 'colgroup', 'frame', 'frameset', 'head',
-        'option', 'optgroup', 'tbody', 'td', 'tfoot', 'th', 'thead',
-        'tr'], :startTagMisplaced],
-      [['event-source', 'section', 'nav', 'article', 'aside', 'header',
-        'footer', 'datagrid', 'command'], :startTagNew]
-    ]
+    handle_start 'html', 'body', 'form', 'plaintext', 'a', 'button', 'xmp', 'table', 'hr', 'image'
 
-    handle_end [
-      ['p',:endTagP],
-      ['body',:endTagBody],
-      ['html',:endTagHtml],
-      [['address', 'blockquote', 'center', 'div', 'dl', 'fieldset',
-        'listing', 'menu', 'ol', 'pre', 'ul'], :endTagBlock],
-      ['form', :endTagForm],
-      [['dd', 'dt', 'li'], :endTagListItem],
-      [HEADING_ELEMENTS, :endTagHeading],
-      [['a', 'b', 'big', 'em', 'font', 'i', 'nobr', 's', 'small',
-        'strike', 'strong', 'tt', 'u'], :endTagFormatting],
-      [['marquee', 'object', 'button'], :endTagButtonMarqueeObject],
-      [['head', 'frameset', 'select', 'optgroup', 'option', 'table',
-        'caption', 'colgroup', 'col', 'thead', 'tfoot', 'tbody', 'tr',
-        'td', 'th'], :endTagMisplaced],
-      [['area', 'basefont', 'bgsound', 'br', 'embed', 'hr', 'image',
-        'img', 'input', 'isindex', 'param', 'spacer', 'wbr', 'frame'],
-        :endTagNone],
-      [['noframes', 'noscript', 'noembed', 'textarea', 'xmp', 'iframe'],
-        :endTagCdataTextAreaXmp],
-      [['event-source', 'section', 'nav', 'article', 'aside', 'header',
-        'footer', 'datagrid', 'command'], :endTagNew]
-    ]
+    handle_start 'input', 'textarea', 'select', 'isindex', %w( script style ), %w( marquee object )
+
+    handle_start %w( li dd dt ) => 'ListItem', %w( base link meta title ) => 'FromHead'
+      
+    handle_start %w( address blockquote center dir div dl fieldset listing menu ol p pre ul ) => 'CloseP'
+
+    handle_start %w( b big em font i nobr s small strike strong tt u ) => 'Formatting'
+
+    handle_start %w( area basefont bgsound br embed img param spacer wbr ) => 'VoidFormatting'
+
+    handle_start %w( iframe noembed noframes noscript ) => 'Cdata', HEADING_ELEMENTS => 'Heading'
+
+    handle_start %w( caption col colgroup frame frameset head option optgroup tbody td tfoot th thead tr ) => 'Misplaced'
+
+    handle_start %w( event-source section nav article aside header footer datagrid command ) => 'New'
+
+    handle_end 'p', 'body', 'html', 'form', %w( button marquee object ), %w( dd dt li ) => 'ListItem'
+
+    handle_end %w( address blockquote center div dl fieldset listing menu ol pre ul ) => 'Block'
+
+    handle_end %w( a b big em font i nobr s small strike strong tt u ) => 'Formatting'
+
+    handle_end %w( head frameset select optgroup option table caption colgroup col thead tfoot tbody tr td th ) => 'Misplaced' 
+
+    handle_end %w( area basefont bgsound br embed hr image img input isindex param spacer wbr frame ) => 'None'
+
+    handle_end %w( noframes noscript noembed textarea xmp iframe ) => 'CdataTextAreaXmp'
+
+    handle_end %w( event-source section nav article aside header footer datagrid command ) => 'New'
 
     def initialize(parser, tree)
       super(parser, tree)
@@ -937,7 +928,7 @@ module HTML5lib
       @tree.openElements.pop
     end
 
-    def startTagIsIndex(name, attributes)
+    def startTagIsindex(name, attributes)
       @parser.parseError("Unexpected start tag isindex. Don't use it!")
       return if @tree.formPointer
       processStartTag('form', {})
@@ -1252,20 +1243,11 @@ module HTML5lib
   class InTablePhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['caption', :startTagCaption],
-      ['colgroup', :startTagColgroup],
-      ['col', :startTagCol],
-      [['tbody', 'tfoot', 'thead'], :startTagRowGroup],
-      [['td', 'th', 'tr'], :startTagImplyTbody],
-      ['table', :startTagTable]
-    ]
+    handle_start 'html', 'caption', 'colgroup', 'col', 'table'
 
-    handle_end [
-      ['table', :endTagTable],
-      [['body', 'caption', 'col', 'colgroup', 'html', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'], :endTagIgnore]
-    ]
+    handle_start %w( tbody tfoot thead ) => 'RowGroup', %w( td th tr ) => 'ImplyTbody'
+
+    handle_end 'table', %w( body caption col colgroup html tbody td tfoot th thead tr ) => 'Ignore'
 
     # helper methods
     def clearStackToTableContext
@@ -1366,16 +1348,9 @@ module HTML5lib
   class InCaptionPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
 
-    handle_start [
-      ['html', :startTagHtml],
-      [['caption', 'col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'], :startTagTableElement]
-    ]
+    handle_start 'html', %w( caption col colgroup tbody td tfoot th thead tr ) => 'TableElement'
 
-    handle_end [
-      ['caption', :endTagCaption],
-      ['table', :endTagTable],
-      [['body', 'col', 'colgroup', 'html', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'], :endTagIgnore]
-    ]
+    handle_end 'caption', 'table', %w( body col colgroup html tbody td tfoot th thead tr ) => 'Ignore'
 
     def ignoreEndTagCaption
       not in_scope?('caption', true)
@@ -1436,15 +1411,9 @@ module HTML5lib
   class InColumnGroupPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['col', :startTagCol]
-    ]
+    handle_start 'html', 'col'
 
-    handle_end [
-      ['colgroup', :endTagColgroup],
-      ['col', :endTagCol]
-    ]
+    handle_end 'colgroup', 'col'
 
     def ignoreEndTagColgroup
       @tree.openElements[-1].name == 'html'
@@ -1492,18 +1461,9 @@ module HTML5lib
   class InTableBodyPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['tr', :startTagTr],
-      [['td', 'th'], :startTagTableCell],
-      [['caption', 'col', 'colgroup', 'tbody', 'tfoot', 'thead'], :startTagTableOther]
-    ]
+    handle_start 'html', 'tr', %w( td th ) => 'TableCell', %w( caption col colgroup tbody tfoot thead ) => 'TableOther'
 
-    handle_end [
-      [['tbody', 'tfoot', 'thead'], :endTagTableRowGroup],
-      ['table', :endTagTable],
-      [['body', 'caption', 'col', 'colgroup', 'html', 'td', 'th', 'tr'], :endTagIgnore]
-    ]
+    handle_end 'table', %w( tbody tfoot thead ) => 'TableRowGroup', %w( body caption col colgroup html td th tr ) => 'Ingore'
 
     # helper methods
     def clearStackToTableBodyContext
@@ -1579,18 +1539,9 @@ module HTML5lib
   class InRowPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
 
-    handle_start [
-      ['html', :startTagHtml],
-      [['td', 'th'], :startTagTableCell],
-      [['caption', 'col', 'colgroup', 'tbody', 'tfoot', 'thead', 'tr'], :startTagTableOther]
-    ]
+    handle_start 'html', %w( td th ) => 'TableCell', %w( caption col colgroup tbody tfoot thead tr ) => 'TableOther'
 
-    handle_end [
-      ['tr', :endTagTr],
-      ['table', :endTagTable],
-      [['tbody', 'tfoot', 'thead'], :endTagTableRowGroup],
-      [['body', 'caption', 'col', 'colgroup', 'html', 'td', 'th'], :endTagIgnore]
-    ]
+    handle_end 'tr', 'table', %w( tbody tfoot thead ) => 'TableRowGroup', %w( body caption col colgroup html td th ) => 'Ignore'
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext
@@ -1669,16 +1620,11 @@ module HTML5lib
   class InCellPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
 
-    handle_start [
-      ['html', :startTagHtml],
-      [['caption', 'col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'], :startTagTableOther]
-    ]
+    handle_start 'html', %w( caption col colgroup tbody td tfoot th thead tr ) => 'TableOther'
 
-    handle_end [
-      [['td', 'th'], :endTagTableCell],
-      [['body', 'caption', 'col', 'colgroup', 'html'], :endTagIgnore],
-      [['table', 'tbody', 'tfoot', 'thead', 'tr'], :endTagImply]
-    ]
+    handle_end %w( td th ) => 'TableCell', %w( body caption col colgroup html ) => 'Ignore'
+
+    handle_end %w( table tbody tfoot thead tr ) => 'Imply'
 
     # helper
     def closeCell
@@ -1747,19 +1693,9 @@ module HTML5lib
   class InSelectPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['option', :startTagOption],
-      ['optgroup', :startTagOptgroup],
-      ['select', :startTagSelect]
-    ]
+    handle_start 'html', 'option', 'optgroup', 'select'
 
-    handle_end [
-      ['option', :endTagOption],
-      ['optgroup', :endTagOptgroup],
-      ['select', :endTagSelect],
-      [['caption', 'table', 'tbody', 'tfoot', 'thead', 'tr', 'td', 'th'], :endTagTableElements]
-    ]
+    handle_end 'option', 'optgroup', 'select', %w( caption table tbody tfoot thead tr td th ) => 'TableElements'
 
     def processCharacters(data)
       @tree.insertText(data)
@@ -1835,7 +1771,7 @@ module HTML5lib
 
   class AfterBodyPhase < Phase
 
-    handle_end [['html', :endTagHtml]]
+    handle_end 'html'
 
     def processComment(data)
       # This is needed because data is to be appended to the <html> element
@@ -1878,17 +1814,9 @@ module HTML5lib
   class InFramesetPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['frameset', :startTagFrameset],
-      ['frame', :startTagFrame],
-      ['noframes', :startTagNoframes]
-    ]
+    handle_start 'html', 'frameset', 'frame', 'noframes'
 
-    handle_end [
-      ['frameset', :endTagFrameset],
-      ['noframes', :endTagNoframes]
-    ]
+    handle_end 'frameset', 'noframes'
 
     def processCharacters(data)
       @parser.parseError(_('Unexpected characters in the frameset phase. Characters ignored.'))
@@ -1938,14 +1866,9 @@ module HTML5lib
   class AfterFramesetPhase < Phase
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
 
-    handle_start [
-      ['html', :startTagHtml],
-      ['noframes', :startTagNoframes]
-    ]
+    handle_start 'html', 'noframes'
 
-    handle_end [
-      ['html', :endTagHtml]
-    ]
+    handle_end 'html'
 
     def processCharacters(data)
       @parser.parseError(_('Unexpected non-space characters in the after frameset phase. Ignored.'))
