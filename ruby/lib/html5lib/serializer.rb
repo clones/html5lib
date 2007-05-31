@@ -205,6 +205,10 @@ end
 class HTMLSerializer
     CDATA_ELEMENTS = %w[style script xmp iframe noembed noframes noscript]
 
+    def self.serialize(stream, options = {})
+        new(options).serialize(stream)
+    end
+
     def initialize(options={})
         @quote_attr_values = false
         @quote_char = '"'

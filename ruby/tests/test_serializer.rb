@@ -37,8 +37,8 @@ class Html5SerializeTestcase < Test::Unit::TestCase
     tests['tests'].each_with_index do |test, index|
 
       define_method "test_#{test_name}_#{index+1}" do
-        result = HTML5lib::HTMLSerializer.new(test["options"] || {}).
-          serialize(JsonWalker.new(test["input"]))
+        result = HTML5lib::HTMLSerializer.
+          serialize(JsonWalker.new(test["input"]), (test["options"] || {}))
         expected = test["expected"]
         if expected.length == 1
           assert_equal(expected[0], result, test["description"])
