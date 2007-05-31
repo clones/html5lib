@@ -32,7 +32,6 @@ end
 
 class Html5SerializeTestcase < Test::Unit::TestCase
   html5lib_test_files('serializer').each do |filename|
-    next if filename =~ /optionaltags/ # TODO
     test_name = File.basename(filename).sub('.test', '')
     tests = JSON::parse(open(filename).read)
     tests['tests'].each_with_index do |test, index|

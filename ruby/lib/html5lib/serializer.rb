@@ -12,19 +12,20 @@ end
 
 class OptionalTagFilter < Filter
     def slider
-        previous = nil
+        previous1 = previous2 = nil
         @source.each do |token|
-            yield previous, token if previous != nil
-            previous = token
+            yield previous2, previous1, token if previous1 != nil
+            previous2 = previous1
+            previous1 = token
         end
-        yield previous, nil
+        yield previous2, previous1, nil
     end
 
     def each
-        slider do |token, nexttok|
+        slider do |previous, token, nexttok|
             type = token[:type]
             if type == :StartTag
-                yield token unless token[:data].empty? and is_optional_start(token[:name], nexttok)
+                yield token unless token[:data].empty? and is_optional_start(token[:name], previous, nexttok)
             elsif type == :EndTag
                 yield token unless is_optional_end(token[:name], nexttok)
             else
@@ -33,7 +34,7 @@ class OptionalTagFilter < Filter
         end
     end
 
-    def is_optional_start(tagname, nexttok)
+    def is_optional_start(tagname, previous, nexttok)
         type = nexttok ? nexttok[:type] : nil
         if tagname == 'html'
             # An html element's start tag may be omitted if the first thing
@@ -78,9 +79,13 @@ class OptionalTagFilter < Filter
             # not immediately preceeded by a tbody, thead, or tfoot element
             # whose end tag has been omitted.
             if type == :StartTag
-                # XXX: we do not look at the preceding event, so instead we never
                 # omit the thead and tfoot elements' end tag when they are
                 # immediately followed by a tbody element. See is_optional_end.
+                if previous and previous[:type] == :EndTag and \
+                  %w(tbody thead tfoot).include?(previous[:name])
+                    return false
+                end
+
                 return nexttok[:name] == 'tr'
             else
                 return false
@@ -163,7 +168,7 @@ class OptionalTagFilter < Filter
             # XXX: we never omit the end tag when the following element is
             # a tbody. See is_optional_start.
             if type == :StartTag
-                return nexttok[:name] == 'tfoot'
+                return %w(tbody tfoot).include?(nexttok[:name])
             elsif tagname == 'tbody'
                 return (type == :EndTag or type == nil)
             else
@@ -175,7 +180,11 @@ class OptionalTagFilter < Filter
             # more content in the parent element.
             # XXX: we never omit the end tag when the following element is
             # a tbody. See is_optional_start.
-            return type == :EndTag || type == nil
+            if type == :StartTag
+                return nexttok[:name] == 'tbody'
+            else
+                return type == :EndTag || type == nil
+            end
         elsif %w(td th).include? tagname
             # A td element's end tag may be omitted if the td element is
             # immediately followed by a td or th element, or if there is
