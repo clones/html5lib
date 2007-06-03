@@ -43,7 +43,7 @@ module HTML5lib
       @errors = []
      
       @tokenizer =  HTMLTokenizer
-      @tree = TreeBuilders::REXMLTree::TreeBuilder
+      @tree = TreeBuilders::REXML::TreeBuilder
  
       options.each { |name, value| instance_variable_set("@#{name}", value) }
 

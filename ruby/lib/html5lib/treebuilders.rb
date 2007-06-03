@@ -8,7 +8,7 @@ module HTML5lib
           SimpleTree::TreeBuilder
         when 'rexml' then
           require 'html5lib/treebuilders/rexml'
-          REXMLTree::TreeBuilder
+          REXML::TreeBuilder
         when 'hpricot' then
           require 'html5lib/treebuilders/hpricot'
           Hpricot::TreeBuilder

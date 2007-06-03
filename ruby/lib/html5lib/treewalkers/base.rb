@@ -1,9 +1,8 @@
 require 'html5lib/constants'
 module HTML5lib
+module TreeWalkers
 
 module TokenConstructor
-    LEADING_AND_TRAILING_SPACES = Regexp.new("^([#{SPACE_CHARACTERS.join('')}]*)(.*?)([#{SPACE_CHARACTERS.join('')}]*)$")
-
     def error(msg)
         return {:type => "SerializeError", :data => msg}
     end
@@ -13,9 +12,7 @@ module TokenConstructor
     end
 
     def emptyTag(name, attrs, hasChildren=false)
-        if hasChildren
-            yield error(_("Void element has children"))
-        end
+        error(_("Void element has children")) if hasChildren
         return({:type => :EmptyTag, :name => name, \
                 :data => normalizeAttrs(attrs)})
     end
@@ -30,10 +27,18 @@ module TokenConstructor
     end
 
     def text(data)
-        LEADING_AND_TRAILING_SPACES.match(data)
-        yield({:type => :SpaceCharacters, :data => $1}) unless $1.empty?
-        yield({:type => :Characters, :data => $2}) unless $2.empty?
-        yield({:type => :SpaceCharacters, :data => $3}) unless $3.empty?
+        if data =~ /^([#{SPACE_CHARACTERS.join('')}]+)/
+          yield({:type => :SpaceCharacters, :data => $1})
+          data = data[$1.length .. -1]
+          return if data.empty?
+        end
+
+        if data =~ /([#{SPACE_CHARACTERS.join('')}]+)$/
+          yield({:type => :Characters, :data => data[0 ... -$1.length]})
+          yield({:type => :SpaceCharacters, :data => $1})
+        else
+          yield({:type => :Characters, :data => data})
+        end
     end
 
     def comment(data)
@@ -45,11 +50,15 @@ module TokenConstructor
     end
 
     def unknown(nodeType)
-        return error(_("Unknown node type: ") + nodeType)
+        return error(_("Unknown node type: ") + nodeType.to_s)
+    end
+
+    def _(str)
+      str
     end
 end
 
-class TreeWalker
+class Base
     include TokenConstructor
 
     def initialize(tree)
@@ -63,99 +72,85 @@ class TreeWalker
     alias walk each
 end
 
-class RecursiveTreeWalker < TreeWalker
-    def walkChildren(node)
-        raise NodeImplementedError
+class NonRecursiveTreeWalker < TreeWalkers::Base
+    def node_details(node)
+        raise NotImplementedError
     end
 
-    def element(node, name, attrs, hasChildren)
-        if voidElements.include?(name)
-            for token in emptyTag(name, attrs, hasChildren)
-                yield token
+    def first_child(node)
+        raise NotImplementedError
+    end
+
+    def next_sibling(node)
+        raise NotImplementedError
+    end
+
+    def parent(node)
+        raise NotImplementedError
+    end
+
+    def each
+        currentNode = @tree
+        while currentNode != nil
+            details = node_details(currentNode)
+            hasChildren = false
+
+            case details.shift
+            when :DOCTYPE
+                yield doctype(*details)
+
+            when :TEXT
+                text(*details) {|token| yield token}
+
+            when :ELEMENT
+                name, attributes, hasChildren = details
+                if VOID_ELEMENTS.include?(name)
+                    yield emptyTag(name, attributes.to_a, hasChildren)
+                    hasChildren = false
+                else
+                    yield startTag(name, attributes.to_a)
+                end
+
+            when :COMMENT
+                yield comment(details[0])
+
+            when :DOCUMENT, :DOCUMENT_FRAGMENT
+                hasChildren = true
+
+            when nil
+                # ignore (REXML::XMLDecl is an example)
+
+            else
+                yield unknown(details[0])
             end
-        else
-            yield startTag(name, attrs)
-            if hasChildren
-                for token in walkChildren(node)
-                    yield token
+
+            firstChild = hasChildren ? first_child(currentNode) : nil
+            if firstChild != nil
+                currentNode = firstChild
+            else
+                while currentNode != nil
+                    details = node_details(currentNode)
+                    if details.shift == :ELEMENT
+                        name, attributes, hasChildren = details
+                        yield endTag(name) if !VOID_ELEMENTS.include?(name)
+                    end
+
+                    if @tree == currentNode
+                        currentNode = nil
+                    else
+                        nextSibling = next_sibling(currentNode)
+                        if nextSibling != nil
+                            currentNode = nextSibling
+                            break
+                        end
+
+                        currentNode = parent(currentNode)
+                    end
                 end
             end
-            yield endTag(name)
         end
     end
 end
 
-<<TBD
-DOCUMENT = Node.DOCUMENT_NODE
-DOCTYPE = Node.DOCUMENT_TYPE_NODE
-TEXT = Node.TEXT_NODE
-ELEMENT = Node.ELEMENT_NODE
-COMMENT = Node.COMMENT_NODE
-UNKNOWN = "<#UNKNOWN#>"
-
-class NonRecursiveTreeWalker(TreeWalker)
-    def getNodeDetails(self, node)
-        raise NotImplementedError
-    
-    def getFirstChild(self, node)
-        raise NotImplementedError
-    
-    def getNextSibling(self, node)
-        raise NotImplementedError
-    
-    def getParentNode(self, node)
-        raise NotImplementedError
-
-    def walk(self)
-        currentNode = self.tree
-        while currentNode is not None
-            details = self.getNodeDetails(currentNode)
-            type, details = details[0], details[1:]
-            hasChildren = False
-
-            if type == DOCTYPE
-                yield self.doctype(*details)
-
-            elif type == TEXT
-                for token in self.text(*details)
-                    yield token
-
-            elif type == ELEMENT
-                name, attributes, hasChildren = details
-                if name in voidElements
-                    for token in self.emptyTag(name, attributes, hasChildren)
-                        yield token
-                    hasChildren = False
-                else
-                    yield self.startTag(name, attributes)
-
-            elif type == COMMENT
-                yield self.comment(details[0])
-
-            elif type == :DOCUMENT
-                hasChildren = True
-
-            else
-                yield self.unknown(details[0])
-            
-            firstChild = hasChildren and self.getFirstChild(currentNode) or None
-            if firstChild is not None
-                currentNode = firstChild
-            else
-                while currentNode is not None
-                    details = self.getNodeDetails(currentNode)
-                    type, details = details[0], details[1:]
-                    if type == ELEMENT
-                        name, attributes, hasChildren = details
-                        if name not in voidElements
-                            yield self.endTag(name)
-                    nextSibling = self.getNextSibling(currentNode)
-                    if nextSibling is not None
-                        currentNode = nextSibling
-                        break
-                    if self.tree is currentNode
-                        currentNode = None
-                    else
-                        currentNode = self.getParentNode(currentNode)
-TBD
+end
 end

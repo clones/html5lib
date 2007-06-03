@@ -7,7 +7,7 @@ require 'html5lib/treewalkers'
 #Run the serialize error checks
 checkSerializeErrors = false
 
-class JsonWalker < HTML5lib::TreeWalker
+class JsonWalker < HTML5lib::TreeWalkers::Base
   def each
     @tree.each do |token|
       case token[0]
