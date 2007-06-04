@@ -43,7 +43,10 @@ class HTMLInputStreamTest < Test::Unit::TestCase
   def test_newlines
     stream = HTMLInputStream.new("\xef\xbb\xbf" + "a\nbb\r\nccc\rdddd")
     assert_equal(0, stream.instance_eval {@tell})
-    assert_equal("a\nbb\nccc\ndddd", stream.chars_until('x'))
+    assert_equal("a\nbb\n", stream.chars_until('c'))
+    assert_equal(6, stream.instance_eval {@tell})
+    assert_equal([3,1], stream.position)
+    assert_equal("ccc\ndddd", stream.chars_until('x'))
     assert_equal(14, stream.instance_eval {@tell})
     assert_equal([4,5], stream.position)
     assert_equal([0,1,4,8], stream.instance_eval {@new_lines})
