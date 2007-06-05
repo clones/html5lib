@@ -18,7 +18,8 @@ puts 'Testing tree builders: ' + $tree_types_to_test * ', '
 
 
 class Html5ParserTestCase < Test::Unit::TestCase
-  include HTML5lib::TestSupport
+  include HTML5lib
+  include TestSupport
 
   html5lib_test_files('tree-construction').each do |test_file|
 
@@ -28,12 +29,12 @@ class Html5ParserTestCase < Test::Unit::TestCase
       next if data.empty?
      
       innerHTML, input, expected_output, expected_errors =
-        HTML5lib::TestSupport.parseTestcase(data)
+        TestSupport.parseTestcase(data)
 
       $tree_types_to_test.each do |tree_name|
         define_method 'test_%s_%d_%s' % [ test_name, index + 1, tree_name ] do
 
-          parser = HTML5lib::HTMLParser.new(:tree => HTML5lib::TreeBuilders.getTreeBuilder(tree_name))
+          parser = HTMLParser.new(:tree => TreeBuilders[tree_name])
         
           if innerHTML
             parser.parseFragment(input, innerHTML)

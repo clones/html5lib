@@ -3,8 +3,9 @@ require 'html5lib/treewalkers/base'
 module HTML5lib
   module TreeWalkers
 
-    def self.getTreeWalker(name)
-      case name.to_s.downcase
+    class << self
+      def [](name)
+        case name.to_s.downcase
         when 'simpletree' then
           require 'html5lib/treewalkers/simpletree'
           SimpleTree::TreeWalker
@@ -16,8 +17,10 @@ module HTML5lib
           Hpricot::TreeWalker
         else
           raise "Unknown TreeWalker #{name}"
+        end
       end
-    end
 
+      alias :getTreeWalker :[]
+    end
   end
 end

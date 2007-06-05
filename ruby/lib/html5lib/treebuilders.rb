@@ -1,8 +1,9 @@
 module HTML5lib
   module TreeBuilders
 
-    def self.getTreeBuilder(name)
-      case name.to_s.downcase
+    class << self
+      def [](name)
+        case name.to_s.downcase
         when 'simpletree' then
           require 'html5lib/treebuilders/simpletree'
           SimpleTree::TreeBuilder
@@ -14,8 +15,10 @@ module HTML5lib
           Hpricot::TreeBuilder
         else
           raise "Unknown TreeBuilder #{name}"
+        end
       end
-    end
 
+      alias :getTreeBuilder :[]
+    end
   end
 end

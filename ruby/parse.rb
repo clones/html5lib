@@ -19,7 +19,7 @@ def parse(opts, args)
   end
 
   require 'html5lib/treebuilders'
-  treebuilder = HTML5lib::TreeBuilders.getTreeBuilder(opts.treebuilder)
+  treebuilder = HTML5lib::TreeBuilders[opts.treebuilder]
 
   if opts.output == :xml
     require 'html5lib/liberalxmlparser'
@@ -57,7 +57,7 @@ def printOutput(parser, document, opts)
     print document
   when :html
     require 'html5lib/treewalkers'
-    tokens = HTML5lib::TreeWalkers.getTreeWalker(opts.treebuilder).new(document)
+    tokens = HTML5lib::TreeWalkers[opts.treebuilder].new(document)
     require 'html5lib/serializer'
     print HTML5lib::HTMLSerializer.serialize(tokens, :encoding=>'utf-8')
   when :hilite

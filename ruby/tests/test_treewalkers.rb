@@ -5,15 +5,15 @@ require 'html5lib/treewalkers'
 require 'html5lib/treebuilders'
 
 $tree_types_to_test = {
-  "simpletree" =>
-    {:builder => HTML5lib::TreeBuilders.getTreeBuilder("simpletree"),
-     :walker  => HTML5lib::TreeWalkers.getTreeWalker("simpletree")},
-  "rexml" =>
-    {:builder => HTML5lib::TreeBuilders.getTreeBuilder("rexml"),
-     :walker  => HTML5lib::TreeWalkers.getTreeWalker("rexml")},
-# "hpricot" =>
-#   {:builder => HTML5lib::TreeBuilders.getTreeBuilder("hpricot"),
-#    :walker  => HTML5lib::TreeWalkers.getTreeWalker("hpricot")},
+  'simpletree' =>
+    {:builder => HTML5lib::TreeBuilders['simpletree'],
+     :walker  => HTML5lib::TreeWalkers['simpletree']},
+  'rexml' =>
+    {:builder => HTML5lib::TreeBuilders['rexml'],
+     :walker  => HTML5lib::TreeWalkers['rexml']},
+# 'hpricot' =>
+#   {:builder => HTML5lib::TreeBuilders['hpricot'],
+#    :walker  => HTML5lib::TreeWalkers['hpricot']},
 }
 
 puts 'Testing tree walkers: ' + $tree_types_to_test.keys * ', '
