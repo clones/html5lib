@@ -1,5 +1,4 @@
 require 'html5lib/constants'
-require 'jcode'
 
 module HTML5lib
 
@@ -304,7 +303,7 @@ class HTMLSerializer
                         if @quote_attr_values or v.empty?
                             quote_attr = true
                         else
-                            quote_attr = (SPACE_CHARACTERS.join('') + "<>\"'").each_char.any? {|c| v.include?(c)}
+                            quote_attr = (SPACE_CHARACTERS + %w(< > " ')).any? {|c| v.include?(c)}
                         end
                         v = v.gsub("&", "&amp;")
                         if encoding

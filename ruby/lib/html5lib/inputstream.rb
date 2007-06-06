@@ -59,7 +59,7 @@ module HTML5lib
         begin
           require 'iconv'
           uString = Iconv.iconv('utf-8', @char_encoding, uString)[0]
-        rescue
+        rescue LoadError
         end
       end
 
