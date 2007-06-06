@@ -218,6 +218,7 @@ class HTMLSerializer
         @space_before_trailing_solidus = true
 
         @omit_optional_tags = true
+        @sanitize = false
 
         @strip_whitespace = false
 
@@ -226,7 +227,7 @@ class HTMLSerializer
         options.each do |name, value|
             next unless %w(quote_attr_values quote_char use_best_quote_char
               minimize_boolean_attributes use_trailing_solidus
-              space_before_trailing_solidus omit_optional_tags
+              space_before_trailing_solidus omit_optional_tags sanitize
               strip_whitespace inject_meta_charset).include? name.to_s
             @use_best_quote_char = false if name.to_s == 'quote_char'
             instance_variable_set("@#{name}", value)
@@ -243,6 +244,10 @@ class HTMLSerializer
         end
         if @strip_whitespace
             treewalker = filter_whitespace(treewalker)
+        end
+        if @sanitize
+            require 'html5lib/sanitizer'
+            treewalker = HTMLSanitizeFilter.new(treewalker)
         end
         if @omit_optional_tags
             treewalker = OptionalTagFilter.new(treewalker)
@@ -261,7 +266,7 @@ class HTMLSerializer
 
             elsif [:Characters, :SpaceCharacters].include? type
                 if type == :SpaceCharacters or in_cdata
-                    if in_cdata and token[:data].find("</") >= 0
+                    if in_cdata and token[:data].include?("</")
                         serializeError(_("Unexpected </ in CDATA"))
                     end
                     if encoding
