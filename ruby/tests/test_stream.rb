@@ -6,7 +6,7 @@ class HTMLInputStreamTest < Test::Unit::TestCase
   include HTML5lib
 
   def test_char_ascii
-    stream = HTMLInputStream.new("'")
+    stream = HTMLInputStream.new("'", :encoding=>'ascii')
     assert_equal('ascii', stream.char_encoding)
     assert_equal("'", stream.char)
   end
@@ -17,7 +17,7 @@ class HTMLInputStreamTest < Test::Unit::TestCase
   end
 
   def test_char_utf8
-    stream = HTMLInputStream.new("\xe2\x80\x98")
+    stream = HTMLInputStream.new("\xe2\x80\x98", :encoding=>'utf-8')
     assert_equal('utf-8', stream.char_encoding)
     assert_equal("\xe2\x80\x98", stream.char)
   end

@@ -60,7 +60,12 @@ module HTML5lib
       elsif @char_encoding != 'utf-8'
         begin
           require 'iconv'
-          uString = Iconv.iconv('utf-8', @char_encoding, uString).first
+          begin
+            uString = Iconv.iconv('utf-8', @char_encoding, uString).first
+          rescue Iconv::InvalidEncoding
+            @char_encoding.sub!(/utf(\d+)/,'utf-\1')
+            uString = Iconv.iconv('utf-8', @char_encoding, uString).first
+          end
         rescue LoadError
         rescue Exception
         end
