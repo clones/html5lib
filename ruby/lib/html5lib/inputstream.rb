@@ -62,12 +62,11 @@ module HTML5lib
           require 'iconv'
           begin
             uString = Iconv.iconv('utf-8', @char_encoding, uString).first
-          rescue Iconv::InvalidEncoding
-            @char_encoding.sub!(/utf(\d+)/,'utf-\1')
-            uString = Iconv.iconv('utf-8', @char_encoding, uString).first
+          rescue
+            @win1252 = true
           end
         rescue LoadError
-        rescue Exception
+          @win1252 = true
         end
       end
 
@@ -139,10 +138,10 @@ module HTML5lib
     def detect_bom
       bom_dict = {
         "\xef\xbb\xbf" => 'utf-8',
-        "\xff\xfe" => 'utf16le',
-        "\xfe\xff" => 'utf16be',
-        "\xff\xfe\x00\x00" => 'utf32le',
-        "\x00\x00\xfe\xff" => 'utf32be'
+        "\xff\xfe" => 'utf-16le',
+        "\xfe\xff" => 'utf-16be',
+        "\xff\xfe\x00\x00" => 'utf-32le',
+        "\x00\x00\xfe\xff" => 'utf-32be'
       }
 
       # Go to beginning of file and read in 4 bytes
