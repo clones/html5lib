@@ -76,7 +76,7 @@ module HTML5lib
       @queue = []
 
       # Reset position in the list to read from
-      reset
+      @tell = 0
     end
 
     # Produces a file object from source.
@@ -186,11 +186,6 @@ module HTML5lib
       end
       col = @tell - @new_lines[line-1] - 1
       return [line, col]
-    end
-
-    # Resets the position in the stream back to the start.
-    def reset
-      @tell = 0
     end
 
     # Read one character from the stream or queue if available. Return
