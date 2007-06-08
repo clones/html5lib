@@ -232,7 +232,7 @@ module HTML5lib
                 | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
                 |  \xF4[\x80-\x8F][\x80-\xBF]{2}     # plane 16
                 )/x
-            @tell += $1.length
+            @tell += $1.length - 1
             $1
           else
             [0xFFFD].pack('U') # invalid utf-8
