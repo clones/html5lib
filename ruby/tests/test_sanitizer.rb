@@ -31,38 +31,42 @@ class SanitizeTest < Test::Unit::TestCase
       :omit_optional_tags => false,
       :inject_meta_charset => false,
       :sanitize => true}).gsub(/^<div xmlns='http:\/\/www.w3.org\/1999\/xhtml'>(.*)<\/div>$/, '\1')
+    rescue
+      return "Ill-formed XHTML!"
+  end
+
+  def check_sanitization(input, htmloutput, xhtmloutput, rexmloutput)
+      assert_equal htmloutput, sanitize_html(input)
+      assert_equal xhtmloutput, sanitize_xhtml(input)
+      assert_equal rexmloutput, sanitize_rexml(input)
   end
 
   HTMLSanitizer::ALLOWED_ELEMENTS.each do |tag_name|
     next if %w[caption col colgroup optgroup option table tbody td tfoot th thead tr].include?(tag_name) ### TODO
     define_method "test_should_allow_#{tag_name}_tag" do
       input = "<#{tag_name} title='1'>foo <bad>bar</bad> baz</#{tag_name}>"
+      htmloutput = "<#{tag_name.downcase} title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name.downcase}>"
+      xhtmloutput = "<#{tag_name} title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name}>"
+      rexmloutput = xhtmloutput
+
       if tag_name == 'image'
-        assert_equal "<img title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
-          sanitize_html(input)
+        htmloutput = "<img title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz"
+        xhtmloutput = htmloutput
+        rexmloutput = "<image title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</image>"
       elsif VOID_ELEMENTS.include?(tag_name)
-        assert_equal "<#{tag_name} title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
-          sanitize_html(input)
-      else
-        assert_equal "<#{tag_name.downcase} title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name.downcase}>",
-          sanitize_html(input)
-        assert_equal "<#{tag_name} title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name}>",
-          sanitize_xhtml(input)
-        assert_equal "<#{tag_name} title='1'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</#{tag_name}>",
-          sanitize_rexml(input)
+        htmloutput = "<#{tag_name} title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz"
+        xhtmloutput = htmloutput
+        rexmloutput =  "<#{tag_name} title='1' />"
       end
+      check_sanitization(input, htmloutput, xhtmloutput, rexmloutput)
     end
   end
 
   HTMLSanitizer::ALLOWED_ELEMENTS.each do |tag_name|
     define_method "test_should_forbid_#{tag_name.upcase}_tag" do
       input = "<#{tag_name.upcase} title='1'>foo <bad>bar</bad> baz</#{tag_name.upcase}>"
-      assert_equal "&lt;#{tag_name.upcase} title=\"1\"&gt;foo &lt;bad&gt;bar&lt;/bad&gt; baz&lt;/#{tag_name.upcase}&gt;",
-        sanitize_html(input)
-      assert_equal "&lt;#{tag_name.upcase} title=\"1\"&gt;foo &lt;bad&gt;bar&lt;/bad&gt; baz&lt;/#{tag_name.upcase}&gt;",
-        sanitize_xhtml(input)
-      assert_equal "&lt;#{tag_name.upcase} title=\"1\"&gt;foo &lt;bad&gt;bar&lt;/bad&gt; baz&lt;/#{tag_name.upcase}&gt;",
-        sanitize_rexml(input)
+      output = "&lt;#{tag_name.upcase} title=\"1\"&gt;foo &lt;bad&gt;bar&lt;/bad&gt; baz&lt;/#{tag_name.upcase}&gt;"
+      check_sanitization(input, output, output, output)
     end
   end
 
@@ -72,9 +76,7 @@ class SanitizeTest < Test::Unit::TestCase
       input = "<p #{attribute_name}='foo'>foo <bad>bar</bad> baz</p>"
       output = "<p #{attribute_name}='foo'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>"
       htmloutput = "<p #{attribute_name.downcase}='foo'>foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>"
-      assert_equal htmloutput, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal output, sanitize_rexml(input)
+      check_sanitization(input, htmloutput, output, output)
     end
   end
 
@@ -82,9 +84,7 @@ class SanitizeTest < Test::Unit::TestCase
     define_method "test_should_forbid_#{attribute_name.upcase}_attribute" do
       input = "<p #{attribute_name.upcase}='display: none;'>foo <bad>bar</bad> baz</p>"
       output =  "<p>foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>"
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal output, sanitize_rexml(input)
+      check_sanitization(input, output, output, output)
     end
   end
 
@@ -92,9 +92,7 @@ class SanitizeTest < Test::Unit::TestCase
     define_method "test_should_allow_#{protocol}_uris" do
       input = %(<a href="#{protocol}">foo</a>)
       output = "<a href='#{protocol}'>foo</a>"
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal output, sanitize_rexml(input)
+      check_sanitization(input, output, output, output)
     end
   end
 
@@ -102,27 +100,21 @@ class SanitizeTest < Test::Unit::TestCase
     define_method "test_should_allow_uppercase_#{protocol}_uris" do
       input = %(<a href="#{protocol.upcase}">foo</a>)
       output = "<a href='#{protocol.upcase}'>foo</a>"
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal output, sanitize_rexml(input)
+      check_sanitization(input, output, output, output)
     end
   end
 
   def test_should_allow_anchors
     input = "<a href='foo' onclick='bar'><script>baz</script></a>"
     output = "<a href='foo'>&lt;script&gt;baz&lt;/script&gt;</a>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   # RFC 3986, sec 4.2
   def test_allow_colons_in_path_component
     input = "<a href=\"./this:that\">foo</a>"
     output = "<a href='./this:that'>foo</a>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   %w(src width height alt).each do |img_attr|
@@ -130,22 +122,20 @@ class SanitizeTest < Test::Unit::TestCase
       input = "<img #{img_attr}='foo' onclick='bar' />"
       output = "<img #{img_attr}='foo'/>"
       rexmloutput = "<img #{img_attr}='foo' />"
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal rexmloutput, sanitize_rexml(input)
+      check_sanitization(input, output, output, rexmloutput)
     end
   end
 
   def test_should_handle_non_html
-    assert_equal 'abc',  sanitize_html("abc")
-    assert_equal 'abc',  sanitize_xhtml("abc")
-    assert_equal 'abc',  sanitize_rexml("abc")
+    input = 'abc'
+    output = 'abc'
+    check_sanitization(input, output, output, output)
   end
 
   def test_should_handle_blank_text
-    assert_equal '', sanitize_html('')
-    assert_equal '', sanitize_xhtml('')
-    assert_equal '', sanitize_rexml('')
+    input = ''
+    output = ''
+    check_sanitization(input, output, output, output)
   end
 
   [%w(img src), %w(a href)].each do |(tag, attr)|
@@ -156,18 +146,14 @@ class SanitizeTest < Test::Unit::TestCase
     output = %(<#{tag} title='1'#{close})
     rexmloutput = %(<#{tag} title='1'#{xclose})
     define_method "test_should_strip_#{attr}_attribute_in_#{tag}_with_bad_protocols" do
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal rexmloutput, sanitize_rexml(input)
+      check_sanitization(input, output, output, rexmloutput)
     end
 
     define_method "test_should_strip_#{attr}_attribute_in_#{tag}_with_bad_protocols_and_whitespace" do
       input = %(<#{tag} #{attr}=" javascript:XSS" title="1">boo</#{tag}>)
       output = %(<#{tag} title='1'#{close})
       rexmloutput = %(<#{tag} title='1'#{xclose})
-      assert_equal output, sanitize_html(input)
-      assert_equal output, sanitize_xhtml(input)
-      assert_equal rexmloutput, sanitize_rexml(input)
+      check_sanitization(input, output, output, rexmloutput)
     end
   end
 
@@ -187,112 +173,129 @@ class SanitizeTest < Test::Unit::TestCase
    %(<img src="&#x20;javascript:alert('XSS');" />),
    %(<img src="&#xA0;javascript:alert('XSS');" />)].each_with_index do |img_hack, i|
     define_method "test_should_not_fall_for_xss_image_hack_#{i}" do
-      assert_equal "<img/>", sanitize_html(img_hack)
+      output = "<img/>"
+      rexmloutput = "<img />"
+      rexmloutput = "Ill-formed XHTML!" if i == 1
+      check_sanitization(img_hack, output, output, rexmloutput)
     end
   end
 
   def test_should_sanitize_tag_broken_up_by_null
-    assert_equal "&lt;scr\357\277\275ipt&gt;alert(\"XSS\")&lt;/scr\357\277\275ipt&gt;", sanitize_html(%(<scr\0ipt>alert(\"XSS\")</scr\0ipt>))
+    input = %(<scr\0ipt>alert(\"XSS\")</scr\0ipt>)
+    output = "&lt;scr\357\277\275ipt&gt;alert(\"XSS\")&lt;/scr\357\277\275ipt&gt;"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_sanitize_invalid_script_tag
-    assert_equal "&lt;script XSS=\"\" SRC=\"http://ha.ckers.org/xss.js\"&gt;&lt;/script&gt;", sanitize_html(%(<script/XSS SRC="http://ha.ckers.org/xss.js"></script>))
+    input = %(<script/XSS SRC="http://ha.ckers.org/xss.js"></script>)
+    output = "&lt;script XSS=\"\" SRC=\"http://ha.ckers.org/xss.js\"&gt;&lt;/script&gt;"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_sanitize_script_tag_with_multiple_open_brackets
-    assert_equal "&lt;&lt;script&gt;alert(\"XSS\");//&lt;&lt;/script&gt;", sanitize_html(%(<<script>alert("XSS");//<</script>))
-    assert_equal %(&lt;iframe src=\"http://ha.ckers.org/scriptlet.html\"&gt;&lt;), sanitize_html(%(<iframe src=http://ha.ckers.org/scriptlet.html\n<))
+    input = %(<<script>alert("XSS");//<</script>)
+    output = "&lt;&lt;script&gt;alert(\"XSS\");//&lt;&lt;/script&gt;"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
+
+    input = %(<iframe src=http://ha.ckers.org/scriptlet.html\n<)
+    output = %(&lt;iframe src=\"http://ha.ckers.org/scriptlet.html\"&gt;&lt;)
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_sanitize_unclosed_script
-    assert_equal "&lt;script src=\"http://ha.ckers.org/xss.js?\"&gt;<b/>", sanitize_html(%(<script src=http://ha.ckers.org/xss.js?<b>))
+    input = %(<script src=http://ha.ckers.org/xss.js?<b>)
+    output = "&lt;script src=\"http://ha.ckers.org/xss.js?\"&gt;<b/>"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_sanitize_half_open_scripts
-    assert_equal  "<img/>", sanitize_html(%(<img src="javascript:alert('XSS')"))
+    input = %(<img src="javascript:alert('XSS')")
+    output = "<img/>"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_not_fall_for_ridiculous_hack
     img_hack = %(<img\nsrc\n=\n"\nj\na\nv\na\ns\nc\nr\ni\np\nt\n:\na\nl\ne\nr\nt\n(\n'\nX\nS\nS\n'\n)\n"\n />)
-    assert_equal "<img/>", sanitize_html(img_hack)
-    assert_equal "<img />", sanitize_rexml(img_hack)
+    output = "<img/>"
+    rexmloutput = "<img />"
+    check_sanitization(img_hack, output, output, rexmloutput)
   end
 
   def test_platypus
     input = %(<a href="http://www.ragingplatypus.com/" style="display:block; position:absolute; left:0; top:0; width:100%; height:100%; z-index:1; background-color:black; background-image:url(http://www.ragingplatypus.com/i/cam-full.jpg); background-x:center; background-y:center; background-repeat:repeat;">never trust your upstream platypus</a>)
     output = %(<a href='http://www.ragingplatypus.com/' style='display: block; width: 100%; height: 100%; background-color: black; background-x: center; background-y: center;'>never trust your upstream platypus</a>)
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   def test_xul
     input = %(<p style="-moz-binding:url('http://ha.ckers.org/xssmoz.xml#xss')">fubar</p>)
     output = %(<p style=''>fubar</p>)
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   def test_input_image
     input = %(<input type="image" src="javascript:alert('XSS');" />)
     output = %(<input type='image'/>)
     rexmloutput = %(<input type='image' />)
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal rexmloutput, sanitize_rexml(input)
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_non_alpha_non_digit
-    assert_equal "&lt;script XSS=\"\" src=\"http://ha.ckers.org/xss.js\"&gt;&lt;/script&gt;",
-      sanitize_html(%(<script/XSS src="http://ha.ckers.org/xss.js"></script>))
-    assert_equal "<a>foo</a>",
-      sanitize_html('<a onclick!#$%&()*~+-_.,:;?@[/|\]^`=alert("XSS")>foo</a>')
-    assert_equal "<img src='http://ha.ckers.org/xss.js'/>",
-      sanitize_html('<img/src="http://ha.ckers.org/xss.js"/>')
+    input = %(<script/XSS src="http://ha.ckers.org/xss.js"></script>)
+    output = "&lt;script XSS=\"\" src=\"http://ha.ckers.org/xss.js\"&gt;&lt;/script&gt;"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
+
+    input = '<a onclick!#$%&()*~+-_.,:;?@[/|\]^`=alert("XSS")>foo</a>'
+    output =  "<a>foo</a>"
+    rexmloutput = "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
+
+    input = '<img/src="http://ha.ckers.org/xss.js"/>'
+    output = "<img src='http://ha.ckers.org/xss.js'/>"
+    rexmloutput =  "Ill-formed XHTML!"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_img_dynsrc_lowsrc
-     input = %(<img dynsrc="javascript:alert('XSS')" />)
-     assert_equal "<img/>", sanitize_html(input)
-     assert_equal "<img/>", sanitize_xhtml(input)
-     assert_equal "<img />", sanitize_rexml(input)
+    input = %(<img dynsrc="javascript:alert('XSS')" />)
+    output = "<img/>"
+    rexmloutput = "<img />"
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_div_background_image_unicode_encoded
     input = %(<div style="background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029">foo</div>)
     output = "<div style=''>foo</div>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   def test_div_expression
     input = %(<div style="width: expression(alert('XSS'));">foo</div>)
     output = "<div style=''>foo</div>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 
   def test_img_vbscript
-     input = %(<img src='vbscript:msgbox("XSS")' />)
-     assert_equal '<img/>', sanitize_html(input)
-     assert_equal '<img/>', sanitize_xhtml(input)
-     assert_equal '<img />', sanitize_rexml(input)
+    input = %(<img src='vbscript:msgbox("XSS")' />)
+    output = '<img/>'
+    rexmloutput = '<img />'
+    check_sanitization(input, output, output, rexmloutput)
   end
 
   def test_should_handle_astral_plane_characters
     input = "<p>&#x1d4b5; &#x1d538;</p>"
     output = "<p>\360\235\222\265 \360\235\224\270</p>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
 
     input = "<p><tspan>\360\235\224\270</tspan> a</p>"
     output = "<p><tspan>\360\235\224\270</tspan> a</p>"
-    assert_equal output, sanitize_html(input)
-    assert_equal output, sanitize_xhtml(input)
-    assert_equal output, sanitize_rexml(input)
+    check_sanitization(input, output, output, output)
   end
 end
