@@ -11,7 +11,8 @@ def html5lib_test_files(subdirectory)
 end
 
 begin
-  require 'jsonx'
+  require 'rubygems'
+  require 'json'
 rescue LoadError
   class JSON
     def self.parse json
