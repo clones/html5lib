@@ -132,7 +132,7 @@ class SanitizeTest < Test::Unit::TestCase
 
   html5lib_test_files('sanitizer').each do |filename|
     JSON::parse(open(filename).read).each do |test|
-      define_method "x_test#{test['name']}" do
+      define_method "test_#{test['name']}" do
         check_sanitization(
           test['input'],
           test['output'],
