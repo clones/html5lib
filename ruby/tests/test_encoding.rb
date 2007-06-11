@@ -9,7 +9,7 @@ class Html5EncodingTestCase < Test::Unit::TestCase
     require 'UniversalDetector'
 
     def test_chardet
-      File.open(File.join(HTML5LIB_BASE, 'tests', 'encoding', 'chardet', 'test_big5.txt')) do |file|
+      File.open(File.join(HTML5LIB_BASE, 'testdata', 'encoding', 'chardet', 'test_big5.txt')) do |file|
         stream = HTML5lib::HTMLInputStream.new(file, :chardet => true)
         assert_equal 'big5', stream.char_encoding.downcase
       end
