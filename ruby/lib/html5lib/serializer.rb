@@ -1,5 +1,4 @@
 require 'html5lib/constants'
-require 'html5lib/filters'
 
 module HTML5lib
 
@@ -40,20 +39,24 @@ module HTML5lib
 
     def serialize(treewalker, encoding=nil)
       in_cdata = false
+      @errors = []
 
-
-@errors = []
       if encoding and @inject_meta_charset
         treewalker = filter_inject_meta_charset(treewalker, encoding)
       end
+
       if @strip_whitespace
-        treewalker = filter_whitespace(treewalker)
+        require 'html5lib/filters/whitespace'
+        treewalker = Filters::WhitespaceFilter.new(treewalker)
       end
+
       if @sanitize
-        require 'html5lib/sanitizer'
-        treewalker = HTMLSanitizeFilter.new(treewalker)
+        require 'html5lib/filters/sanitizer'
+        treewalker = Filters::HTMLSanitizeFilter.new(treewalker)
       end
+
       if @omit_optional_tags
+        require 'html5lib/filters/optionaltags'
         treewalker = Filters::OptionalTagFilter.new(treewalker)
       end
 
@@ -200,10 +203,6 @@ module HTML5lib
         end
         yield token
       end
-    end
-
-    def filter_whitespace(treewalker)
-      raise NotImplementedError
     end
   end
 
