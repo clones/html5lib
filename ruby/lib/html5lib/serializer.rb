@@ -6,7 +6,7 @@ module HTML5lib
     CDATA_ELEMENTS = %w[style script xmp iframe noembed noframes noscript]
 
     def self.serialize(stream, options = {})
-      new(options).serialize(stream)
+      new(options).serialize(stream, options[:encoding])
     end
 
     def initialize(options={})
@@ -42,7 +42,8 @@ module HTML5lib
       @errors = []
 
       if encoding and @inject_meta_charset
-        treewalker = filter_inject_meta_charset(treewalker, encoding)
+        require 'html5lib/filters/inject_meta_charset'
+        treewalker = Filters::InjectMetaCharset.new(treewalker, encoding)
       end
 
       if @strip_whitespace
@@ -65,25 +66,14 @@ module HTML5lib
         type = token[:type]
         if type == :Doctype
           doctype = "<!DOCTYPE %s>" % token[:name]
-          if encoding
-            result << doctype.encode(encoding)
-          else
-            result << doctype
-          end
+          result << doctype
 
         elsif [:Characters, :SpaceCharacters].include? type
           if type == :SpaceCharacters or in_cdata
             if in_cdata and token[:data].include?("</")
               serializeError(_("Unexpected </ in CDATA"))
             end
-            if encoding
-              result << token[:data].encode(encoding, errors || "strict")
-            else
-              result << token[:data]
-            end
-          elsif encoding
-            result << token[:data].replace("&", "&amp;").
-              encode(encoding, unicode_encode_errors)
+            result << token[:data]
           else
             result << token[:data].
                         gsub("&", "&amp;").
@@ -100,7 +90,6 @@ module HTML5lib
           end
           attributes = []
           for k,v in attrs = token[:data].to_a.sort
-            k = k.encode(encoding) if encoding
             attributes << ' '
 
             attributes << k
@@ -114,9 +103,6 @@ module HTML5lib
                 quote_attr = (SPACE_CHARACTERS + %w(< > " ')).any? {|c| v.include?(c)}
               end
               v = v.gsub("&", "&amp;")
-              if encoding
-                v = v.encode(encoding, unicode_encode_errors)
-              end
               if quote_attr
                 quote_char = @quote_char
                 if @use_best_quote_char
@@ -144,11 +130,7 @@ module HTML5lib
               attributes << "/"
             end
           end
-          if encoding
-            result << "<%s%s>" % [name.encode(encoding), attributes.join('')]
-          else
-            result << "<%s%s>" % [name, attributes.join('')]
-          end
+          result << "<%s%s>" % [name, attributes.join('')]
 
         elsif type == :EndTag
           name = token[:name]
@@ -158,50 +140,34 @@ module HTML5lib
             serializeError(_("Unexpected child element of a CDATA element"))
           end
           end_tag = "</#{name}>"
-          end_tag = end_tag.encode(encoding) if encoding
           result << end_tag
 
         elsif type == :Comment
           data = token[:data]
           serializeError(_("Comment contains --")) if data.index("--")
           comment = "<!--%s-->" % token[:data]
-          if encoding
-            comment = comment.encode(encoding, unicode_encode_errors)
-          end
           result << comment
 
         else
           serializeError(token[:data])
         end
       end
-      result.join('')
-    end
 
-    def render(treewalker, encoding=nil)
-      if encoding
-        return "".join(list(serialize(treewalker, encoding)))
+      if encoding and encoding != 'utf-8'
+        require 'iconv'
+        Iconv.iconv(encoding, 'utf-8', result.join('')).first
       else
-        return "".join(list(serialize(treewalker)))
+        result.join('')
       end
     end
+
+    alias :render :serialize
 
     def serializeError(data="XXX ERROR MESSAGE NEEDED")
       # XXX The idea is to make data mandatory.
       @errors.push(data)
       if @strict
         raise SerializeError
-      end
-    end
-
-    def filter_inject_meta_charset(treewalker, encoding)
-      done = false
-      for token in treewalker
-        if not done and token[:type] == :StartTag \
-            and token[:name].lower() == "head"
-          yield({:type => :EmptyTag, :name => "meta", \
-                 :data => {"charset" => encoding}})
-        end
-        yield token
       end
     end
   end
