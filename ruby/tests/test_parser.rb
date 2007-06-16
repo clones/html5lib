@@ -12,7 +12,7 @@ begin
 rescue LoadError
 end
 
-$CHECK_PARSER_ERRORS = ARGV.delete('-p')
+$CHECK_PARSER_ERRORS = ARGV.delete('-p') # TODO
 
 puts 'Testing tree builders: ' + $tree_types_to_test * ', '
 
