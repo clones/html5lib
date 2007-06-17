@@ -11,9 +11,9 @@ $tree_types_to_test = {
   'rexml' =>
     {:builder => HTML5lib::TreeBuilders['rexml'],
      :walker  => HTML5lib::TreeWalkers['rexml']},
-# 'hpricot' => # TODO
-#   {:builder => HTML5lib::TreeBuilders['hpricot'],
-#    :walker  => HTML5lib::TreeWalkers['hpricot']},
+  'hpricot' =>
+    {:builder => HTML5lib::TreeBuilders['hpricot'],
+     :walker  => HTML5lib::TreeWalkers['hpricot']},
 }
 
 puts 'Testing tree walkers: ' + $tree_types_to_test.keys * ', '
@@ -46,7 +46,7 @@ class TestTreeWalkers < Test::Unit::TestCase
     output = []
     indent = 0
     concatenateCharacterTokens(tokens) do |token|
-        case token[:type]
+      case token[:type]
         when :StartTag, :EmptyTag
             output << "#{' '*indent}<#{token[:name]}>"
             indent += 2
@@ -65,7 +65,7 @@ class TestTreeWalkers < Test::Unit::TestCase
             output << "#{' '*indent}\"#{token[:data]}\""
         else
             # TODO: what to do with errors?
-        end
+      end
     end
     return output.join("\n")
   end
@@ -81,12 +81,11 @@ class TestTreeWalkers < Test::Unit::TestCase
       innerHTML, input, expected_output, expected_errors =
         HTML5lib::TestSupport::parseTestcase(data)
 
-      rexml = $tree_types_to_test['rexml']
-      $tree_types_to_test.each do |tree_name, treeClass|
+      $tree_types_to_test.each do |tree_name, tree_class|
 
         define_method "test_#{test_name}_#{index}_#{tree_name}" do
 
-          parser = HTML5lib::HTMLParser.new(:tree => treeClass[:builder])
+          parser = HTML5lib::HTMLParser.new(:tree => tree_class[:builder])
 
           if innerHTML
             parser.parseFragment(input, innerHTML)
@@ -97,7 +96,7 @@ class TestTreeWalkers < Test::Unit::TestCase
           document = parser.tree.getDocument
 
           begin
-            output = sortattrs(convertTokens(treeClass[:walker].new(document)))
+            output = sortattrs(convertTokens(tree_class[:walker].new(document)))
             expected = sortattrs(expected_output)
             assert_equal expected, output, [
               '', 'Input:', input,
