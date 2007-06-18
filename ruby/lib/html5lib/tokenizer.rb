@@ -48,6 +48,14 @@ module HTML5lib
         :beforeDoctypeName => :beforeDoctypeNameState,
         :doctypeName => :doctypeNameState,
         :afterDoctypeName => :afterDoctypeNameState,
+        :beforeDoctypePublicIdentifier => :beforeDoctypePublicIdentifierState,
+        :doctypePublicIdentifierDoubleQuoted => :doctypePublicIdentifierDoubleQuotedState,
+        :doctypePublicIdentifierSingleQuoted => :doctypePublicIdentifierSingleQuotedState,
+        :afterDoctypePublicIdentifier => :afterDoctypePublicIdentifierState,
+        :beforeDoctypeSystemIdentifier => :beforeDoctypeSystemIdentifierState,
+        :doctypeSystemIdentifierDoubleQuoted => :doctypeSystemIdentifierDoubleQuotedState,
+        :doctypeSystemIdentifierSingleQuoted => :doctypeSystemIdentifierSingleQuotedState,
+        :afterDoctypeSystemIdentifier => :afterDoctypeSystemIdentifierState,
         :bogusDoctype => :bogusDoctypeState
       }
 
@@ -634,7 +642,8 @@ module HTML5lib
         if ((not charStack.include? :EOF) and
           charStack.join("").upcase == "DOCTYPE")
           @currentToken =\
-            {:type => :Doctype, :name => "", :data => true}
+            {:type => :Doctype, :name => "",
+             :publicId => nil, :systemId => nil, :correct => true}
           @state = @states[:doctype]
         else
           @tokenQueue.push({:type => :ParseError, :data =>
@@ -721,19 +730,16 @@ module HTML5lib
     def beforeDoctypeNameState
       data = @stream.char
       if SPACE_CHARACTERS.include? data
-      elsif ASCII_LOWERCASE.include? data
-        @currentToken[:name] = data.upcase
-        @state = @states[:doctypeName]
       elsif data == ">"
-        # Character needs to be consumed per the specification so don't
-        # invoke emitCurrentTokenWithParseError with :data as argument.
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected > character. Expected DOCTYPE name.")})
+        @currentToken[:correct] = false
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file. Expected DOCTYPE name.")})
+        @currentToken[:correct] = false
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       else
@@ -745,33 +751,21 @@ module HTML5lib
 
     def doctypeNameState
       data = @stream.char
-      needsDoctypeCheck = false
       if SPACE_CHARACTERS.include? data
         @state = @states[:afterDoctypeName]
-        needsDoctypeCheck = true
       elsif data == ">"
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in DOCTYPE name.")})
+        @currentToken[:correct] = false
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       else
-        # We can't just uppercase everything that arrives here. For
-        # instance, non-ASCII characters.
-        if ASCII_LOWERCASE.include? data
-          data = data.upcase
-        end
         @currentToken[:name] += data
-        needsDoctypeCheck = true
       end
 
-      # After some iterations through this state it should eventually say
-      # "HTML". Otherwise there's an error.
-      if needsDoctypeCheck and @currentToken[:name] == "HTML"
-        @currentToken[:data] = false
-      end
       return true
     end
 
@@ -783,16 +777,195 @@ module HTML5lib
         @state = @states[:data]
       elsif data == :EOF
         @currentToken[:data] = true
-        # XXX EMIT
         @stream.queue.push(data)
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        charStack = [data]  
+        5.times { charStack << stream.char }
+        token = charStack.join('').tr(ASCII_UPPERCASE,ASCII_LOWERCASE)
+        if token == "public"
+          @state = @states[:beforeDoctypePublicIdentifier]
+        elsif token == "system"
+          @state = @states[:beforeDoctypeSystemIdentifier]
+        else
+          @stream.queue += charStack
+          @tokenQueue.push({:type => :ParseError, :data =>
+            _("Expected 'public' or 'system'. Got '#{charStack.join('')}'")})
+          @state = @states[:bogusDoctype]
+        end
+      end
+      return true
+    end
+    
+    def beforeDoctypePublicIdentifierState
+      data = @stream.char
+
+      if SPACE_CHARACTERS.include?(data)
+      elsif data == "\""
+        @currentToken[:publicId] = ""
+        @state = @states[:doctypePublicIdentifierDoubleQuoted]
+      elsif data == "'"
+        @currentToken[:publicId] = ""
+        @state = @states[:doctypePublicIdentifierSingleQuoted]
+      elsif data == ">"
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       else
         @tokenQueue.push({:type => :ParseError, :data =>
-          _("Expected space or '>'. Got '" + data + "'")})
-        @currentToken[:data] = true
+          _("Unexpected character in DOCTYPE.")})
+        @state = @states[:bogusDoctype]
+      end
+
+      return true
+    end
+ 
+    def doctypePublicIdentifierDoubleQuotedState
+      data = @stream.char
+      if data == "\""
+        @state = @states[:afterDoctypePublicIdentifier]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @currentToken[:publicId] += data
+      end
+      return true
+    end
+
+    def doctypePublicIdentifierSingleQuotedState
+      data = @stream.char
+      if data == "'"
+        @state = @states[:afterDoctypePublicIdentifier]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @currentToken[:publicId] += data
+      end
+      return true
+    end
+
+    def afterDoctypePublicIdentifierState
+      data = @stream.char
+      if SPACE_CHARACTERS.include?(data)
+      elsif data == "\""
+        @currentToken[:systemId] = ""
+        @state = @states[:doctypeSystemIdentifierDoubleQuoted]
+      elsif data == "'"
+        @currentToken[:systemId] = ""
+        @state = @states[:doctypeSystemIdentifierSingleQuoted]
+      elsif data == ">"
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected character in DOCTYPE.")})
+        @state = @states[:bogusDoctype]
+      end
+      return true
+    end
+    
+    def beforeDoctypeSystemIdentifierState
+      data = @stream.char
+      if SPACE_CHARACTERS.include?(data)
+      elsif data == "\""
+        @currentToken[:systemId] = ""
+        @state = @states[:doctypeSystemIdentifierDoubleQuoted]
+      elsif data == "'"
+        @currentToken[:systemId] = ""
+        @state = @states[:doctypeSystemIdentifierSingleQuoted]
+      elsif data == ">"
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected character in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected character in DOCTYPE.")})
+        @state = @states[:bogusDoctype]
+      end
+      return true
+    end
+
+    def doctypeSystemIdentifierDoubleQuotedState
+      data = @stream.char
+      if data == "\""
+        @state = @states[:afterDoctypeSystemIdentifier]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @currentToken[:systemId] += data
+      end
+      return true
+    end
+
+    def doctypeSystemIdentifierSingleQuotedState
+      data = @stream.char
+      if data == "'"
+        @state = @states[:afterDoctypeSystemIdentifier]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @currentToken[:systemId] += data
+      end
+      return true
+    end
+
+    def afterDoctypeSystemIdentifierState
+      data = @stream.char
+      if SPACE_CHARACTERS.include?(data)
+      elsif data == ">"
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      elsif data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected end of file in DOCTYPE.")})
+        @currentToken[:correct] = false
+        @tokenQueue.push(@currentToken)
+        @state = @states[:data]
+      else
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Unexpected character in DOCTYPE.")})
         @state = @states[:bogusDoctype]
       end
       return true
@@ -808,6 +981,7 @@ module HTML5lib
         @stream.queue.push(data)
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in bogus doctype.")})
+        @currentToken[:correct] = false
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
       end
