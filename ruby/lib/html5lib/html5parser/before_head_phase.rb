@@ -6,6 +6,7 @@ module HTML5lib
     handle_start 'html', 'head'
 
     handle_end 'html'
+    handle_end 'br' => 'EmptyElement'
 
     def processEOF
       startTagHead('head', {})
@@ -29,6 +30,11 @@ module HTML5lib
     end
 
     def endTagHtml(name)
+      startTagHead('head', {})
+      @parser.phase.processEndTag(name)
+    end
+
+    def endTagEmptyElement(name)
       startTagHead('head', {})
       @parser.phase.processEndTag(name)
     end

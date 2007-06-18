@@ -33,7 +33,9 @@ module HTML5lib
 
     handle_end %w( head frameset select optgroup option table caption colgroup col thead tfoot tbody tr td th ) => 'Misplaced' 
 
-    handle_end %w( area basefont bgsound br embed hr image img input isindex param spacer wbr frame ) => 'None'
+    handle_end 'br'
+
+    handle_end %w( area basefont bgsound embed hr image img input isindex param spacer wbr frame ) => 'None'
 
     handle_end %w( noframes noscript noembed textarea xmp iframe ) => 'CdataTextAreaXmp'
 
@@ -120,7 +122,12 @@ module HTML5lib
 
       @tree.openElements.reverse.each_with_index do |node, i|
         if stopName.include?(node.name)
-          (i + 1).times { @tree.openElements.pop }
+          poppedNodes = (0..i).collect { @tree.openElements.pop }
+          if i >= 1
+            @parser.parseError("Missing end tag%s (%s)" % [
+              (i>1 ? 's' : ''),
+              poppedNodes.reverse.map {|item| item.name}.join(', ')])
+          end
           break
         end
 
@@ -495,6 +502,13 @@ module HTML5lib
     def endTagMisplaced(name)
       # This handles elements with end tags in other insertion modes.
       @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
+    end
+
+    def endTagBr(name)
+      @parser.parseError(_("Unexpected end tag (br). Treated as br element."))
+      @tree.reconstructActiveFormattingElements
+      @tree.insertElement(name, {})
+      @tree.openElements.pop()
     end
 
     def endTagNone(name)

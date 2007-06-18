@@ -6,6 +6,7 @@ module HTML5lib
     handle_start 'html', 'head', 'title', 'style', 'script', %w( base link meta )
 
     handle_end 'head', 'html', %w( title style script )
+    handle_end 'br' => 'EmptyElement'
 
     def processEOF
       if ['title', 'style', 'script'].include?(name = @tree.openElements[-1].name)
@@ -91,6 +92,11 @@ module HTML5lib
       else
         @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
       end
+    end
+
+    def endTagEmptyElement(name)
+      anythingElse
+      @parser.phase.processEndTag(name)
     end
 
     def endTagOther(name)

@@ -51,6 +51,10 @@ class SanitizeTest < Test::Unit::TestCase
       if %w[caption colgroup optgroup option tbody td tfoot th thead tr].include?(tag_name)
         htmloutput = "foo &lt;bad&gt;bar&lt;/bad&gt; baz"
         xhtmloutput = htmloutput
+      elsif tag_name == 'br'
+        htmloutput = "<br title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz<br/>"
+        xhtmloutput = htmloutput
+        rexmloutput = "<br title='1' />"
       elsif tag_name == 'col'
         htmloutput = "foo &lt;bad&gt;bar&lt;/bad&gt; baz"
         xhtmloutput = htmloutput
