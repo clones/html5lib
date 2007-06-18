@@ -430,11 +430,6 @@ module HTML5lib
           @stream.chars_until(ASCII_LETTERS, true)
       elsif data == ">"
         emitCurrentToken
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character when getting the tag name.")})
-        emitCurrentToken
       elsif data == "/"
         processSolidusInTag
         @state = @states[:beforeAttributeName]
@@ -459,11 +454,6 @@ module HTML5lib
         emitCurrentToken
       elsif data == "/"
         processSolidusInTag
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character. Expected attribute name instead.")})
-        emitCurrentToken
       else
         @currentToken[:data].push([data, ""])
         @state = @states[:attributeName]
@@ -494,12 +484,6 @@ module HTML5lib
       elsif data == "/"
         processSolidusInTag
         @state = @states[:beforeAttributeName]
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character in attribute name.")})
-        emitCurrentToken
-        leavingThisState = false
       else
         @currentToken[:data][-1][0] += data
         leavingThisState = false
@@ -537,11 +521,6 @@ module HTML5lib
       elsif data == "/"
         processSolidusInTag
         @state = @states[:beforeAttributeName]
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character. Expected = or end of tag.")})
-        emitCurrentToken
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file. Expected = or end of tag.")})
@@ -565,11 +544,6 @@ module HTML5lib
       elsif data == "'"
         @state = @states[:attributeValueSingleQuoted]
       elsif data == ">"
-        emitCurrentToken
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character. Expected attribute value.")})
         emitCurrentToken
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
@@ -623,11 +597,6 @@ module HTML5lib
       elsif data == "&"
         processEntityInAttribute
       elsif data == ">"
-        emitCurrentToken
-      elsif data == "<"
-        @stream.queue.push(data)
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected < character in attribute value.")})
         emitCurrentToken
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
