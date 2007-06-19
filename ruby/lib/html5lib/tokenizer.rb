@@ -41,8 +41,10 @@ module HTML5lib
         :attributeValueUnQuoted => :attributeValueUnQuotedState,
         :bogusComment => :bogusCommentState,
         :markupDeclarationOpen => :markupDeclarationOpenState,
+        :commentStart => :commentStartState,
+        :commentStartDash => :commentStartDashState,
         :comment => :commentState,
-        :commentDash => :commentDashState,
+        :commentEndDash => :commentEndDashState,
         :commentEnd => :commentEndState,
         :doctype => :doctypeState,
         :beforeDoctypeName => :beforeDoctypeNameState,
@@ -62,6 +64,8 @@ module HTML5lib
       # Setup the initial tokenizer state
       @contentModelFlag = :PCDATA
       @state = @states[:data]
+      @escapeFlag = false
+      @lastFourChars = []
 
       # The current token being created
       @currentToken = nil
@@ -175,7 +179,10 @@ module HTML5lib
     def consumeEntity
       char = nil
       charStack = [@stream.char]
-      if charStack[0] == "#"
+      if SPACE_CHARACTERS.include?(charStack[0]) or 
+        [:EOF, '<', '&'].include?(charStack[0])
+        @stream.queue+= charStack
+      elsif charStack[0] == "#"
         # We might have a number entity here.
         charStack += [@stream.char, @stream.char]
         if charStack.include? :EOF
@@ -202,10 +209,6 @@ module HTML5lib
               _("Numeric entity expected but none found.")})
           end
         end
-      # Break out if we reach the end of the file
-      elsif charStack[0] == :EOF
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Entity expected. Got end of file instead.")})
       else
         # At this point in the process might have named entity. Entities
         # are stored in the global variable "entities".
@@ -275,14 +278,33 @@ module HTML5lib
     # statements should be.
     def dataState
       data = @stream.char
-      if data == "&" and (@contentModelFlag == :PCDATA or
-        @contentModelFlag == :RCDATA)
+
+      if @contentModelFlag == :CDATA or @contentModelFlag == :RCDATA
+        @lastFourChars << data
+        @lastFourChars.shift if @lastFourChars.length > 4
+      end
+
+      if data == "&" and [:PCDATA,:RCDATA].include?(@contentModelFlag)
         @state = @states[:entityData]
-      elsif data == "<" and @contentModelFlag != :PLAINTEXT
-        @state = @states[:tagOpen]
+
+      elsif data == "-" and [:CDATA,:RCDATA].include?(@contentModelFlag) and
+        @escapeFlag == false and @lastFourChars.join('') == "<!--"
+          @escapeFlag = true
+          @tokenQueue.push({:type => :Characters, :data => data})
+
+      elsif data == "<" and @escapeFlag == false and
+        [:PCDATA,:CDATA,:RCDATA].include?(@contentModelFlag)
+          @state = @states[:tagOpen]
+
+      elsif data == ">" and [:CDATA,:RCDATA].include?(@contentModelFlag)
+        @escapeFlag == true and @lastFourChars[1..-1].join('') == "-->"
+          @escapeFlag = false
+          @tokenQueue.push({:type => :Characters, :data => data})
+
       elsif data == :EOF
         # Tokenization ends.
         return false
+
       elsif SPACE_CHARACTERS.include? data
         # Directly after emitting a token you switch back to the "data
         # state". At that point SPACE_CHARACTERS are important so they are
@@ -293,7 +315,7 @@ module HTML5lib
           data + @stream.chars_until(SPACE_CHARACTERS, true)})
       else
         @tokenQueue.push({:type => :Characters, :data => 
-          data + @stream.chars_until(["&", "<"])})
+          data + @stream.chars_until(%w[& < > -])})
       end
       return true
     end
@@ -631,7 +653,7 @@ module HTML5lib
       charStack = [@stream.char, @stream.char]
       if charStack == ["-", "-"]
         @currentToken = {:type => :Comment, :data => ""}
-        @state = @states[:comment]
+        @state = @states[:commentStart]
       else
         5.times { charStack.push(@stream.char) }
         # Put in explicit :EOF check
@@ -651,10 +673,52 @@ module HTML5lib
       return true
     end
 
+    def commentStartState
+        data = @stream.char
+        if data == "-"
+            @state = @states[:commentStartDash]
+        elsif data == ">"
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Incorrect comment.")})
+            @tokenQueue.push(@currentToken)
+            @state = @states[:data]
+        elsif data == EOF
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Unexpected end of file in comment.")})
+            @tokenQueue.push(@currentToken)
+            @state = @states[:data]
+        else
+            @currentToken[:data] += data + @stream.chars_until("-")
+            @state = @states[:comment]
+        end
+        return true
+    end
+    
+    def commentStartDashState
+        data = @stream.char
+        if data == "-"
+            @state = @states[:commentEnd]
+        elsif data == ">"
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Incorrect comment.")})
+            @tokenQueue.push(@currentToken)
+            @state = @states[:data]
+        elsif data == EOF
+            @tokenQueue.push({:type => :ParseError, :data =>
+              _("Unexpected end of file in comment.")})
+            @tokenQueue.push(@currentToken)
+            @state = @states[:data]
+        else
+            @currentToken[:data] += data + @stream.chars_until("-")
+            @state = @states[:comment]
+        end
+        return true
+    end
+
     def commentState
       data = @stream.char
       if data == "-"
-        @state = @states[:commentDash]
+        @state = @states[:commentEndDash]
       elsif data == :EOF
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in comment.")})
@@ -666,7 +730,7 @@ module HTML5lib
       return true
     end
 
-    def commentDashState
+    def commentEndDashState
       data = @stream.char
       if data == "-"
         @state = @states[:commentEnd]

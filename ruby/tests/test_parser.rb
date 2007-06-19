@@ -24,7 +24,6 @@ class Html5ParserTestCase < Test::Unit::TestCase
   html5lib_test_files('tree-construction').each do |test_file|
 
     test_name = File.basename(test_file).sub('.dat', '')
-    next if test_name == 'tests5' # TODO
 
     File.read(test_file).split("#data\n").each_with_index do |data, index|
       next if data.empty?

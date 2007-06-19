@@ -261,7 +261,9 @@ module HTML5lib
       # Put the character stopped on back to the front of the queue
       # from where it came.
       c = char_stack.pop
-      if c == :EOF or @data_stream[@tell-1] == c[0]
+      if c == :EOF
+        @tell -= 1
+      elsif @tell > 0 and @data_stream[@tell-1] == c[0] and @queue.empty?
         @tell -= 1
       else
         @queue.insert(0, c)
