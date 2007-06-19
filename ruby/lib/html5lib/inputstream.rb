@@ -33,9 +33,6 @@ module HTML5lib
 
       options.each { |name, value| instance_variable_set("@#{name}", value) }
 
-      # List of where new lines occur
-      @new_lines = [0]
-
       # Raw Stream
       @raw_stream = open_stream(source)
 
@@ -77,6 +74,8 @@ module HTML5lib
 
       # Reset position in the list to read from
       @tell = 0
+      @line = @col = 0
+      @line_lengths = []
     end
 
     # Produces a file object from source.
@@ -179,13 +178,17 @@ module HTML5lib
 
     # Returns (line, col) of the current position in the stream.
     def position
-      line = 0
-      @new_lines.each do |pos|
-        break unless pos < @tell
-        line += 1
+      line, col = @line, @col
+      @queue.reverse.each do |c|
+        if c == "\n":
+          line -= 1
+          raise RuntimeError.new("col=#{col}") unless col == 0
+          col = @line_lengths[line]
+        else
+          col -= 1
+        end 
       end
-      col = @tell - @new_lines[line-1] - 1
-      return [line, col]
+      return [line+1, col]
     end
 
     # Read one character from the stream or queue if available. Return
@@ -205,9 +208,14 @@ module HTML5lib
             c = 0x0A
           end
 
-          # record where newlines occur so that the position method
-          # can tell where it is
-          @new_lines << @tell-1 if c == 0x0A
+          # update position in stream
+          if c == 0x0a
+            @line_lengths << @col
+            @line += 1
+            @col = 0
+          else
+            @col += 1
+          end
 
           c.chr
 
@@ -261,13 +269,7 @@ module HTML5lib
       # Put the character stopped on back to the front of the queue
       # from where it came.
       c = char_stack.pop
-      if c == :EOF
-        @tell -= 1
-      elsif @tell > 0 and @data_stream[@tell-1] == c[0] and @queue.empty?
-        @tell -= 1
-      else
-        @queue.insert(0, c)
-      end
+      @queue.insert(0, c) unless c == :EOF
       return char_stack.join('')
     end
   end

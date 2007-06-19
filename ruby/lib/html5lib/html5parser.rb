@@ -62,7 +62,8 @@ module HTML5lib
       @errors = []
 
       @tokenizer = @tokenizer.class unless Class === @tokenizer
-      @tokenizer = @tokenizer.new(stream, :encoding => encoding, :parseMeta => innerHTML)
+      @tokenizer = @tokenizer.new(stream, :encoding => encoding,
+        :parseMeta => !innerHTML)
 
       if innerHTML
         case @innerHTML = container.downcase
