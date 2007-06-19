@@ -149,15 +149,19 @@ module HTML5lib
 
     def startTagHeading(name, attributes)
       endTagP('p') if in_scope?('p')
-      HEADING_ELEMENTS.each do |element|
-        if in_scope?(element)
-          @parser.parseError(_("Unexpected start tag (#{name})."))
-        
-          remove_open_elements_until { |element| HEADING_ELEMENTS.include?(element.name) }
 
-          break
-         end
-      end
+      # Uncomment the following for IE7 behavior:
+      # HEADING_ELEMENTS.each do |element|
+      #   if in_scope?(element)
+      #     @parser.parseError(_("Unexpected start tag (#{name})."))
+      # 
+      #     remove_open_elements_until do |element|
+      #       HEADING_ELEMENTS.include?(element.name)
+      #     end
+      #
+      #     break
+      #   end
+      # end
       @tree.insertElement(name, attributes)
     end
 

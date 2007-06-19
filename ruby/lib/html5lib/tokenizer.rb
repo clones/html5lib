@@ -296,7 +296,7 @@ module HTML5lib
         [:PCDATA,:CDATA,:RCDATA].include?(@contentModelFlag)
           @state = @states[:tagOpen]
 
-      elsif data == ">" and [:CDATA,:RCDATA].include?(@contentModelFlag)
+      elsif data == ">" and [:CDATA,:RCDATA].include?(@contentModelFlag) and
         @escapeFlag == true and @lastFourChars[1..-1].join('') == "-->"
           @escapeFlag = false
           @tokenQueue.push({:type => :Characters, :data => data})
