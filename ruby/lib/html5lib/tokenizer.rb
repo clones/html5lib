@@ -388,8 +388,6 @@ module HTML5lib
           # emitting the end tag token.
           @contentModelFlag = :PCDATA
         else
-          @tokenQueue.push({:type => :ParseError, :data =>
-            _("Expected closing tag after seeing '</'. None found.")})
           @tokenQueue.push({:type => :Characters, :data => "</"})
           @state = @states[:data]
 
@@ -399,29 +397,27 @@ module HTML5lib
         end
       end
 
-      if @contentModelFlag == :PCDATA
-        data = @stream.char
-        if data == :EOF
-          @tokenQueue.push({:type => :ParseError, :data =>
-            _("Expected closing tag. Unexpected end of file.")})
-          @tokenQueue.push({:type => :Characters, :data => "</"})
-          @state = @states[:data]
-        elsif ASCII_LETTERS.include? data
-          @currentToken =\
-            {:type => :EndTag, :name => data, :data => []}
-          @state = @states[:tagName]
-        elsif data == ">"
-          @tokenQueue.push({:type => :ParseError, :data =>
-            _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
-          @state = @states[:data]
-        else
-          # XXX data can be _'_...
-          @tokenQueue.push({:type => :ParseError, :data =>
-            _("Expected closing tag. Unexpected character '" + data + "' found.")})
-          @stream.queue.push(data)
-          @state = @states[:bogusComment]
-        end
+      data = @stream.char
+      if data == :EOF
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Expected closing tag. Unexpected end of file.")})
+        @tokenQueue.push({:type => :Characters, :data => "</"})
+        @state = @states[:data]
+      elsif ASCII_LETTERS.include? data
+        @currentToken = {:type => :EndTag, :name => data, :data => []}
+        @state = @states[:tagName]
+      elsif data == ">"
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
+        @state = @states[:data]
+      else
+        # XXX data can be _'_...
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Expected closing tag. Unexpected character '#{data}' found.")})
+        @stream.queue.push(data)
+        @state = @states[:bogusComment]
       end
+
       return true
     end
 
