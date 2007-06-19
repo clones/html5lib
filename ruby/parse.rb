@@ -93,25 +93,34 @@ options.serializer = {
 
 require 'optparse'
 opts = OptionParser.new do |opts|
-  opts.on("-p", "--[no-]profile", "Profile the run") do |profile|
-    options.profile = profile
-  end
-    
-  opts.on("-t", "--[no-]time", "Time the run") do |time|
-    options.time = time
-  end
-    
+  opts.separator ""
+  opts.separator "Parse Options:"
+
   opts.on("-b", "--treebuilder NAME") do |treebuilder|
     options.treebuilder = treebuilder
-  end
-
-  opts.on("-e", "--error", "Print a list of parse errors") do |error|
-    options.error = error
   end
 
   opts.on("-f", "--fragment", "Parse as a fragment") do |parse|
     options.parsemethod = :parseFragment
   end
+
+  opts.separator ""
+  opts.separator "Filter Options:"
+
+  opts.on("--[no-]inject-meta-charset", "inject <meta charset>") do |inject|
+    options.serializer[:inject_meta_charset] = inject
+  end
+
+  opts.on("--[no-]strip-whitespace", "strip unnecessary whitespace") do |strip|
+    options.serializer[:strip_whitespace] = strip
+  end
+
+  opts.on("--[no-]sanitize", "escape unsafe tags") do |sanitize|
+    options.serializer[:sanitize] = sanitize
+  end
+
+  opts.separator ""
+  opts.separator "Output Options:"
 
   opts.on("--tree", "output as debug tree") do |tree|
     options.output = :tree
@@ -130,24 +139,50 @@ opts = OptionParser.new do |opts|
     options.output = :hilite
   end
   
-  opts.on("-c", "--[no-]encoding", "Print character encoding used") do |encoding|
-    options.encoding = encoding
+  opts.on("-e", "--error", "Print a list of parse errors") do |error|
+    options.error = error
   end
 
-  opts.on("--[no-]inject-meta-charset", "inject <meta charset>") do |inject|
-    options.serializer[:inject_meta_charset] = inject
-  end
-
-  opts.on("--[no-]strip-whitespace", "strip unnecessary whitespace") do |strip|
-    options.serializer[:strip_whitespace] = strip
-  end
-
-  opts.on("--[no-]sanitize", "escape unsafe tags") do |sanitize|
-    options.serializer[:sanitize] = sanitize
-  end
+  opts.separator ""
+  opts.separator "Serialization Options:"
 
   opts.on("--[no-]omit-optional-tags", "Omit optional tags") do |omit|
     options.serializer[:omit_optional_tags] = omit
+  end
+
+  opts.on("--[no-]quote-attr-values", "Quote attribute values") do |quote|
+    options.serializer[:quote_attr_values] = quote
+  end
+
+  opts.on("--[no-]use-best-quote-char", "Use best quote character") do |best|
+    options.serializer[:use_best_quote_char] = best
+  end
+
+  opts.on("--quote-char C", "Use specified quote character") do |c|
+    options.serializer[:quote_char] = c
+  end
+
+  opts.on("--[no-]minimize-boolean-attributes", "Minimize boolean attributes") do |min|
+    options.serializer[:minimize_boolean_attributes] = min
+  end
+
+  opts.on("--[no-]use-trailing-solidus", "Use trailing solidus") do |slash|
+    options.serializer[:use_trailing_solidus] = slash
+  end
+
+  opts.separator ""
+  opts.separator "Other Options:"
+
+  opts.on("-p", "--[no-]profile", "Profile the run") do |profile|
+    options.profile = profile
+  end
+    
+  opts.on("-t", "--[no-]time", "Time the run") do |time|
+    options.time = time
+  end
+    
+  opts.on("-c", "--[no-]encoding", "Print character encoding used") do |encoding|
+    options.encoding = encoding
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
