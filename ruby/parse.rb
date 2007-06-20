@@ -71,7 +71,7 @@ def printOutput(parser, document, opts)
     require 'html5lib/treewalkers'
     tokens = HTML5lib::TreeWalkers[opts.treebuilder].new(document)
     require 'html5lib/serializer'
-    print HTML5lib::HTMLSerializer.serialize(tokens, opts.serializer)
+    puts HTML5lib::HTMLSerializer.serialize(tokens, opts.serializer)
   when :hilite
     print document.hilite
   when :tree
