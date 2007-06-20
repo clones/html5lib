@@ -5,12 +5,18 @@
 $:.unshift File.dirname(__FILE__),'lib'
 
 def parse(opts, args)
+  encoding = nil
 
   f = args[-1]
   if f
     begin
-      require 'open-uri' if f[0..6] == 'http://'
-      f = open(f)
+      if f[0..6] == 'http://'
+        require 'open-uri'
+        f = URI.parse(f).open
+        encoding = f.charset
+      else
+        f = open(f)
+      end
     rescue
     end
   else
@@ -29,22 +35,28 @@ def parse(opts, args)
     p = HTML5lib::HTMLParser.new(:tree=>treebuilder)
   end
 
+  if opts.parsemethod == :parse
+    args = [f, encoding]
+  else
+    args = [f, 'div', encoding]
+  end
+
   if opts.profile
     require 'profiler'
     Profiler__::start_profile
-    p.send(opts.parsemethod,f)
+    p.send(opts.parsemethod, *args)
     Profiler__::stop_profile
     Profiler__::print_profile($stderr)
   elsif opts.time
     require 'time'
     t0 = Time.new
-    document = p.send(opts.parsemethod,f)
+    document = p.send(opts.parsemethod, *args)
     t1 = Time.new
     printOutput(p, document, opts)
     t2 = Time.new
     puts "\n\nRun took: %fs (plus %fs to print the output)"%[t1-t0, t2-t1]
   else
-    document = p.send(opts.parsemethod,f)
+    document = p.send(opts.parsemethod, *args)
     printOutput(p, document, opts)
   end
 end
