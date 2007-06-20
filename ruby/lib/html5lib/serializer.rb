@@ -3,12 +3,15 @@ require 'html5lib/constants'
 module HTML5lib
 
   class HTMLSerializer
-    CDATA_ELEMENTS = %w[style script xmp iframe noembed noframes noscript]
 
     def self.serialize(stream, options = {})
       new(options).serialize(stream, options[:encoding])
     end
 
+    def escape(string)
+      string.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
+    end
+ 
     def initialize(options={})
       @quote_attr_values = false
       @quote_char = '"'
@@ -75,15 +78,12 @@ module HTML5lib
             end
             result << token[:data]
           else
-            result << token[:data].
-                        gsub("&", "&amp;").
-                        gsub("<", "&lt;").
-                        gsub(">", "&gt;")
+            result << escape(token[:data])
           end
 
         elsif [:StartTag, :EmptyTag].include? type
           name = token[:name]
-          if CDATA_ELEMENTS.include?(name)
+          if RCDATA_ELEMENTS.include?(name)
             in_cdata = true
           elsif in_cdata
             serializeError(_("Unexpected child element of a CDATA element"))
@@ -134,7 +134,7 @@ module HTML5lib
 
         elsif type == :EndTag
           name = token[:name]
-          if CDATA_ELEMENTS.include?(name)
+          if RCDATA_ELEMENTS.include?(name)
             in_cdata = false
           elsif in_cdata
             serializeError(_("Unexpected child element of a CDATA element"))
