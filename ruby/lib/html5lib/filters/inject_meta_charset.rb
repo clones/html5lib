@@ -28,6 +28,29 @@ module HTML5lib
                 end
               end
 
+              # replace charset with actual encoding
+              has_http_equiv_content_type = false
+              content_index = -1
+              token[:data].each_with_index do |(name,value),i|
+                if name.downcase == 'charset'
+                  token[:data][i] = ['charset', @encoding]
+                  meta_found = true
+                  break
+                elsif name == 'http-equiv' and value.downcase == 'content-type'
+                  has_http_equiv_content_type = true
+                elsif name == 'content'
+                  content_index = i
+                end
+              end
+
+              if not meta_found
+                if has_http_equiv_content_type and content_index >= 0
+                  token[:data][content_index][1] =
+                    'text/html; charset=%s' % @encoding
+                  meta_found = true
+                end
+              end
+
             elsif token[:name].downcase == "head" and not meta_found
               # insert meta into empty head
               yield(:type => :StartTag, :name => "head", :data => token[:data])
