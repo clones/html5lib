@@ -14,6 +14,8 @@ def parse(opts, args)
         require 'open-uri'
         f = URI.parse(f).open
         encoding = f.charset
+      elsif f == '-'
+        f = $stdin
       else
         f = open(f)
       end
