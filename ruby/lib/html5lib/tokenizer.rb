@@ -145,24 +145,14 @@ module HTML5lib
       # If the integer is between 127 and 160 (so 128 and bigger and 159 and
       # smaller) we need to do the "windows trick".
       if (127...160).include? charAsInt
-        #XXX - removed parse error from windows 1252 entity for now
-        #we may want to reenable this later
-        #@tokenQueue.push({:type => :ParseError, :data =>
-        #  _("Entity used with illegal number (windows-1252 reference).")})
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Entity used with illegal number (windows-1252 reference).")})
 
         charAsInt = ENTITIES_WINDOWS1252[charAsInt - 128]
       end
 
-      # 0 is not a good number.
-      if charAsInt == 0
-        charAsInt = 65533
-      end
-
-      if charAsInt <= 0x10FFFF
+      if charAsInt > 0 and charAsInt <= 1114111
         char = [charAsInt].pack('U')
-      else
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Numeric entity couldn't be converted to character.")})
       end
 
       # Discard the ; if present. Otherwise, put it back on the queue and
