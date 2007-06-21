@@ -20,6 +20,7 @@ module HTML5lib
 
       @use_trailing_solidus = false
       @space_before_trailing_solidus = true
+      @escape_lt_in_attrs = false
 
       @omit_optional_tags = true
       @sanitize = false
@@ -29,10 +30,7 @@ module HTML5lib
       @inject_meta_charset = true
 
       options.each do |name, value|
-        next unless %w(quote_attr_values quote_char use_best_quote_char
-            minimize_boolean_attributes use_trailing_solidus
-            space_before_trailing_solidus omit_optional_tags sanitize
-            strip_whitespace inject_meta_charset).include? name.to_s
+        next unless instance_variables.include?("@#{name}")
         @use_best_quote_char = false if name.to_s == 'quote_char'
         instance_variable_set("@#{name}", value)
       end
@@ -103,6 +101,7 @@ module HTML5lib
                 quote_attr = (SPACE_CHARACTERS + %w(< > " ')).any? {|c| v.include?(c)}
               end
               v = v.gsub("&", "&amp;")
+              v = v.gsub("<", "&lt;") if @escape_lt_in_attrs
               if quote_attr
                 quote_char = @quote_char
                 if @use_best_quote_char

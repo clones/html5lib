@@ -184,6 +184,10 @@ opts = OptionParser.new do |opts|
     options.serializer[:use_trailing_solidus] = slash
   end
 
+  opts.on("--[no-]escape-lt-in-attrs", "Escape less than signs in attribute values") do |lt|
+    options.serializer[:escape_lt_in_attrs] = lt
+  end
+
   opts.separator ""
   opts.separator "Other Options:"
 
