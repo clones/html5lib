@@ -51,10 +51,6 @@ class SanitizeTest < Test::Unit::TestCase
       if %w[caption colgroup optgroup option tbody td tfoot th thead tr].include?(tag_name)
         htmloutput = "foo &lt;bad&gt;bar&lt;/bad&gt; baz"
         xhtmloutput = htmloutput
-      elsif tag_name == 'br'
-        htmloutput = "<br title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz<br/>"
-        xhtmloutput = htmloutput
-        rexmloutput = "<br title='1' />"
       elsif tag_name == 'col'
         htmloutput = "foo &lt;bad&gt;bar&lt;/bad&gt; baz"
         xhtmloutput = htmloutput
@@ -69,6 +65,7 @@ class SanitizeTest < Test::Unit::TestCase
       elsif VOID_ELEMENTS.include?(tag_name)
         htmloutput = "<#{tag_name} title='1'/>foo &lt;bad&gt;bar&lt;/bad&gt; baz"
         xhtmloutput = htmloutput
+        htmloutput += '<br/>' if tag_name == 'br'
         rexmloutput =  "<#{tag_name} title='1' />"
       end
       check_sanitization(input, htmloutput, xhtmloutput, rexmloutput)
