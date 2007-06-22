@@ -3,14 +3,14 @@ require File.join(File.dirname(__FILE__), 'preamble')
 require 'html5lib/liberalxmlparser'
 
 XMLELEM = /<(\w+\s*)((?:[-:\w]+="[^"]*"\s*)+)(\/?)>/
-SORTATTRS = '<#{$1+$2.split.sort.join(' ')+$3}>'
 
 def assert_xml_equal(input, expected=nil, parser=HTML5lib::XMLParser)
+  sortattrs = proc {"<#{$1+$2.split.sort.join(' ')+$3}>"}
   document = parser.parse(input.chomp).root
   if not expected
-    expected = input.chomp.gsub(XMLELEM,SORTATTRS)
+    expected = input.chomp.gsub(XMLELEM,&sortattrs)
     expected = expected.gsub(/&#(\d+);/) {[$1.to_i].pack('U')}
-    output = document.to_s.gsub(/'/,'"').gsub(XMLELEM,SORTATTRS)
+    output = document.to_s.gsub(/'/,'"').gsub(XMLELEM,&sortattrs)
     assert_equal(expected, output)
   else
     assert_equal(expected, document.to_s.gsub(/'/,'"'))
