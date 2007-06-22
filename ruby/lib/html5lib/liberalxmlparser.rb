@@ -25,9 +25,10 @@ module HTML5lib
     end
 
     def normalizeToken(token)
-      if token[:type] == :StartTag or token[:type] == :EmptyTag
+      case token[:type]
+      when :StartTag, :EmptyTag
         # We need to remove the duplicate attributes and convert attributes
-        # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
+        # to a Hash so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
         token[:data] = Hash[*token[:data].reverse.flatten]
 
@@ -38,12 +39,19 @@ module HTML5lib
           token[:type] = :EndTag
         end
 
-      elsif token[:type] == :EndTag
+      when :Characters
+        # un-escape RCDATA_ELEMENTS (e.g. style, script)
+        if @tokenizer.contentModelFlag == :CDATA
+          token[:data] = token[:data].
+            gsub('&lt;','<').gsub('&gt;','>').gsub('&amp;','&')
+        end
+
+      when :EndTag
         if token[:data]
            parseError(_("End tag contains unexpected attributes."))
         end
 
-      elsif token[:type] == :Comment
+      when :Comment
         # Rescue CDATA from the comments
         if token[:data][0..6] == "[CDATA[" and token[:data][-2..-1] == "]]"
           token[:type] = :Characters

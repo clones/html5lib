@@ -193,19 +193,38 @@ EOX
   def test_br
     assert_xhtml_equal <<EOX1
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
+<head><title>BR</title></head>
 <body>
 <br/>
 </body></html>
 EOX1
   end
 
-  def xtest_strong
+  def test_strong
     assert_xhtml_equal <<EOX
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
+<head><title>STRONG</title></head>
 <body>
 <strong></strong>
+</body></html>
+EOX
+  end
+
+  def test_script
+    assert_xhtml_equal <<EOX
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title></head>
+<body>
+<script>1 &lt; 2 &amp; 3</script>
+</body></html>
+EOX
+  end
+
+  def test_title
+    assert_xhtml_equal <<EOX
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>1 &lt; 2 &amp; 3</title></head>
+<body>
 </body></html>
 EOX
   end
