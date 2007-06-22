@@ -8,7 +8,8 @@ module HTML5lib
       :minimize_boolean_attributes => false,
       :use_trailing_solidus => true,
       :escape_lt_in_attrs => true,
-      :omit_optional_tags => false
+      :omit_optional_tags => false,
+      :escape_rcdata => true
     }
 
     def initialize(options={})

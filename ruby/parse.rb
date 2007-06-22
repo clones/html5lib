@@ -188,6 +188,10 @@ opts = OptionParser.new do |opts|
     options.serializer[:escape_lt_in_attrs] = lt
   end
 
+  opts.on("--[no-]escape-rcdata", "Escape rcdata element values") do |rcdata|
+    options.serializer[:escape_rcdata] = rcdata
+  end
+
   opts.separator ""
   opts.separator "Other Options:"
 

@@ -21,6 +21,7 @@ module HTML5lib
       @use_trailing_solidus = false
       @space_before_trailing_solidus = true
       @escape_lt_in_attrs = false
+      @escape_rcdata = false
 
       @omit_optional_tags = true
       @sanitize = false
@@ -81,7 +82,7 @@ module HTML5lib
 
         elsif [:StartTag, :EmptyTag].include? type
           name = token[:name]
-          if RCDATA_ELEMENTS.include?(name)
+          if RCDATA_ELEMENTS.include?(name) and not @escape_rcdata
             in_cdata = true
           elsif in_cdata
             serializeError(_("Unexpected child element of a CDATA element"))
