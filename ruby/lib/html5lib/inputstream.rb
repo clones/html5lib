@@ -317,6 +317,12 @@ module HTML5lib
       @queue.insert(0, c) unless c == :EOF
       return char_stack.join('')
     end
+
+    def unget(characters)
+      unless characters == :EOF
+        @queue = characters.to_a + @queue
+      end
+    end
   end
 
   # String-like object with an assosiated position and various extra methods

@@ -109,7 +109,7 @@ module HTML5lib
 
       # The character we just consumed need to be put back on the stack so it
       # doesn't get lost...
-      @stream.queue.push(data)
+      @stream.unget(data)
     end
 
     # This function returns either U+FFFD or the character based on the
@@ -160,7 +160,7 @@ module HTML5lib
       if c != ";"
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Numeric entity didn't end with ';'.")})
-        @stream.queue.push(c)
+        @stream.unget(c)
       end
 
       return char
@@ -171,7 +171,7 @@ module HTML5lib
       charStack = [@stream.char]
       if SPACE_CHARACTERS.include?(charStack[0]) or 
         [:EOF, '<', '&'].include?(charStack[0])
-        @stream.queue+= charStack
+        @stream.unget(charStack)
       elsif charStack[0] == "#"
         # We might have a number entity here.
         charStack += [@stream.char, @stream.char]
@@ -179,22 +179,22 @@ module HTML5lib
           # If we reach the end of the file put everything up to :EOF
           # back in the queue
           charStack = charStack[0...charStack.index(:EOF)]
-          @stream.queue+= charStack
+          @stream.unget(charStack)
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Numeric entity expected. Got end of file instead.")})
         else
           if charStack[1].downcase == "x" \
             and HEX_DIGITS.include? charStack[2]
             # Hexadecimal entity detected.
-            @stream.queue.push(charStack[2])
+            @stream.unget(charStack[2])
             char = consumeNumberEntity(true)
           elsif DIGITS.include? charStack[1]
             # Decimal entity detected.
-            @stream.queue += charStack[1..-1]
+            @stream.unget(charStack[1..-1])
             char = consumeNumberEntity(false)
           else
             # No number entity detected.
-            @stream.queue += charStack
+            @stream.unget(charStack)
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Numeric entity expected but none found.")})
           end
@@ -231,12 +231,12 @@ module HTML5lib
           if not charStack[-1] == ";"
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Named entity didn't end with ';'.")})
-            @stream.queue += charStack[entityName.length..-1]
+            @stream.unget(charStack[entityName.length..-1])
           end
         else
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Named entity expected. Got none.")})
-          @stream.queue += charStack
+          @stream.unget(charStack)
         end
       end
       return char
@@ -345,14 +345,14 @@ module HTML5lib
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Expected tag name. Got '?' instead (HTML doesn't " +
             "support processing instructions).")})
-          @stream.queue.push(data)
+          @stream.unget(data)
           @state = @states[:bogusComment]
         else
           # XXX
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Expected tag name. Got something else instead")})
           @tokenQueue.push({:type => :Characters, :data => "<"})
-          @stream.queue.push(data)
+          @stream.unget(data)
           @state = @states[:data]
         end
       else
@@ -363,7 +363,7 @@ module HTML5lib
           @state = @states[:closeTagOpen]
         else
           @tokenQueue.push({:type => :Characters, :data => "<"})
-          @stream.queue.insert(0, data)
+          @stream.unget(data)
           @state = @states[:data]
         end
       end
@@ -388,7 +388,7 @@ module HTML5lib
 
           # Since this is just for checking. We put the characters back on
           # the stack.
-          @stream.queue += charStack
+          @stream.unget(charStack)
         end
 
         if @currentToken and
@@ -426,7 +426,7 @@ module HTML5lib
         # XXX data can be _'_...
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Expected closing tag. Unexpected character '#{data}' found.")})
-        @stream.queue.push(data)
+        @stream.unget(data)
         @state = @states[:bogusComment]
       end
 
@@ -556,7 +556,7 @@ module HTML5lib
         @state = @states[:attributeValueDoubleQuoted]
       elsif data == "&"
         @state = @states[:attributeValueUnQuoted]
-        @stream.queue.push(data);
+        @stream.unget(data);
       elsif data == "'"
         @state = @states[:attributeValueSingleQuoted]
       elsif data == ">"
@@ -656,7 +656,7 @@ module HTML5lib
         else
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Expected '--' or 'DOCTYPE'. Not found.")})
-          @stream.queue += charStack
+          @stream.unget(charStack)
           @state = @states[:bogusComment]
         end
       end
@@ -771,7 +771,7 @@ module HTML5lib
       else
         @tokenQueue.push({:type => :ParseError, :data =>
           _("No space after literal string 'DOCTYPE'.")})
-        @stream.queue.push(data)
+        @stream.unget(data)
         @state = @states[:beforeDoctypeName]
       end
       return true
@@ -827,7 +827,7 @@ module HTML5lib
         @state = @states[:data]
       elsif data == :EOF
         @currentToken[:data] = true
-        @stream.queue.push(data)
+        @stream.unget(data)
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in DOCTYPE.")})
         @currentToken[:correct] = false
@@ -842,7 +842,7 @@ module HTML5lib
         elsif token == "system"
           @state = @states[:beforeDoctypeSystemIdentifier]
         else
-          @stream.queue += charStack
+          @stream.unget(charStack)
           @tokenQueue.push({:type => :ParseError, :data =>
             _("Expected 'public' or 'system'. Got '#{charStack.join('')}'")})
           @state = @states[:bogusDoctype]
@@ -1028,7 +1028,7 @@ module HTML5lib
         @state = @states[:data]
       elsif data == :EOF
         # XXX EMIT
-        @stream.queue.push(data)
+        @stream.unget(data)
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Unexpected end of file in bogus doctype.")})
         @currentToken[:correct] = false
