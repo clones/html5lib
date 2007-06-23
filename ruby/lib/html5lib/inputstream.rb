@@ -319,9 +319,7 @@ module HTML5lib
     end
 
     def unget(characters)
-      unless characters == :EOF
-        @queue = characters.to_a + @queue
-      end
+      @queue.unshift(*characters.to_a) unless characters == :EOF
     end
   end
 

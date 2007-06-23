@@ -142,9 +142,13 @@ module HTML5lib
       # Convert the set of characters consumed to an int.
       charAsInt = charStack.join('').to_i(radix)
 
-      # If the integer is between 127 and 160 (so 128 and bigger and 159 and
-      # smaller) we need to do the "windows trick".
-      if (127...160).include? charAsInt
+      if charAsInt == 13
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Incorrect CR newline entity. Replaced with LF.")})
+        charAsInt = 10
+      elsif (128..159).include? charAsInt
+        # If the integer is between 127 and 160 (so 128 and bigger and 159
+        # and smaller) we need to do the "windows trick".
         @tokenQueue.push({:type => :ParseError, :data =>
           _("Entity used with illegal number (windows-1252 reference).")})
 
@@ -166,7 +170,7 @@ module HTML5lib
       return char
     end
 
-    def consumeEntity
+    def consumeEntity(from_attribute=false)
       char = nil
       charStack = [@stream.char]
       if SPACE_CHARACTERS.include?(charStack[0]) or 
@@ -209,6 +213,8 @@ module HTML5lib
         filteredEntityList.reject! {|e| e[0].chr != charStack[0]}
         entityName = nil
 
+        # Try to find the longest entity the string will match to take care
+        # of &noti for instance.
         while charStack[-1] != :EOF
           name = charStack.join('')
           if filteredEntityList.any? {|e| e[0...name.length] == name}
@@ -220,6 +226,7 @@ module HTML5lib
 
           if ENTITIES.include? name
             entityName = name
+            break if entityName[-1] == ';'
           end
         end
 
@@ -228,9 +235,17 @@ module HTML5lib
 
           # Check whether or not the last character returned can be
           # discarded or needs to be put back.
-          if not charStack[-1] == ";"
+          if entityName[-1] != ?;
             @tokenQueue.push({:type => :ParseError, :data =>
               _("Named entity didn't end with ';'.")})
+          end
+
+          if charStack[-1] != ";" and from_attribute and
+             (ASCII_LETTERS.include?(charStack[entityName.length]) or
+              DIGITS.include?(charStack[entityName.length]))
+            @stream.unget(charStack)
+            char = '&'
+          else
             @stream.unget(charStack[entityName.length..-1])
           end
         else
@@ -244,7 +259,7 @@ module HTML5lib
 
     # This method replaces the need for "entityInAttributeValueState".
     def processEntityInAttribute
-      entity = consumeEntity
+      entity = consumeEntity(true)
       if entity
         @currentToken[:data][-1][1] += entity
       else
