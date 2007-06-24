@@ -40,6 +40,11 @@ module HTML5lib
       #Number of bytes to use when looking for a meta element with
       #encoding information
       @NUM_BYTES_META = 512
+      #Number of bytes to use when using detecting encoding using chardet
+      @NUM_BYTES_CHARDET = 256
+      #Number of bytes to use when reading content
+      @NUM_BYTES_BUFFER = 1024
+
       #Encoding to use if no other information can be found
       @DEFAULT_ENCODING = 'windows-1252'
     
@@ -51,14 +56,15 @@ module HTML5lib
       end
 
       # Read bytes from stream decoding them into Unicode
-      uString = @raw_stream.read
+      @buffer = @raw_stream.read(@NUM_BYTES_BUFFER) || ''
       if @char_encoding == 'windows-1252'
         @win1252 = true
       elsif @char_encoding != 'utf-8'
         begin
           require 'iconv'
           begin
-            uString = Iconv.iconv('utf-8', @char_encoding, uString).first
+            @buffer << @raw_stream.read unless @raw_stream.eof?
+            @buffer = Iconv.iconv('utf-8', @char_encoding, @buffer).first
           rescue
             @win1252 = true
           end
@@ -66,9 +72,6 @@ module HTML5lib
           @win1252 = true
         end
       end
-
-      # Convert the unicode string into a list to be used as the data stream
-      @data_stream = uString
 
       @queue = []
 
@@ -109,9 +112,22 @@ module HTML5lib
         begin
           require 'rubygems'
           require 'UniversalDetector' # gem install chardet
-          buffer = @raw_stream.read
-          encoding = UniversalDetector::chardet(buffer)['encoding']
-          seek(buffer, 0)
+          buffers = []
+          detector = UniversalDetector::Detector.instance
+          detector.reset
+          until @raw_stream.eof?
+            buffer = @raw_stream.read(@NUM_BYTES_CHARDET)
+            break if !buffer or buffer.empty?
+            buffers << buffer
+            detector.feed(buffer)
+            break if detector.instance_eval {@done}
+            detector.instance_eval {
+              @_mLastChar = @_mLastChar.chr if Fixnum === @_mLastChar
+            }
+          end
+          detector.close
+          encoding = detector.result['encoding']
+          seek(buffers*'', 0)
         rescue LoadError
         end
       end
@@ -242,14 +258,20 @@ module HTML5lib
       unless @queue.empty?
         return @queue.shift
       else
-        c = @data_stream[@tell]
+        if @tell + 3 > @buffer.length and !@raw_stream.eof?
+          # read next block
+          @buffer = @buffer[@tell .. -1] + @raw_stream.read(@NUM_BYTES_BUFFER)
+          @tell = 0
+        end
+
+        c = @buffer[@tell]
         @tell += 1
 
         case c
         when 0x01 .. 0x7F
           if c == 0x0D
             # normalize newlines
-            @tell += 1 if @data_stream[@tell] == 0x0A
+            @tell += 1 if @buffer[@tell] == 0x0A
             c = 0x0A
           end
 
@@ -276,7 +298,7 @@ module HTML5lib
         when 0xC0 .. 0xFF
           if @win1252
             "\xC3" + (c-64).chr # convert to utf-8
-          elsif @data_stream[@tell-1 .. -1] =~ /^
+          elsif @buffer[@tell-1 .. @tell+3] =~ /^
                 ( [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
                 |  \xE0[\xA0-\xBF][\x80-\xBF]        # excluding overlongs
                 | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
