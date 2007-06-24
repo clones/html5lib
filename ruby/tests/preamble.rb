@@ -1,9 +1,9 @@
 require 'test/unit'
 
-HTML5LIB_BASE = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__)))) 
+HTML5_BASE = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__)))) 
 
-if File.exists?(File.join(HTML5LIB_BASE, 'testdata'))
-  TESTDATA_DIR = File.join(HTML5LIB_BASE, 'testdata')
+if File.exists?(File.join(HTML5_BASE, 'testdata'))
+  TESTDATA_DIR = File.join(HTML5_BASE, 'testdata')
 else
   TESTDATA_DIR = File.join(File.dirname(File.dirname(File.expand_path(__FILE__))), 'testdata')
 end
@@ -12,7 +12,7 @@ $:.unshift File.join(File.dirname(File.dirname(__FILE__)),'lib')
 
 $:.unshift File.dirname(__FILE__)
 
-def html5lib_test_files(subdirectory)
+def html5_test_files(subdirectory)
   Dir[File.join(TESTDATA_DIR, subdirectory, '*.*')]
 end
 
@@ -30,7 +30,7 @@ rescue LoadError
   end
 end
 
-module HTML5lib
+module HTML5
   module TestSupport
     def self.startswith?(a, b)
       b[0... a.length] == a

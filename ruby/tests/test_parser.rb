@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), 'preamble')
 
-require 'html5lib/treebuilders'
-require 'html5lib/html5parser'
+require 'html5/treebuilders'
+require 'html5/html5parser'
 
 
 $tree_types_to_test = ['simpletree', 'rexml']
@@ -18,10 +18,10 @@ puts 'Testing tree builders: ' + $tree_types_to_test * ', '
 
 
 class Html5ParserTestCase < Test::Unit::TestCase
-  include HTML5lib
+  include HTML5
   include TestSupport
 
-  html5lib_test_files('tree-construction').each do |test_file|
+  html5_test_files('tree-construction').each do |test_file|
 
     test_name = File.basename(test_file).sub('.dat', '')
 

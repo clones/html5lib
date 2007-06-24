@@ -1,10 +1,10 @@
 require File.join(File.dirname(__FILE__), 'preamble')
 
-require 'html5lib/liberalxmlparser'
+require 'html5/liberalxmlparser'
 
 XMLELEM = /<(\w+\s*)((?:[-:\w]+="[^"]*"\s*)+)(\/?)>/
 
-def assert_xml_equal(input, expected=nil, parser=HTML5lib::XMLParser)
+def assert_xml_equal(input, expected=nil, parser=HTML5::XMLParser)
   sortattrs = proc {"<#{$1+$2.split.sort.join(' ')+$3}>"}
   document = parser.parse(input.chomp).root
   if not expected
@@ -17,7 +17,7 @@ def assert_xml_equal(input, expected=nil, parser=HTML5lib::XMLParser)
   end
 end
 
-def assert_xhtml_equal(input, expected=nil, parser=HTML5lib::XHTMLParser)
+def assert_xhtml_equal(input, expected=nil, parser=HTML5::XHTMLParser)
   assert_xml_equal(input, expected, parser)
 end
 
