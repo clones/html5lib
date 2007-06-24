@@ -2,7 +2,7 @@
 # at any time. 
 # 
 # For background/rationale, see:
-#  * http://www.intertwingly.net/blog/2007/01/08/Xhtml5
+#  * http://www.intertwingly.net/blog/2007/01/08/Xhtml5lib
 #  * http://tinyurl.com/ylfj8k (and follow-ups)
 # 
 # References:
