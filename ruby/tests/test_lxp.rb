@@ -34,10 +34,10 @@ class BasicXhtml5Test < Test::Unit::TestCase
 
   def test_title_body_named_charref
     assert_xhtml_equal(
-      '<title>mdash</title>A &mdash B',
+      '<title>ntilde</title>A &ntilde B',
       '<html xmlns="http://www.w3.org/1999/xhtml">' +
-      '<head><title>mdash</title></head>' + 
-      '<body>A '+ [0x2014].pack('U') + ' B</body>' +
+      '<head><title>ntilde</title></head>' + 
+      '<body>A '+ [0xF1].pack('U') + ' B</body>' +
       '</html>')
   end
 end
