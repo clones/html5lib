@@ -112,7 +112,7 @@ module HTML5
 
     def startTagForm(name, attributes)
       if @tree.formPointer
-        @parser.parseError('Unexpected start tag (form). Ignored.')
+        @parser.parseError(_('Unexpected start tag (form). Ignored.'))
       else
         endTagP('p') if in_scope?('p')
         @tree.insertElement(name, attributes)
@@ -129,9 +129,9 @@ module HTML5
         if stopName.include?(node.name)
           poppedNodes = (0..i).collect { @tree.openElements.pop }
           if i >= 1
-            @parser.parseError("Missing end tag%s (%s)" % [
+            @parser.parseError(_("Missing end tag%s (%s)" % [
               (i>1 ? 's' : ''),
-              poppedNodes.reverse.map {|item| item.name}.join(', ')])
+              poppedNodes.reverse.map {|item| item.name}.join(', ')]))
           end
           break
         end
@@ -251,7 +251,7 @@ module HTML5
     end
 
     def startTagIsindex(name, attributes)
-      @parser.parseError("Unexpected start tag isindex. Don't use it!")
+      @parser.parseError(_("Unexpected start tag isindex. Don't use it!"))
       return if @tree.formPointer
       processStartTag('form', {})
       processStartTag('hr', {})
@@ -311,7 +311,7 @@ module HTML5
 
     def endTagP(name)
       @tree.generateImpliedEndTags('p') if in_scope?('p')
-      @parser.parseError('Unexpected end tag (p).') unless @tree.openElements[-1].name == 'p'
+      @parser.parseError(_('Unexpected end tag (p).')) unless @tree.openElements[-1].name == 'p'
       @tree.openElements.pop while in_scope?('p')
     end
 
@@ -342,7 +342,7 @@ module HTML5
       @tree.generateImpliedEndTags if in_scope?(name)
 
       unless @tree.openElements[-1].name == name
-        @parser.parseError(("End tag (#{name}) seen too early. Expected other end tag."))
+        @parser.parseError(_("End tag (#{name}) seen too early. Expected other end tag."))
       end
 
       if in_scope?(name)
@@ -351,7 +351,14 @@ module HTML5
     end
 
     def endTagForm(name)
-      endTagBlock(name)
+      if in_scope?(name)
+        @tree.generateImpliedEndTags
+      end
+      if @tree.openElements[-1].name != name
+        @parser.parseError(_("End tag (form) seen too early. Ignored."))
+      else
+        @tree.openElements.pop
+      end
       @tree.formPointer = nil
     end
 
@@ -361,7 +368,7 @@ module HTML5
         @tree.generateImpliedEndTags(name)
 
         unless @tree.openElements[-1].name == name
-          @parser.parseError(("End tag (#{name}) seen too early. Expected other end tag."))
+          @parser.parseError(_("End tag (#{name}) seen too early. Expected other end tag."))
         end
       end
 
@@ -377,7 +384,7 @@ module HTML5
       end
 
       unless @tree.openElements[-1].name == name
-        @parser.parseError(("Unexpected end tag (#{name}). Expected other end tag."))
+        @parser.parseError(_("Unexpected end tag (#{name}). Expected other end tag."))
       end
 
       HEADING_ELEMENTS.each do |element|
