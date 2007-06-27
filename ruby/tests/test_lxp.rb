@@ -220,6 +220,22 @@ EOX
 EOX
   end
 
+  def test_script_src
+    assert_xhtml_equal <<EOX1, <<EOX2.strip
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title><script src="http://example.com"/></head>
+<body>
+<script>1 &lt; 2 &amp; 3</script>
+</body></html>
+EOX1
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title><script src="http://example.com"></script></head>
+<body>
+<script>1 &lt; 2 &amp; 3</script>
+</body></html>
+EOX2
+  end
+
   def test_title
     assert_xhtml_equal <<EOX
 <html xmlns="http://www.w3.org/1999/xhtml">

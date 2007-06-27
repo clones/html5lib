@@ -34,7 +34,9 @@ module HTML5
 
         # For EmptyTags, process both a Start and an End tag
         if token[:type] == :EmptyTag
+          save = @tokenizer.contentModelFlag
           @phase.processStartTag(token[:name], token[:data])
+          @tokenizer.contentModelFlag = save
           token[:data] = {}
           token[:type] = :EndTag
         end
