@@ -128,7 +128,6 @@ module HTML5
         radix = 16
       end
 
-      char = [0xFFFD].pack('U')
       charStack = []
 
       # Consume all the characters that are in range while making sure we
@@ -155,8 +154,12 @@ module HTML5
         charAsInt = ENTITIES_WINDOWS1252[charAsInt - 128]
       end
 
-      if charAsInt > 0 and charAsInt <= 1114111
+      if 0 < charAsInt and charAsInt <= 1114111 and not (55296 <= charAsInt and charAsInt <= 57343)
         char = [charAsInt].pack('U')
+      else
+        char = [0xFFFD].pack('U')
+        @tokenQueue.push({:type => :ParseError, :data =>
+          _("Numeric entity represents an illegal codepoint.")})
       end
 
       # Discard the ; if present. Otherwise, put it back on the queue and
