@@ -84,9 +84,9 @@ module HTML5
       # Start processing. When EOF is reached @state will return false
       # instead of true and the loop will terminate.
       while send @state
-        while not @tokenQueue.empty?
-          yield @tokenQueue.shift
-        end
+        yield :type => :ParseError, :data => @stream.errors.shift until
+          @stream.errors.empty?
+        yield @tokenQueue.shift until @tokenQueue.empty?
       end
     end
 

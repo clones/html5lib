@@ -10,7 +10,7 @@ module HTML5
 
   class HTMLInputStream
 
-    attr_accessor :queue, :char_encoding
+    attr_accessor :queue, :char_encoding, :errors
 
     # Initialises the HTMLInputStream.
     # 
@@ -74,6 +74,7 @@ module HTML5
       end
 
       @queue = []
+      @errors = []
 
       # Reset position in the list to read from
       @tell = 0
@@ -314,6 +315,8 @@ module HTML5
           end
 
         when 0x00
+          @errors.push('null character found in input stream, ' +
+            'replaced with U+FFFD')
           [0xFFFD].pack('U') # null characters are invalid
 
         else
