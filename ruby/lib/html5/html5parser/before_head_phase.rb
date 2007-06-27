@@ -5,7 +5,7 @@ module HTML5
 
     handle_start 'html', 'head'
 
-    handle_end %w( html head body br ) => 'ImplyHead'
+    handle_end %w( html head body br p ) => 'ImplyHead'
 
     def processEOF
       startTagHead('head', {})

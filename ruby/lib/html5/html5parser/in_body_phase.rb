@@ -312,7 +312,12 @@ module HTML5
     def endTagP(name)
       @tree.generateImpliedEndTags('p') if in_scope?('p')
       @parser.parseError(_('Unexpected end tag (p).')) unless @tree.openElements[-1].name == 'p'
-      @tree.openElements.pop while in_scope?('p')
+      if in_scope?('p')
+        @tree.openElements.pop while in_scope?('p')
+      else
+        startTagCloseP('p', {})
+        endTagP('p')
+      end
     end
 
     def endTagBody(name)

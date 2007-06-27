@@ -6,7 +6,7 @@ module HTML5
     handle_start 'html', 'head', 'title', 'style', 'script', %w( base link meta )
 
     handle_end 'head'
-    handle_end %w( html body br ) => 'ImplyAfterHead'
+    handle_end %w( html body br p ) => 'ImplyAfterHead'
     handle_end %w( title style script )
 
     def processEOF
