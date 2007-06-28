@@ -292,20 +292,23 @@ module HTML5
         @lastFourChars.shift if @lastFourChars.length > 4
       end
 
-      if data == "&" and [:PCDATA,:RCDATA].include?(@contentModelFlag)
-        @state = @states[:entityData]
+      if data == "&" and !@escapeFlag and
+        [:PCDATA,:RCDATA].include?(@contentModelFlag)
+          @state = @states[:entityData]
 
-      elsif data == "-" and [:CDATA,:RCDATA].include?(@contentModelFlag) and
-        @escapeFlag == false and @lastFourChars.join('') == "<!--"
+      elsif data == "-" and !@escapeFlag and
+        [:CDATA,:RCDATA].include?(@contentModelFlag) and
+        @lastFourChars.join('') == "<!--"
           @escapeFlag = true
           @tokenQueue.push({:type => :Characters, :data => data})
 
-      elsif data == "<" and @escapeFlag == false and
+      elsif data == "<" and !@escapeFlag and
         [:PCDATA,:CDATA,:RCDATA].include?(@contentModelFlag)
           @state = @states[:tagOpen]
 
-      elsif data == ">" and [:CDATA,:RCDATA].include?(@contentModelFlag) and
-        @escapeFlag == true and @lastFourChars[1..-1].join('') == "-->"
+      elsif data == ">" and @escapeFlag and 
+        [:CDATA,:RCDATA].include?(@contentModelFlag) and
+        @lastFourChars[1..-1].join('') == "-->"
           @escapeFlag = false
           @tokenQueue.push({:type => :Characters, :data => data})
 
