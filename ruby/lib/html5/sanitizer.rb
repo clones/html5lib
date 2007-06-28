@@ -1,4 +1,5 @@
 require 'cgi'
+require 'html5/tokenizer'
 
 module HTML5
 
