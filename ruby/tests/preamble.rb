@@ -55,34 +55,22 @@ module HTML5
         data = {}
         key=nil
         @f.each_line do |line|
-          heading = isSectionHeading(line)
-          if heading
+          if line[0] == ?# and @sections.include?(line[1..-2])
+            heading = line[1..-2]
             if data.any? and heading == @sections[0]
-              #Remove trailing newline
-              data[key].chomp!
+              data[key].chomp!  #Remove trailing newline
               yield normaliseOutput(data)
               data = {}
             end
             key = heading
             data[key]=""
           elsif key
-            data[key] += line + "\n"
+            data[key] += line
           end
         end
         yield normaliseOutput(data) if data
       end
         
-      # If the current heading is a test section heading return the heading,
-      # otherwise return false
-      def isSectionHeading(line)
-        line.chomp!
-        if line[0] == ?# and @sections.include?(line[1..-1])
-          return line[1..-1]
-        else
-          return false
-        end
-      end
-    
       def normaliseOutput(data)
         #Remove trailing newlines
         data.keys.each { |key| data[key].chomp! }

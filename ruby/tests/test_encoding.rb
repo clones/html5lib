@@ -3,6 +3,8 @@ require File.join(File.dirname(__FILE__), 'preamble')
 require 'html5/inputstream'
 
 class Html5EncodingTestCase < Test::Unit::TestCase
+  include HTML5
+  include TestSupport
 
   begin
     require 'rubygems'
@@ -20,10 +22,8 @@ class Html5EncodingTestCase < Test::Unit::TestCase
   html5_test_files('encoding').each do |test_file|        
     test_name = File.basename(test_file).sub('.dat', '').tr('-', '')
 
-    File.read(test_file).split("#data\n").each_with_index do |data, index|
-      next if data.empty?
-      input, encoding = data.split(/\n#encoding\s+/, 2)
-      encoding = encoding.split[0]
+    TestData.new(test_file, %w(data encoding)).
+      each_with_index do |(input, encoding), index|
 
       define_method 'test_%s_%d' % [ test_name, index + 1 ] do
         stream = HTML5::HTMLInputStream.new(input, :chardet => false)
