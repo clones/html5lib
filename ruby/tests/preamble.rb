@@ -32,40 +32,6 @@ end
 
 module HTML5
   module TestSupport
-    def self.startswith?(a, b)
-      b[0... a.length] == a
-    end
-
-    def self.parseTestcase(data)
-      innerHTML = nil
-      input = []
-      output = []
-      errors = []
-      currentList = input
-      data.split(/\n/).each do |line|
-        if !line.empty? and !startswith?("#errors", line) and
-          !startswith?("#document", line) and
-          !startswith?("#data", line) and
-          !startswith?("#document-fragment", line)
-
-          if currentList == output and startswith?("|", line)
-            currentList.push(line[2..-1])
-          else
-            currentList.push(line)
-          end
-        elsif line == "#errors"
-          currentList = errors
-        elsif line == "#document" or startswith?("#document-fragment", line)
-          if startswith?("#document-fragment", line)
-            innerHTML = line[19..-1]
-            raise AssertionError unless innerHTML
-          end
-          currentList = output
-        end
-      end
-      return innerHTML, input.join("\n"), output.join("\n"), errors
-    end
-
     # convert the output of str(document) to the format used in the testcases
     def convertTreeDump(treedump)
       treedump.split(/\n/)[1..-1].map { |line| (line.length > 2 and line[0] == ?|) ? line[3..-1] : line }.join("\n")
@@ -77,5 +43,51 @@ module HTML5
       end
     end
 
+    class TestData
+      include Enumerable
+
+      def initialize(filename, sections)
+        @f = open(filename)
+        @sections = sections
+      end
+    
+      def each
+        data = {}
+        key=nil
+        @f.each_line do |line|
+          heading = isSectionHeading(line)
+          if heading
+            if data.any? and heading == @sections[0]
+              #Remove trailing newline
+              data[key].chomp!
+              yield normaliseOutput(data)
+              data = {}
+            end
+            key = heading
+            data[key]=""
+          elsif key
+            data[key] += line + "\n"
+          end
+        end
+        yield normaliseOutput(data) if data
+      end
+        
+      # If the current heading is a test section heading return the heading,
+      # otherwise return false
+      def isSectionHeading(line)
+        line.chomp!
+        if line[0] == ?# and @sections.include?(line[1..-1])
+          return line[1..-1]
+        else
+          return false
+        end
+      end
+    
+      def normaliseOutput(data)
+        #Remove trailing newlines
+        data.keys.each { |key| data[key].chomp! }
+        @sections.map {|heading| data[heading]}
+      end
+    end
   end
 end

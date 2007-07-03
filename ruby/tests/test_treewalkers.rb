@@ -75,11 +75,10 @@ class TestTreeWalkers < Test::Unit::TestCase
     test_name = File.basename(test_file).sub('.dat', '')
     next if test_name == 'tests5' # TODO
 
-    File.read(test_file).split("#data\n").each_with_index do |data, index|
-      next if data.empty?
+    TestData.new(test_file, %w(data errors document-fragment document)).
+      each_with_index do |(input, errors, innerHTML, expected), index|
 
-      innerHTML, input, expected_output, expected_errors =
-        HTML5::TestSupport::parseTestcase(data)
+      expected = expected.gsub("\n| ","\n")[2..-1]
 
       $tree_types_to_test.each do |tree_name, tree_class|
 
@@ -97,7 +96,7 @@ class TestTreeWalkers < Test::Unit::TestCase
 
           begin
             output = sortattrs(convertTokens(tree_class[:walker].new(document)))
-            expected = sortattrs(expected_output)
+            expected = sortattrs(expected)
             assert_equal expected, output, [
               '', 'Input:', input,
               '', 'Expected:', expected,
