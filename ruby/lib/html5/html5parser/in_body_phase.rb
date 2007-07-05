@@ -188,7 +188,10 @@ module HTML5
 
     def startTagNobr(name, attributes)
       @tree.reconstructActiveFormattingElements
-      processEndTag('nobr') if in_scope?('nobr')
+      if in_scope?('nobr')
+        @parser.parseError(_('Unexpected start tag (nobr) implies end tag (nobr).'))
+        processEndTag('nobr')
+      end
       addFormattingElement(name, attributes)
     end
 
