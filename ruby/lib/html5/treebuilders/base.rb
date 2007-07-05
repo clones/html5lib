@@ -299,7 +299,8 @@ module HTML5
         def generateImpliedEndTags(exclude=nil)
           name = @openElements[-1].name
 
-          if (['dd', 'dt', 'li', 'p', 'td', 'th', 'tr'].include?(name) and name != exclude)
+          # XXX td, th and tr are not actually needed
+          if (%w[dd dt li p td th tr].include?(name) and name != exclude)
             @openElements.pop
             # XXX This is not entirely what the specification says. We should
             # investigate it more closely.

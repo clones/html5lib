@@ -369,12 +369,11 @@ module HTML5
 
     def endTagListItem(name)
       # AT Could merge this with the Block case
-      if in_scope?(name)
-        @tree.generateImpliedEndTags(name)
+      @tree.generateImpliedEndTags(name) if in_scope?(name)
 
-        unless @tree.openElements[-1].name == name
-          @parser.parseError(_("End tag (#{name}) seen too early. Expected other end tag."))
-        end
+      unless @tree.openElements[-1].name == name
+        @parser.parseError(_("End tag (#{name}) seen too early. " + 
+          'Expected other end tag.'))
       end
 
       remove_open_elements_until(name) if in_scope?(name)

@@ -170,6 +170,8 @@ module HTML5
         raise SerializeError
       end
     end
+
+    def _(string); string; end
   end
 
   # Error in serialized tree
