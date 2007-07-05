@@ -24,7 +24,6 @@ class Html5ParserTestCase < Test::Unit::TestCase
   html5_test_files('tree-construction').each do |test_file|
 
     test_name = File.basename(test_file).sub('.dat', '')
-    next if test_name == "tests5" # TODO
 
     TestData.new(test_file, %w(data errors document-fragment document)).
       each_with_index do |(input, errors, innerHTML, expected), index|
