@@ -191,6 +191,8 @@ module HTML5
       if in_scope?('nobr')
         @parser.parseError(_('Unexpected start tag (nobr) implies end tag (nobr).'))
         processEndTag('nobr')
+        # XXX Need tests that trigger the following
+        @tree.reconstructActiveFormattingElements
       end
       addFormattingElement(name, attributes)
     end
