@@ -3,11 +3,12 @@ require 'html5/html5parser/phase'
 module HTML5
   class InHeadPhase < Phase
 
-    handle_start 'html', 'head', 'title', 'style', 'script', %w( base link meta )
+    handle_start 'html', 'head', 'title', 'style', 'script', 'noscript'
+    handle_start %w( base link meta )
 
     handle_end 'head'
     handle_end %w( html body br p ) => 'ImplyAfterHead'
-    handle_end %w( title style script )
+    handle_end %w( title style script noscript )
 
     def processEOF
       if ['title', 'style', 'script'].include?(name = @tree.openElements[-1].name)
@@ -19,7 +20,7 @@ module HTML5
     end
 
     def processCharacters(data)
-      if ['title', 'style', 'script'].include?(@tree.openElements[-1].name)
+      if %w[title style script noscript].include?(@tree.openElements[-1].name)
         @tree.insertText(data)
       else
         anythingElse
@@ -49,12 +50,23 @@ module HTML5
       @parser.tokenizer.contentModelFlag = :CDATA
     end
 
+    def startTagNoscript(name, attributes)
+      # XXX Need to decide whether to implement the scripting disabled case.
+      element = @tree.createElement(name, attributes)
+      if @tree.headPointer !=nil and @parser.phase == @parser.phases[:inHead]
+        appendToHead(element)
+      else
+        @tree.openElements[-1].appendChild(element)
+      end
+      @tree.openElements.push(element)
+      @parser.tokenizer.contentModelFlag = :CDATA
+    end
+
     def startTagScript(name, attributes)
       #XXX Inner HTML case may be wrong
       element = @tree.createElement(name, attributes)
       element._flags.push("parser-inserted")
-      if (@tree.headPointer != nil and
-        @parser.phase == @parser.phases[:inHead])
+      if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
         @tree.openElements[-1].appendChild(element)
@@ -91,7 +103,7 @@ module HTML5
       @parser.phase.processEndTag(name)
     end
 
-    def endTagTitleStyleScript(name)
+    def endTagTitleStyleScriptNoscript(name)
       if @tree.openElements[-1].name == name
         @tree.openElements.pop
       else
