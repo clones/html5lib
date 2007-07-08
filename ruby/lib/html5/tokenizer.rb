@@ -179,10 +179,10 @@ module HTML5
       if SPACE_CHARACTERS.include?(charStack[0]) or 
         [:EOF, '<', '&'].include?(charStack[0])
         @stream.unget(charStack)
-      elsif charStack[0] == "#"
+      elsif charStack[0] == '#'
         # We might have a number entity here.
         charStack += [@stream.char, @stream.char]
-        if charStack.include? :EOF
+        if charStack[0 .. 1].include? :EOF
           # If we reach the end of the file put everything up to :EOF
           # back in the queue
           charStack = charStack[0...charStack.index(:EOF)]
