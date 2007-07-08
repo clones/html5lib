@@ -60,7 +60,11 @@ class TestTreeWalkers < Test::Unit::TestCase
         when :Comment
             output << "#{' '*indent}<!-- #{token[:data]} -->"
         when :Doctype
-            output << "#{' '*indent}<!DOCTYPE #{token[:name]}>"
+            if token[:name] and token[:name].any?
+              output << "#{' '*indent}<!DOCTYPE #{token[:name]}>"
+            else
+              output << "#{' '*indent}<!DOCTYPE>"
+            end
         when :Characters, :SpaceCharacters
             output << "#{' '*indent}\"#{token[:data]}\""
         else

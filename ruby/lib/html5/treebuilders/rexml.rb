@@ -125,7 +125,7 @@ module HTML5
         end
 
         def printTree indent=0
-          "\n|#{' ' * indent}<!DOCTYPE #{name}>"
+          "\n|#{' ' * indent}<!DOCTYPE#{name and name.any? ? ' ' : ''}#{name}>"
         end
       end
 

@@ -159,7 +159,11 @@ module HTML5
         end
 
         def printTree(indent=0)
-          "\n|#{' ' * indent}<!DOCTYPE #{hpricot.target}>"
+          if hpricot.target and hpricot.target.any?
+            "\n|#{' ' * indent}<!DOCTYPE #{hpricot.target}>"
+          else
+            "\n|#{' ' * indent}<!DOCTYPE>"
+          end
         end
       end
 

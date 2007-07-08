@@ -720,7 +720,7 @@ module HTML5
             @tokenQueue.push(@currentToken)
             @state = @states[:data]
         else
-            @currentToken[:data] += data + @stream.chars_until("-")
+            @currentToken[:data] += '-' + data + @stream.chars_until("-")
             @state = @states[:comment]
         end
         return true

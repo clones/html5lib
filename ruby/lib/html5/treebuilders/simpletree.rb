@@ -114,7 +114,7 @@ module HTML5
 
       class DocumentType < Node
         def to_s
-           "<!DOCTYPE %s>" % name
+           "<!DOCTYPE#{name and name.any? ? ' ' : ''}#{name}>"
         end
       end
 
