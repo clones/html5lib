@@ -198,8 +198,11 @@ module HTML5
           return false
         end
 
-        def insertDoctype(name)
-          @document.appendChild(@doctypeClass.new(name))
+        def insertDoctype(name, public_id, system_id)
+          doctype = @doctypeClass.new(name)
+          doctype.public_id = public_id
+          doctype.system_id = system_id
+          @document.appendChild(doctype)
         end
 
         def insertComment(data, parent=nil)

@@ -145,17 +145,19 @@ module HTML5
       end
 
       class DocumentType < Node
+        def_delegators :@hpricot, :public_id, :system_id
+
         def self.hpricot_class
           ::Hpricot::DocType
         end
 
-        def initialize(name)
+        def initialize(name, public_id, system_id)
           begin
             super(name)
           rescue ArgumentError # needs 3...
           end
 
-          @hpricot = ::Hpricot::DocType.new(name, nil, nil)
+          @hpricot = ::Hpricot::DocType.new(name, public_id, system_id)
         end
 
         def printTree(indent=0)
@@ -204,6 +206,11 @@ module HTML5
           @elementClass = Element
           @commentClass = CommentNode
           @fragmentClass = DocumentFragment
+        end
+
+        def insertDoctype(name, public_id, system_id)
+          doctype = @doctypeClass.new(name, public_id, system_id)
+          @document.appendChild(doctype)
         end
 
         def testSerializer(node)

@@ -113,8 +113,16 @@ module HTML5
       end
 
       class DocumentType < Node
+        attr_accessor :public_id, :system_id
+
         def to_s
-           "<!DOCTYPE#{name and name.any? ? ' ' : ''}#{name}>"
+          "<!DOCTYPE#{name and name.any? ? ' ' : ''}#{name}>"
+        end
+
+        def initialize name
+          super name
+          @public_id = nil
+          @system_id = nil
         end
       end
 

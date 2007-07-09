@@ -22,7 +22,7 @@ class JsonWalker < HTML5::TreeWalkers::Base
       when 'Characters', 'SpaceCharacters'
         text(token[1]) {|textToken| yield textToken}
       when 'Doctype'
-        yield doctype(token[1])
+        yield doctype(token[1], token[2], token[3])
       else
         raise "Unknown token type: " + token[0]
       end

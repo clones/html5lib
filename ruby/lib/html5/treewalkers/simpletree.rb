@@ -12,7 +12,7 @@ module HTML5
             return
 
           when DocumentType
-            yield doctype(node.name)
+            yield doctype(node.name, node.public_id, node.system_id)
 
           when TextNode
             text(node.value) {|token| yield token}

@@ -120,8 +120,25 @@ module HTML5
       end
 
       class DocumentType < Node
+        def_delegator :@rxobj, :public, :public_id
+
+        def_delegator :@rxobj, :system, :system_id
+
         def self.rxclass
           ::REXML::DocType
+        end
+
+        def initialize name, public_id, system_id
+            super(name)
+            if public_id
+              @rxobj = ::REXML::DocType.new [name,
+                ::REXML::DocType::PUBLIC, public_id, system_id]
+            elsif system_id
+              @rxobj = ::REXML::DocType.new [name,
+                ::REXML::DocType::SYSTEM, nil, system_id]
+            else
+              @rxobj = ::REXML::DocType.new name
+            end
         end
 
         def printTree indent=0
@@ -171,6 +188,11 @@ module HTML5
           @elementClass = Element
           @commentClass = CommentNode
           @fragmentClass = DocumentFragment
+        end
+
+        def insertDoctype(name, public_id, system_id)
+          doctype = @doctypeClass.new(name, public_id, system_id)
+          @document.appendChild(doctype)
         end
 
         def testSerializer node

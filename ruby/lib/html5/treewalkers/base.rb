@@ -45,8 +45,10 @@ module TokenConstructor
         return {:type => :Comment, :data => data}
     end
 
-    def doctype(name)
-        return {:type => :Doctype, :name => name, :data => name.upcase() == "HTML"}
+    def doctype(name, public_id, system_id, correct=nil)
+        return {:type => :Doctype, :name => name,
+          :public_id => public_id, :system_id => system_id,
+          :correct => correct}
     end
 
     def unknown(nodeType)

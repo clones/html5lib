@@ -22,7 +22,7 @@ module HTML5
         @parser.parseError(_('Erroneous DOCTYPE.'))
       end
       # XXX need to update DOCTYPE tokens
-      @tree.insertDoctype(name)
+      @tree.insertDoctype(name, publicId, systemId)
 
       publicId = publicId.to_s.upcase
 

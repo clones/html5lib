@@ -23,7 +23,7 @@ module HTML5
           when ::Hpricot::Doc
             [:DOCUMENT]
           when ::Hpricot::DocType
-            [:DOCTYPE, node.target]
+            [:DOCTYPE, node.target, node.public_id, node.system_id]
           when ::Hpricot::XMLDecl
             [nil]
           else
