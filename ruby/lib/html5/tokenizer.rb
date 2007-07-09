@@ -1043,6 +1043,7 @@ module HTML5
 
     def bogusDoctypeState
       data = @stream.char
+      @currentToken[:correct] = false
       if data == ">"
         @tokenQueue.push(@currentToken)
         @state = @states[:data]
