@@ -72,6 +72,8 @@ module HTML5
 
       # Tokens to be processed.
       @tokenQueue = []
+      @lowercase_element_name = true unless options[:lowercase_element_name] == false
+      @lowercase_attr_name    = true unless options[:lowercase_attr_name] == false
     end
 
     # This is where the magic happens.
@@ -275,8 +277,15 @@ module HTML5
     # emitted.
     def emitCurrentToken
       # Add token to the queue to be yielded
-      @tokenQueue.push(@currentToken)
-      @state = @states[:data]
+      token = @currentToken
+      if [:StartTag, :EndTag, :EmptyTag].include?(token[:type])
+        if @lowercase_element_name
+          token[:name] = token[:name].downcase
+        end
+        @tokenQueue.push(token)
+        @state = @states[:data]
+      end
+      
     end
 
     # Below are the various tokenizer states worked out.
@@ -322,11 +331,9 @@ module HTML5
         # emitted separately.
         # XXX need to check if we don't need a special "spaces" flag on
         # characters.
-        @tokenQueue.push({:type => :SpaceCharacters, :data =>
-          data + @stream.chars_until(SPACE_CHARACTERS, true)})
+        @tokenQueue.push({:type => :SpaceCharacters, :data => data + @stream.chars_until(SPACE_CHARACTERS, true)})
       else
-        @tokenQueue.push({:type => :Characters, :data => 
-          data + @stream.chars_until(%w[& < > -])})
+        @tokenQueue.push({:type => :Characters, :data => data + @stream.chars_until(%w[& < > -])})
       end
       return true
     end
@@ -350,7 +357,7 @@ module HTML5
         elsif data == "/"
           @state = @states[:closeTagOpen]
         elsif data != :EOF and ASCII_LETTERS.include? data
-          @currentToken = {:type => :StartTag, :name => data.downcase, :data => []}
+          @currentToken = {:type => :StartTag, :name => data, :data => []}
           @state = @states[:tagName]
         elsif data == ">"
           # XXX In theory it could be something besides a tag name. But
@@ -436,7 +443,7 @@ module HTML5
         @tokenQueue.push({:type => :Characters, :data => "</"})
         @state = @states[:data]
       elsif ASCII_LETTERS.include? data
-        @currentToken = {:type => :EndTag, :name => data.downcase, :data => []}
+        @currentToken = {:type => :EndTag, :name => data, :data => []}
         @state = @states[:tagName]
       elsif data == ">"
         @tokenQueue.push({:type => :ParseError, :data =>
@@ -462,7 +469,7 @@ module HTML5
           _("Unexpected end of file in the tag name.")})
         emitCurrentToken
       elsif ASCII_LETTERS.include? data
-        @currentToken[:name] += data.downcase + @stream.chars_until(ASCII_LETTERS, true).downcase
+        @currentToken[:name] += data + @stream.chars_until(ASCII_LETTERS, true)
       elsif data == ">"
         emitCurrentToken
       elsif data == "/"
@@ -482,7 +489,7 @@ module HTML5
         @tokenQueue.push({:type => :ParseError, :data => _("Unexpected end of file. Expected attribute name instead.")})
         emitCurrentToken
       elsif ASCII_LETTERS.include? data
-        @currentToken[:data].push([data.downcase, ""])
+        @currentToken[:data].push([data, ""])
         @state = @states[:attributeName]
       elsif data == ">"
         emitCurrentToken
@@ -506,7 +513,7 @@ module HTML5
         @state = @states[:data]
         emitToken = true
       elsif ASCII_LETTERS.include? data
-        @currentToken[:data][-1][0] += data.downcase + @stream.chars_until(ASCII_LETTERS, true).downcase
+        @currentToken[:data][-1][0] += data + @stream.chars_until(ASCII_LETTERS, true)
         leavingThisState = false
       elsif data == ">"
         # XXX If we emit here the attributes are converted to a dict
@@ -527,6 +534,9 @@ module HTML5
         # Attributes are not dropped at this stage. That happens when the
         # start tag token is emitted so values can still be safely appended
         # to attributes, but we do want to report the parse error in time.
+        if @lowercase_attr_name:
+            @currentToken[:data][-1][0] = @currentToken[:data].last.first.downcase
+        end
         @currentToken[:data][0...-1].each {|name,value|
           if @currentToken[:data].last.first == name
             @tokenQueue.push({:type => :ParseError, :data =>_("Dropped duplicate attribute on tag.")})

@@ -63,7 +63,7 @@ module HTML5
 
       @tokenizer = @tokenizer.class unless Class === @tokenizer
       @tokenizer = @tokenizer.new(stream, :encoding => encoding,
-        :parseMeta => !innerHTML)
+        :parseMeta => !innerHTML, :lowercase_attr_name => @lowercase_attr_name, :lowercase_element_name => @lowercase_element_name)
 
       if innerHTML
         case @innerHTML = container.downcase

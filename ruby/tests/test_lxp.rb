@@ -6,7 +6,7 @@ XMLELEM = /<(\w+\s*)((?:[-:\w]+="[^"]*"\s*)+)(\/?)>/
 
 def assert_xml_equal(input, expected=nil, parser=HTML5::XMLParser)
   sortattrs = proc {"<#{$1+$2.split.sort.join(' ')+$3}>"}
-  document = parser.parse(input.chomp).root
+  document = parser.parse(input.chomp, :lowercase_attr_name => false, :lowercase_element_name => false).root
   if not expected
     expected = input.chomp.gsub(XMLELEM,&sortattrs)
     expected = expected.gsub(/&#(\d+);/) {[$1.to_i].pack('U')}
