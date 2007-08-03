@@ -164,7 +164,7 @@ module HTML5
           if hpricot.target and hpricot.target.any?
             "\n|#{' ' * indent}<!DOCTYPE #{hpricot.target}>"
           else
-            "\n|#{' ' * indent}<!DOCTYPE>"
+            "\n|#{' ' * indent}<!DOCTYPE >"
           end
         end
       end
