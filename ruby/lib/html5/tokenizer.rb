@@ -350,8 +350,7 @@ module HTML5
         elsif data == "/"
           @state = @states[:closeTagOpen]
         elsif data != :EOF and ASCII_LETTERS.include? data
-          @currentToken =\
-            {:type => :StartTag, :name => data, :data => []}
+          @currentToken = {:type => :StartTag, :name => data.downcase, :data => []}
           @state = @states[:tagName]
         elsif data == ">"
           # XXX In theory it could be something besides a tag name. But
@@ -437,7 +436,7 @@ module HTML5
         @tokenQueue.push({:type => :Characters, :data => "</"})
         @state = @states[:data]
       elsif ASCII_LETTERS.include? data
-        @currentToken = {:type => :EndTag, :name => data, :data => []}
+        @currentToken = {:type => :EndTag, :name => data.downcase, :data => []}
         @state = @states[:tagName]
       elsif data == ">"
         @tokenQueue.push({:type => :ParseError, :data =>
@@ -463,8 +462,7 @@ module HTML5
           _("Unexpected end of file in the tag name.")})
         emitCurrentToken
       elsif ASCII_LETTERS.include? data
-        @currentToken[:name] += data +\
-          @stream.chars_until(ASCII_LETTERS, true)
+        @currentToken[:name] += data.downcase + @stream.chars_until(ASCII_LETTERS, true).downcase
       elsif data == ">"
         emitCurrentToken
       elsif data == "/"
@@ -481,11 +479,10 @@ module HTML5
       if SPACE_CHARACTERS.include? data
         @stream.chars_until(SPACE_CHARACTERS, true)
       elsif data == :EOF
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected end of file. Expected attribute name instead.")})
+        @tokenQueue.push({:type => :ParseError, :data => _("Unexpected end of file. Expected attribute name instead.")})
         emitCurrentToken
       elsif ASCII_LETTERS.include? data
-        @currentToken[:data].push([data, ""])
+        @currentToken[:data].push([data.downcase, ""])
         @state = @states[:attributeName]
       elsif data == ">"
         emitCurrentToken
@@ -505,13 +502,11 @@ module HTML5
       if data == "="
         @state = @states[:beforeAttributeValue]
       elsif data == :EOF
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected end of file in attribute name.")})
+        @tokenQueue.push({:type => :ParseError, :data => _("Unexpected end of file in attribute name.")})
         @state = @states[:data]
         emitToken = true
       elsif ASCII_LETTERS.include? data
-        @currentToken[:data][-1][0] += data +\
-          @stream.chars_until(ASCII_LETTERS, true)
+        @currentToken[:data][-1][0] += data.downcase + @stream.chars_until(ASCII_LETTERS, true).downcase
         leavingThisState = false
       elsif data == ">"
         # XXX If we emit here the attributes are converted to a dict
@@ -533,9 +528,9 @@ module HTML5
         # start tag token is emitted so values can still be safely appended
         # to attributes, but we do want to report the parse error in time.
         @currentToken[:data][0...-1].each {|name,value|
-          if @currentToken[:data][-1][0] == name
-            @tokenQueue.push({:type => :ParseError, :data =>
-              _("Dropped duplicate attribute on tag.")})
+          if @currentToken[:data].last.first == name
+            @tokenQueue.push({:type => :ParseError, :data =>_("Dropped duplicate attribute on tag.")})
+            break # don't report an error more than once
           end
         }
         # XXX Fix for above XXX
@@ -600,12 +595,10 @@ module HTML5
       elsif data == "&"
         processEntityInAttribute
       elsif data == :EOF
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected end of file in attribute value (\").")})
+        @tokenQueue.push({:type => :ParseError, :data => _("Unexpected end of file in attribute value (\").")})
         emitCurrentToken
       else
-        @currentToken[:data][-1][1] += data +\
-          @stream.chars_until(["\"", "&"])
+        @currentToken[:data][-1][1] += data + @stream.chars_until(["\"", "&"])
       end
       return true
     end
@@ -636,12 +629,10 @@ module HTML5
       elsif data == ">"
         emitCurrentToken
       elsif data == :EOF
-        @tokenQueue.push({:type => :ParseError, :data =>
-          _("Unexpected end of file in attribute value.")})
+        @tokenQueue.push({:type => :ParseError, :data => _("Unexpected end of file in attribute value.")})
         emitCurrentToken
       else
-        @currentToken[:data][-1][1] += data + 
-          @stream.chars_until(["&", ">","<"] + SPACE_CHARACTERS)
+        @currentToken[:data][-1][1] += data +  @stream.chars_until(["&", ">","<"] + SPACE_CHARACTERS)
       end
       return true
     end
