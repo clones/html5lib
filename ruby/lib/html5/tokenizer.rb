@@ -72,8 +72,8 @@ module HTML5
 
       # Tokens to be processed.
       @tokenQueue = []
-      @lowercase_element_name = true unless options[:lowercase_element_name] == false
-      @lowercase_attr_name    = true unless options[:lowercase_attr_name] == false
+      @lowercase_element_name = options[:lowercase_element_name] != false
+      @lowercase_attr_name    = options[:lowercase_attr_name] != false
     end
 
     # This is where the magic happens.
@@ -301,16 +301,11 @@ module HTML5
         @lastFourChars.shift if @lastFourChars.length > 4
       end
 
-      if data == "&" and !@escapeFlag and
-        [:PCDATA,:RCDATA].include?(@contentModelFlag)
+      if data == "&" and [:PCDATA,:RCDATA].include?(@contentModelFlag) and !@escapeFlag
           @state = @states[:entityData]
-
-      elsif data == "-" and !@escapeFlag and
-        [:CDATA,:RCDATA].include?(@contentModelFlag) and
-        @lastFourChars.join('') == "<!--"
+      elsif data == "-" && [:CDATA, :RCDATA].include?(@contentModelFlag) && !@escapeFlag && @lastFourChars.join('') == "<!--"
           @escapeFlag = true
           @tokenQueue.push({:type => :Characters, :data => data})
-
       elsif data == "<" and !@escapeFlag and
         [:PCDATA,:CDATA,:RCDATA].include?(@contentModelFlag)
           @state = @states[:tagOpen]
@@ -534,7 +529,7 @@ module HTML5
         # Attributes are not dropped at this stage. That happens when the
         # start tag token is emitted so values can still be safely appended
         # to attributes, but we do want to report the parse error in time.
-        if @lowercase_attr_name:
+        if @lowercase_attr_name
             @currentToken[:data][-1][0] = @currentToken[:data].last.first.downcase
         end
         @currentToken[:data][0...-1].each {|name,value|
