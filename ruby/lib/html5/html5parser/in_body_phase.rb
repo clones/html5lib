@@ -266,7 +266,7 @@ module HTML5
       processStartTag('p', {})
       processStartTag('label', {})
       # XXX Localization ...
-      processCharacters('This is a searchable index. Insert your search keywords here:')
+      processCharacters('This is a searchable index. Insert your search keywords here: ')
       attributes['name'] = 'isindex'
       attrs = attributes.to_a
       processStartTag('input', attributes)

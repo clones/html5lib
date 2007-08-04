@@ -110,7 +110,6 @@ module HTML5
     end
 
     def processSpaceCharacters(data)
-      @tree.insertText(data, @tree.document)
     end
 
     def processCharacters(data)
