@@ -51,25 +51,28 @@ module HTML5
 
       # for special handling of whitespace in <pre>
       @processSpaceCharactersDropNewline = false
+      alias processSpaceCharactersNonPre processSpaceCharacters
     end
 
     def processSpaceCharactersDropNewline(data)
-      #Sometimes (start of <pre> blocks) we want to drop leading newlines
-      @processSpaceCharactersDropNewline = false
-      if (data.length > 0 and data[0] == ?\n and 
-        %w[pre textarea].include?(@tree.openElements[-1].name) and
-        not @tree.openElements[-1].hasContent)
+      # #Sometimes (start of <pre> blocks) we want to drop leading newlines
+
+      alias processSpaceCharacters processSpaceCharactersNonPre
+
+      if (data.length > 0 and data[0] == ?\n && 
+        %w[pre textarea].include?(@tree.openElements[-1].name) && !@tree.openElements[-1].hasContent)
         data = data[1..-1]
       end
-      @tree.insertText(data) if data.length > 0
+
+      if data.length > 0
+        @tree.reconstructActiveFormattingElements
+        @tree.insertText(data)
+      end
     end
 
     def processSpaceCharacters(data)
-      if @processSpaceCharactersDropNewline
-        processSpaceCharactersDropNewline(data)
-      else
-        super(data)
-      end
+      @tree.reconstructActiveFormattingElements()
+      @tree.insertText(data)
     end
 
     def processCharacters(data)
@@ -278,6 +281,7 @@ module HTML5
       @tree.insertElement(name, attributes)
       @parser.tokenizer.contentModelFlag = :RCDATA
       @processSpaceCharactersDropNewline = true
+      alias processSpaceCharacters processSpaceCharactersDropNewline
     end
 
     # iframe, noembed noframes, noscript(if scripting enabled)
