@@ -31,14 +31,14 @@ module HTML5
     end
 
     def endTagFrameset(name)
-      if @tree.openElements[-1].name == 'html'
+      if @tree.openElements.last.name == 'html'
         # innerHTML case
         @parser.parseError(_("Unexpected end tag token (frameset) in the frameset phase (innerHTML)."))
       else
         @tree.openElements.pop
       end
       if (not @parser.innerHTML and
-        @tree.openElements[-1].name != 'frameset')
+        @tree.openElements.last.name != 'frameset')
         # If we're not in innerHTML mode and the the current node is not a
         # "frameset" element (anymore) then switch.
         @parser.phase = @parser.phases[:afterFrameset]

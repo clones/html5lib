@@ -8,7 +8,6 @@ module HTML5
     module Hpricot
 
       class Node < Base::Node
-
         extend Forwardable
 
         def_delegators :@hpricot, :name
@@ -22,7 +21,7 @@ module HTML5
 
         def appendChild(node)
           if node.kind_of?(TextNode) and childNodes.any? and childNodes.last.kind_of?(TextNode)
-            childNodes[-1].hpricot.content = childNodes[-1].hpricot.to_s + node.hpricot.to_s
+            childNodes.last.hpricot.content = childNodes.last.hpricot.to_s + node.hpricot.to_s
           else
             childNodes << node
             hpricot.children << node.hpricot
@@ -175,7 +174,7 @@ module HTML5
         end
 
         def printTree(indent=0)
-          childNodes.inject('') { |tree, child| tree + child.printTree(indent+2) }
+          childNodes.inject('') {|tree, child| tree + child.printTree(indent + 2) }
         end
       end
 
@@ -202,9 +201,9 @@ module HTML5
       class TreeBuilder < Base::TreeBuilder
         def initialize
           @documentClass = Document
-          @doctypeClass = DocumentType
-          @elementClass = Element
-          @commentClass = CommentNode
+          @doctypeClass  = DocumentType
+          @elementClass  = Element
+          @commentClass  = CommentNode
           @fragmentClass = DocumentFragment
         end
 

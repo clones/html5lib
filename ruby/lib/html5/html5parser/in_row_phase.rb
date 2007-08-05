@@ -73,7 +73,7 @@ module HTML5
 
     # XXX unify this with other table helper methods
     def clearStackToTableRowContext
-      until ['tr', 'html'].include?(name = @tree.openElements[-1].name)
+      until %w[tr html].include?(name = @tree.openElements.last.name)
         @parser.parseError(_("Unexpected implied end tag (#{name}) in the row phase."))
         @tree.openElements.pop
       end

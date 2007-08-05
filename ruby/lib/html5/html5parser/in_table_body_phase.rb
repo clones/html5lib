@@ -29,7 +29,7 @@ module HTML5
       # XXX AT Any ideas on how to share this with endTagTable?
       if in_scope?('tbody', true) or in_scope?('thead', true) or in_scope?('tfoot', true)
         clearStackToTableBodyContext
-        endTagTableRowGroup(@tree.openElements[-1].name)
+        endTagTableRowGroup(@tree.openElements.last.name)
         @parser.phase.processStartTag(name, attributes)
       else
         # innerHTML case
@@ -54,7 +54,7 @@ module HTML5
     def endTagTable(name)
       if in_scope?('tbody', true) or in_scope?('thead', true) or in_scope?('tfoot', true)
         clearStackToTableBodyContext
-        endTagTableRowGroup(@tree.openElements[-1].name)
+        endTagTableRowGroup(@tree.openElements.last.name)
         @parser.phase.processEndTag(name)
       else
         # innerHTML case
@@ -73,7 +73,7 @@ module HTML5
     protected
 
     def clearStackToTableBodyContext
-      until ['tbody', 'tfoot', 'thead', 'html'].include?(name = @tree.openElements[-1].name)
+      until %w[tbody tfoot thead html].include?(name = @tree.openElements.last.name)
         @parser.parseError(_("Unexpected implied end tag (#{name}) in the table body phase."))
         @tree.openElements.pop
       end

@@ -11,7 +11,7 @@ module HTML5
     handle_end %w( title style script noscript )
 
     def processEOF
-      if ['title', 'style', 'script'].include?(name = @tree.openElements[-1].name)
+      if ['title', 'style', 'script'].include?(name = @tree.openElements.last.name)
         @parser.parseError(_("Unexpected end of file. Expected end tag (#{name})."))
         @tree.openElements.pop
       end
@@ -20,7 +20,7 @@ module HTML5
     end
 
     def processCharacters(data)
-      if %w[title style script noscript].include?(@tree.openElements[-1].name)
+      if %w[title style script noscript].include?(@tree.openElements.last.name)
         @tree.insertText(data)
       else
         anythingElse
@@ -44,7 +44,7 @@ module HTML5
       if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements[-1].appendChild(element)
+        @tree.openElements.last.appendChild(element)
       end
       @tree.openElements.push(element)
       @parser.tokenizer.contentModelFlag = :CDATA
@@ -56,7 +56,7 @@ module HTML5
       if @tree.headPointer !=nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements[-1].appendChild(element)
+        @tree.openElements.last.appendChild(element)
       end
       @tree.openElements.push(element)
       @parser.tokenizer.contentModelFlag = :CDATA
@@ -69,7 +69,7 @@ module HTML5
       if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements[-1].appendChild(element)
+        @tree.openElements.last.appendChild(element)
       end
       @tree.openElements.push(element)
       @parser.tokenizer.contentModelFlag = :CDATA
@@ -80,7 +80,7 @@ module HTML5
       if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements[-1].appendChild(element)
+        @tree.openElements.last.appendChild(element)
       end
     end
 
@@ -90,7 +90,7 @@ module HTML5
     end
 
     def endTagHead(name)
-      if @tree.openElements[-1].name == 'head'
+      if @tree.openElements.last.name == 'head'
         @tree.openElements.pop
       else
         @parser.parseError(_("Unexpected end tag (head). Ignored."))
@@ -104,7 +104,7 @@ module HTML5
     end
 
     def endTagTitleStyleScriptNoscript(name)
-      if @tree.openElements[-1].name == name
+      if @tree.openElements.last.name == name
         @tree.openElements.pop
       else
         @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
@@ -116,7 +116,7 @@ module HTML5
     end
 
     def anythingElse
-      if @tree.openElements[-1].name == 'head'
+      if @tree.openElements.last.name == 'head'
         endTagHead('head')
       else
         @parser.phase = @parser.phases[:afterHead]
@@ -128,7 +128,7 @@ module HTML5
     def appendToHead(element)
       if @tree.headPointer.nil?
         assert @parser.innerHTML
-        @tree.openElements[-1].appendChild(element)
+        @tree.openElements.last.appendChild(element)
       else
         @tree.headPointer.appendChild(element)
       end

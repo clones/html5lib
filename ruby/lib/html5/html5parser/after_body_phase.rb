@@ -8,7 +8,7 @@ module HTML5
     def processComment(data)
       # This is needed because data is to be appended to the <html> element
       # here and not to whatever is currently open.
-      @tree.insertComment(data, @tree.openElements[0])
+      @tree.insertComment(data, @tree.openElements.first)
     end
 
     def processCharacters(data)

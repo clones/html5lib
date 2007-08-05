@@ -24,9 +24,9 @@ module HTML5
         attr_accessor :_flags
 
         def initialize(name)
-          @parent = nil
+          @parent     = nil
           @childNodes = []
-          @_flags = []
+          @_flags     = []
         end
 
         # Insert node as a child of the current node
@@ -231,7 +231,7 @@ module HTML5
         def insertElementNormal(name, attributes)
           element = @elementClass.new(name)
           element.attributes = attributes
-          @openElements[-1].appendChild(element)
+          @openElements.last.appendChild(element)
           @openElements.push(element)
           return element
         end
@@ -240,7 +240,7 @@ module HTML5
         def insertElementTable(name, attributes)
           element = @elementClass.new(name)
           element.attributes = attributes
-          if TABLE_INSERT_MODE_ELEMENTS.include?(@openElements[-1].name)
+          if TABLE_INSERT_MODE_ELEMENTS.include?(@openElements.last.name)
             #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
             parent, insertBefore = getTableMisnestedNodePosition
@@ -268,7 +268,7 @@ module HTML5
             parent.insertText(data, insertBefore)
           end
         end
-      
+
         # Get the foster parent element, and sibling to insert before
         # (or nil) when inserting a misnested table node
         def getTableMisnestedNodePosition

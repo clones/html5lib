@@ -67,11 +67,11 @@ module HTML5
     def endTagTable(name)
       if in_scope?('table', true)
         @tree.generateImpliedEndTags
-      
-        unless @tree.openElements[-1].name == 'table'
-          @parser.parseError(_("Unexpected end tag (table). Expected end tag (#{@tree.openElements[-1].name})."))
+
+        unless @tree.openElements.last.name == 'table'
+          @parser.parseError(_("Unexpected end tag (table). Expected end tag (#{@tree.openElements.last.name})."))
         end
-      
+
         remove_open_elements_until('table')
 
         @parser.resetInsertionMode
@@ -99,7 +99,7 @@ module HTML5
 
     def clearStackToTableContext
       # "clear the stack back to a table context"
-      until ['table', 'html'].include?(name = @tree.openElements[-1].name)
+      until %w[table html].include?(name = @tree.openElements.last.name)
         @parser.parseError(_("Unexpected implied end tag (#{name}) in the table phase."))
         @tree.openElements.pop
       end

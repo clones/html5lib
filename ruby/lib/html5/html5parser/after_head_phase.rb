@@ -2,7 +2,7 @@ require 'html5/html5parser/phase'
 
 module HTML5
   class AfterHeadPhase < Phase
-  
+
     handle_start 'html', 'body', 'frameset', %w( base link meta script style title ) => 'FromHead'
 
     def processEOF

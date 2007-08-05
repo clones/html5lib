@@ -60,7 +60,7 @@ module HTML5
       alias processSpaceCharacters processSpaceCharactersNonPre
 
       if (data.length > 0 and data[0] == ?\n && 
-        %w[pre textarea].include?(@tree.openElements[-1].name) && !@tree.openElements[-1].hasContent)
+        %w[pre textarea].include?(@tree.openElements.last.name) && !@tree.openElements.last.hasContent)
         data = data[1..-1]
       end
 
@@ -95,8 +95,7 @@ module HTML5
     def startTagBody(name, attributes)
       @parser.parseError(_('Unexpected start tag (body).'))
 
-      if (@tree.openElements.length == 1 or
-        @tree.openElements[1].name != 'body')
+      if (@tree.openElements.length == 1 || @tree.openElements[1].name != 'body')
         assert @parser.innerHTML
       else
         attributes.each do |attr, value|
@@ -132,17 +131,14 @@ module HTML5
         if stopName.include?(node.name)
           poppedNodes = (0..i).collect { @tree.openElements.pop }
           if i >= 1
-            @parser.parseError(_("Missing end tag%s (%s)" % [
-              (i>1 ? 's' : ''),
-              poppedNodes.reverse.map {|item| item.name}.join(', ')]))
+            @parser.parseError(_("Missing end tag%s (%s)" % [(i>1 ? 's' : ''), poppedNodes.reverse.map{|item| item.name}.join(', ')]))
           end
           break
         end
 
         # Phrasing elements are all non special, non scoping, non
         # formatting elements
-        break if ((SPECIAL_ELEMENTS + SCOPING_ELEMENTS).include?(node.name) and
-          not ['address', 'div'].include?(node.name))
+        break if ((SPECIAL_ELEMENTS + SCOPING_ELEMENTS).include?(node.name) && !%w[address div].include?(node.name))
       end
 
       # Always insert an <li> element.
@@ -320,7 +316,7 @@ module HTML5
 
     def endTagP(name)
       @tree.generateImpliedEndTags('p') if in_scope?('p')
-      @parser.parseError(_('Unexpected end tag (p).')) unless @tree.openElements[-1].name == 'p'
+      @parser.parseError(_('Unexpected end tag (p).')) unless @tree.openElements.last.name == 'p'
       if in_scope?('p')
         @tree.openElements.pop while in_scope?('p')
       else
@@ -338,7 +334,7 @@ module HTML5
         @parser.parseError
         return
       end
-      unless @tree.openElements[-1].name == 'body'
+      unless @tree.openElements.last.name == 'body'
         @parser.parseError(_("Unexpected end tag (body). Missing end tag (#{@tree.openElements[-1].name})."))
       end
       @parser.phase = @parser.phases[:afterBody]
@@ -355,7 +351,7 @@ module HTML5
 
       @tree.generateImpliedEndTags if in_scope?(name)
 
-      unless @tree.openElements[-1].name == name
+      unless @tree.openElements.last.name == name
         @parser.parseError(_("End tag (#{name}) seen too early. Expected other end tag."))
       end
 
@@ -368,7 +364,7 @@ module HTML5
       if in_scope?(name)
         @tree.generateImpliedEndTags
       end
-      if @tree.openElements[-1].name != name
+      if @tree.openElements.last.name != name
         @parser.parseError(_("End tag (form) seen too early. Ignored."))
       else
         @tree.openElements.pop
@@ -380,9 +376,8 @@ module HTML5
       # AT Could merge this with the Block case
       @tree.generateImpliedEndTags(name) if in_scope?(name)
 
-      unless @tree.openElements[-1].name == name
-        @parser.parseError(_("End tag (#{name}) seen too early. " + 
-          'Expected other end tag.'))
+      unless @tree.openElements.last.name == name
+        @parser.parseError(_("End tag (#{name}) seen too early. " + 'Expected other end tag.'))
       end
 
       remove_open_elements_until(name) if in_scope?(name)
@@ -396,13 +391,13 @@ module HTML5
         end
       end
 
-      unless @tree.openElements[-1].name == name
+      unless @tree.openElements.last.name == name
         @parser.parseError(_("Unexpected end tag (#{name}). Expected other end tag."))
       end
 
       HEADING_ELEMENTS.each do |element|
         if in_scope?(element)
-          remove_open_elements_until { |element| HEADING_ELEMENTS.include?(element.name) }
+          remove_open_elements_until {|element| HEADING_ELEMENTS.include?(element.name)}
           break
         end
       end
@@ -415,7 +410,7 @@ module HTML5
       while true
         # Step 1 paragraph 1
         afeElement = @tree.elementInActiveFormattingElements(name)
-        if not afeElement or (@tree.openElements.include?(afeElement) and not in_scope?(afeElement.name))
+        if !afeElement or (@tree.openElements.include?(afeElement) && !in_scope?(afeElement.name))
           @parser.parseError(_("End tag (#{name}) violates step 1, paragraph 1 of the adoption agency algorithm."))
           return
         # Step 1 paragraph 2
@@ -426,7 +421,7 @@ module HTML5
         end
 
         # Step 1 paragraph 3
-        if afeElement != @tree.openElements[-1]
+        if afeElement != @tree.openElements.last
           @parser.parseError(_("End tag (#{name}) violates step 1, paragraph 3 of the adoption agency algorithm."))
         end
 
@@ -443,7 +438,7 @@ module HTML5
 
         # Step 3
         if furthestBlock.nil?
-          element = remove_open_elements_until { |element| element == afeElement }
+          element = remove_open_elements_until {|element| element == afeElement }
           @tree.activeFormattingElements.delete(element)
           return
         end
@@ -523,13 +518,13 @@ module HTML5
     def endTagButtonMarqueeObject(name)
       @tree.generateImpliedEndTags if in_scope?(name)
 
-      unless @tree.openElements[-1].name == name
+      unless @tree.openElements.last.name == name
         @parser.parseError(_("Unexpected end tag (#{name}). Expected other end tag first."))
       end
 
       if in_scope?(name)
         remove_open_elements_until(name)
-      
+
         @tree.clearActiveFormattingElements
       end
     end
@@ -552,7 +547,7 @@ module HTML5
     end
 
     def endTagCdataTextAreaXmp(name)
-      if @tree.openElements[-1].name == name
+      if @tree.openElements.last.name == name
         @tree.openElements.pop
       else
         @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
@@ -573,11 +568,11 @@ module HTML5
         if node.name == name
           @tree.generateImpliedEndTags
 
-          unless @tree.openElements[-1].name == name
+          unless @tree.openElements.last.name == name
             @parser.parseError(_("Unexpected end tag (#{name})."))
           end
 
-          remove_open_elements_until { |element| element == node }
+          remove_open_elements_until {|element| element == node }
 
           break
         else
@@ -593,7 +588,7 @@ module HTML5
 
     def addFormattingElement(name, attributes)
       @tree.insertElement(name, attributes)
-      @tree.activeFormattingElements.push(@tree.openElements[-1])
+      @tree.activeFormattingElements.push(@tree.openElements.last)
     end
 
   end

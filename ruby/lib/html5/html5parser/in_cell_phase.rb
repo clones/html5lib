@@ -32,7 +32,7 @@ module HTML5
     def endTagTableCell(name)
       if in_scope?(name, true)
         @tree.generateImpliedEndTags(name)
-        if @tree.openElements[-1].name != name
+        if @tree.openElements.last.name != name
           @parser.parseError("Got table cell end tag (#{name}) while required end tags are missing.")
 
           remove_open_elements_until(name)

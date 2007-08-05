@@ -31,6 +31,5 @@ module HTML5
       @parser.phase = @parser.lastPhase
       @parser.phase.processEndTag(name)
     end
-
   end
 end

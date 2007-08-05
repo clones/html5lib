@@ -15,13 +15,13 @@ module HTML5
 
     def startTagOption(name, attributes)
       # We need to imply </option> if <option> is the current node.
-      @tree.openElements.pop if @tree.openElements[-1].name == 'option'
+      @tree.openElements.pop if @tree.openElements.last.name == 'option'
       @tree.insertElement(name, attributes)
     end
 
     def startTagOptgroup(name, attributes)
-      @tree.openElements.pop if @tree.openElements[-1].name == 'option'
-      @tree.openElements.pop if @tree.openElements[-1].name == 'optgroup'
+      @tree.openElements.pop if @tree.openElements.last.name == 'option'
+      @tree.openElements.pop if @tree.openElements.last.name == 'optgroup'
       @tree.insertElement(name, attributes)
     end
 
@@ -35,7 +35,7 @@ module HTML5
     end
 
     def endTagOption(name)
-      if @tree.openElements[-1].name == 'option'
+      if @tree.openElements.last.name == 'option'
         @tree.openElements.pop
       else
         @parser.parseError(_('Unexpected end tag (option) in the select phase. Ignored.'))
@@ -44,11 +44,11 @@ module HTML5
 
     def endTagOptgroup(name)
       # </optgroup> implicitly closes <option>
-      if @tree.openElements[-1].name == 'option' and @tree.openElements[-2].name == 'optgroup'
+      if @tree.openElements.last.name == 'option' and @tree.openElements[-2].name == 'optgroup'
         @tree.openElements.pop
       end
       # It also closes </optgroup>
-      if @tree.openElements[-1].name == 'optgroup'
+      if @tree.openElements.last.name == 'optgroup'
         @tree.openElements.pop
       # But nothing else
       else

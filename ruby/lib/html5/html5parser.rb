@@ -28,7 +28,7 @@ module HTML5
     def self.parseFragment(stream, options = {})
       container = options.delete(:container) || 'div'
       encoding = options.delete(:encoding)
-      new(options).parseFragment(stream,container,encoding)
+      new(options).parseFragment(stream, container, encoding)
     end
 
     @@phases = %w( initial rootElement beforeHead inHead afterHead inBody inTable inCaption
@@ -44,8 +44,8 @@ module HTML5
      
       @tokenizer =  HTMLTokenizer
       @tree = TreeBuilders::REXML::TreeBuilder
- 
-      options.each { |name, value| instance_variable_set("@#{name}", value) }
+
+      options.each {|name, value| instance_variable_set("@#{name}", value) }
 
       @tree = @tree.new
 
@@ -126,11 +126,11 @@ module HTML5
     # element)
     def parse(stream, encoding=nil)
       _parse(stream, false, encoding)
-      return @tree.getDocument
+      @tree.getDocument
     end
-  
+
     # Parse a HTML fragment into a well-formed tree fragment
-    
+
     # container - name of the element we're setting the innerHTML property
     # if set to nil, default to 'div'
     #
@@ -142,7 +142,7 @@ module HTML5
     # element)
     def parseFragment(stream, container='div', encoding=nil)
       _parse(stream, true, encoding, container)
-      return @tree.getFragment
+      @tree.getFragment
     end
 
     def parseError(data = 'XXX ERROR MESSAGE NEEDED')
@@ -174,7 +174,7 @@ module HTML5
         # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
         unless token[:data].empty?
-          data = token[:data].reverse.map { |attr, value| [attr.tr(ASCII_UPPERCASE, ASCII_LOWERCASE), value] }
+          data = token[:data].reverse.map {|attr, value| [attr.tr(ASCII_UPPERCASE, ASCII_LOWERCASE), value] }
           token[:data] = Hash[*data.flatten]
         end
 
@@ -183,22 +183,22 @@ module HTML5
         token[:name] = token[:name].downcase
       end
 
-      return token
+      token
     end
 
     @@new_modes = {
-      'select' => :inSelect,
-      'td' => :inCell,
-      'th' => :inCell,
-      'tr' => :inRow,
-      'tbody' => :inTableBody,
-      'thead' => :inTableBody,
-      'tfoot' => :inTableBody,
-      'caption' => :inCaption,
+      'select'   => :inSelect,
+      'td'       => :inCell,
+      'th'       => :inCell,
+      'tr'       => :inRow,
+      'tbody'    => :inTableBody,
+      'thead'    => :inTableBody,
+      'tfoot'    => :inTableBody,
+      'caption'  => :inCaption,
       'colgroup' => :inColumnGroup,
-      'table' => :inTable,
-      'head' => :inBody,
-      'body' => :inBody,
+      'table'    => :inTable,
+      'head'     => :inBody,
+      'body'     => :inBody,
       'frameset' => :inFrameset
     }
 
@@ -210,7 +210,7 @@ module HTML5
       @tree.openElements.reverse.each do |node|
         nodeName = node.name
 
-        if node == @tree.openElements[0]
+        if node == @tree.openElements.first
           last = true
           unless ['td', 'th'].include?(nodeName)
             # XXX

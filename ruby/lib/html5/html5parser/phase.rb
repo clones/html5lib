@@ -17,7 +17,7 @@ module HTML5
 
     # The following example call:
     #
-    #   tag_handlers('startTag', 'html', %( base link meta ), %( li dt dd ) => 'ListItem')
+    #   tag_handlers('startTag', 'html', %w( base link meta ), %w( li dt dd ) => 'ListItem')
     #
     # ...would return a hash equal to this:
     #
@@ -34,15 +34,15 @@ module HTML5
       if tags.last.is_a?(Hash)
         tags.pop.each do |names, handler_method_suffix|
           handler_method = prefix + handler_method_suffix
-          Array(names).each { |name| mapping[name] = handler_method }
+          Array(names).each {|name| mapping[name] = handler_method }
         end
       end
       tags.each do |names|
         names = Array(names)
-        handler_method = prefix + names.map { |name| name.capitalize }.join
-        names.each { |name| mapping[name] = handler_method }
+        handler_method = prefix + names.map {|name| name.capitalize }.join
+        names.each {|name| mapping[name] = handler_method }
       end
-      return mapping
+      mapping
     end
 
     def self.start_tag_handlers
@@ -98,7 +98,7 @@ module HTML5
     def processComment(data)
       # For most phases the following is correct. Where it's not it will be
       # overridden.
-      @tree.insertComment(data, @tree.openElements[-1])
+      @tree.insertComment(data, @tree.openElements.last)
     end
 
     def processDoctype(name, publicId, systemId, correct)
@@ -120,8 +120,8 @@ module HTML5
       # XXX Need a check here to see if the first start tag token emitted is
       # this token... If it's not, invoke @parser.parseError.
       attributes.each do |attr, value|
-        unless @tree.openElements[0].attributes.has_key?(attr)
-          @tree.openElements[0].attributes[attr] = value
+        unless @tree.openElements.first.attributes.has_key?(attr)
+          @tree.openElements.first.attributes[attr] = value
         end
       end
       @parser.firstStartTag = false
@@ -147,10 +147,9 @@ module HTML5
       finished = false
       until finished
         element = @tree.openElements.pop
-        finished = name.nil?? yield(element) : element.name == name
+        finished = name.nil? ? yield(element) : element.name == name
       end
       return element
     end
-
   end
 end

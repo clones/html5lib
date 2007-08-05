@@ -10,7 +10,7 @@ module HTML5
     handle_end 'caption', 'table', %w( body col colgroup html tbody td tfoot th thead tr ) => 'Ignore'
 
     def ignoreEndTagCaption
-      not in_scope?('caption', true)
+      !in_scope?('caption', true)
     end
 
     def processCharacters(data)
