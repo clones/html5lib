@@ -297,7 +297,7 @@ module HTML5
           end
 
         when 0xC0 .. 0xFF
-          if @win1252
+          if instance_variable_defined?(:@win1252) && @win1252
             "\xC3" + (c-64).chr # convert to utf-8
           elsif @buffer[@tell-1 .. @tell+3] =~ /^
                 ( [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte

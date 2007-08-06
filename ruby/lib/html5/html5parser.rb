@@ -46,7 +46,8 @@ module HTML5
       @tree = TreeBuilders::REXML::TreeBuilder
 
       options.each {|name, value| instance_variable_set("@#{name}", value) }
-
+      @lowercase_attr_name    = nil unless instance_variable_defined?(:@lowercase_attr_name)
+      @lowercase_element_name = nil unless instance_variable_defined?(:@lowercase_element_name)
       @tree = @tree.new
 
       @phases = @@phases.inject({}) do |phases, phase_name|

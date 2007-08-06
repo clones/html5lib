@@ -51,13 +51,25 @@ module HTML5
 
       # for special handling of whitespace in <pre>
       @processSpaceCharactersDropNewline = false
-      alias processSpaceCharactersNonPre processSpaceCharacters
+      if $-w
+        $-w = false
+        alias processSpaceCharactersNonPre processSpaceCharacters
+        $-w = true
+      else
+        alias processSpaceCharactersNonPre processSpaceCharacters
+      end
     end
 
     def processSpaceCharactersDropNewline(data)
       # #Sometimes (start of <pre> blocks) we want to drop leading newlines
 
-      alias processSpaceCharacters processSpaceCharactersNonPre
+      if $-w
+        $-w = false
+        alias processSpaceCharacters processSpaceCharactersNonPre
+        $-w = true
+      else
+        alias processSpaceCharacters processSpaceCharactersNonPre
+      end
 
       if (data.length > 0 and data[0] == ?\n && 
         %w[pre textarea].include?(@tree.openElements.last.name) && !@tree.openElements.last.hasContent)
