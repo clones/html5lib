@@ -21,7 +21,7 @@ module HTML5
 
         def appendChild(node)
           if node.kind_of?(TextNode) and childNodes.any? and childNodes.last.kind_of?(TextNode)
-            childNodes.last.hpricot.content = childNodes.last.hpricot.to_s + node.hpricot.to_s
+            childNodes.last.hpricot.content = childNodes.last.hpricot.content + node.hpricot.content
           else
             childNodes << node
             hpricot.children << node.hpricot
