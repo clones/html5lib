@@ -6,6 +6,33 @@ require 'tokenizer_test_parser'
 
 class Html5TokenizerTestCase < Test::Unit::TestCase
 
+  def assert_tokens_match(expectedTokens, receivedTokens, ignoreErrorOrder, message)
+    if !ignoreErrorOrder
+      return expectedTokens == receivedTokens
+    else
+      #Sort the tokens into two groups; non-parse errors and parse errors
+      expected = [[],[]]
+      received = [[],[]]
+      
+      for token in expectedTokens
+        if token != "ParseError"
+          expected[0] << token
+        else
+          expected[1] << token
+        end
+      end
+
+      for token in receivedTokens
+        if token != "ParseError"
+          received[0] << token
+        else
+          received[1] << token
+        end
+      end
+      assert_equal expected, received, message
+    end
+  end
+
   def type_of?(token_name, token)
     token != 'ParseError' and token_name == token.first
   end
@@ -48,7 +75,7 @@ class Html5TokenizerTestCase < Test::Unit::TestCase
 
         expected = concatenate_consecutive_characters(data['output'])
 
-        assert_equal expected, actual, message
+        assert_tokens_match expected, actual, data["ignoreErrorOrder"], message
       end
     end 
   end
