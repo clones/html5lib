@@ -7,20 +7,20 @@ module TokenConstructor
     {:type => "SerializeError", :data => msg}
   end
 
-  def normalizeAttrs(attrs)
+  def normalize_attrs(attrs)
     attrs.to_a
   end
 
-  def emptyTag(name, attrs, hasChildren=false)
-    error(_("Void element has children")) if hasChildren
-    {:type => :EmptyTag, :name => name, :data => normalizeAttrs(attrs)}
+  def empty_tag(name, attrs, has_children=false)
+    error(_("Void element has children")) if has_children
+    {:type => :EmptyTag, :name => name, :data => normalize_attrs(attrs)}
   end
 
-  def startTag(name, attrs)
-    {:type => :StartTag, :name => name, :data => normalizeAttrs(attrs)}
+  def start_tag(name, attrs)
+    {:type => :StartTag, :name => name, :data => normalize_attrs(attrs)}
   end
 
-  def endTag(name)
+  def end_tag(name)
     {:type => :EndTag, :name => name, :data => []}
   end
 
@@ -88,10 +88,10 @@ class NonRecursiveTreeWalker < TreeWalkers::Base
   end
 
   def each
-    currentNode = @tree
-    while currentNode != nil
-      details = node_details(currentNode)
-      hasChildren = false
+    current_node = @tree
+    while current_node != nil
+      details = node_details(current_node)
+      has_children = false
 
       case details.shift
       when :DOCTYPE
@@ -101,19 +101,19 @@ class NonRecursiveTreeWalker < TreeWalkers::Base
         text(*details) {|token| yield token}
 
       when :ELEMENT
-        name, attributes, hasChildren = details
+        name, attributes, has_children = details
         if VOID_ELEMENTS.include?(name)
-          yield emptyTag(name, attributes.to_a, hasChildren)
-          hasChildren = false
+          yield empty_tag(name, attributes.to_a, has_children)
+          has_children = false
         else
-          yield startTag(name, attributes.to_a)
+          yield start_tag(name, attributes.to_a)
         end
 
       when :COMMENT
         yield comment(details[0])
 
       when :DOCUMENT, :DOCUMENT_FRAGMENT
-        hasChildren = true
+        has_children = true
 
       when nil
         # ignore (REXML::XMLDecl is an example)
@@ -122,27 +122,27 @@ class NonRecursiveTreeWalker < TreeWalkers::Base
         yield unknown(details[0])
       end
 
-      firstChild = hasChildren ? first_child(currentNode) : nil
-      if firstChild != nil
-        currentNode = firstChild
+      first_child = has_children ? first_child(current_node) : nil
+      if first_child != nil
+        current_node = first_child
       else
-        while currentNode != nil
-          details = node_details(currentNode)
+        while current_node != nil
+          details = node_details(current_node)
           if details.shift == :ELEMENT
-            name, attributes, hasChildren = details
-            yield endTag(name) if !VOID_ELEMENTS.include?(name)
+            name, attributes, has_children = details
+            yield end_tag(name) if !VOID_ELEMENTS.include?(name)
           end
 
-          if @tree == currentNode
-            currentNode = nil
+          if @tree == current_node
+            current_node = nil
           else
-            nextSibling = next_sibling(currentNode)
-            if nextSibling != nil
-              currentNode = nextSibling
+            next_sibling = next_sibling(current_node)
+            if next_sibling != nil
+              current_node = next_sibling
               break
             end
 
-            currentNode = parent(currentNode)
+            current_node = parent(current_node)
           end
         end
       end

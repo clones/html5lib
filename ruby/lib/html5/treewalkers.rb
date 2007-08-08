@@ -20,7 +20,7 @@ module HTML5
         end
       end
 
-      alias :getTreeWalker :[]
+      alias :get_tree_walker :[]
     end
   end
 end

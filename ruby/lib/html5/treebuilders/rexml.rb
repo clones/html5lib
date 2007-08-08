@@ -193,11 +193,11 @@ module HTML5
           node.printTree
         end
 
-        def getDocument
+        def get_document
           @document.rxobj
         end
 
-        def getFragment
+        def get_fragment
           @document = super
           return @document.rxobj.children
         end

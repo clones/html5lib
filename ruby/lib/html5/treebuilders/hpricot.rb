@@ -216,11 +216,11 @@ module HTML5
           node.printTree
         end
 
-        def getDocument
+        def get_document
           @document.hpricot
         end
 
-        def getFragment
+        def get_fragment
           @document = super
           return @document.hpricot.children
         end

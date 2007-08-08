@@ -13,7 +13,7 @@ module HTML5
               [:DOCUMENT_FRAGMENT]
             else
               [:ELEMENT, node.name,
-                node.attributes.map {|name,value| [name,value]},
+                node.attributes.map {|name, value| [name, value]},
                 !node.empty?]
             end
           when ::Hpricot::Text

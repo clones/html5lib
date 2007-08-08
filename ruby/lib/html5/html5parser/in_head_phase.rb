@@ -10,17 +10,17 @@ module HTML5
     handle_end %w( html body br p ) => 'ImplyAfterHead'
     handle_end %w( title style script noscript )
 
-    def processEOF
-      if ['title', 'style', 'script'].include?(name = @tree.openElements.last.name)
-        @parser.parseError(_("Unexpected end of file. Expected end tag (#{name})."))
-        @tree.openElements.pop
+    def process_eof
+      if ['title', 'style', 'script'].include?(name = @tree.open_elements.last.name)
+        parse_error(_("Unexpected end of file. Expected end tag (#{name})."))
+        @tree.open_elements.pop
       end
       anythingElse
-      @parser.phase.processEOF
+      @parser.phase.process_eof
     end
 
     def processCharacters(data)
-      if %w[title style script noscript].include?(@tree.openElements.last.name)
+      if %w[title style script noscript].include?(@tree.open_elements.last.name)
         @tree.insertText(data)
       else
         anythingElse
@@ -29,58 +29,58 @@ module HTML5
     end
 
     def startTagHead(name, attributes)
-      @parser.parseError(_('Unexpected start tag head in existing head. Ignored'))
+      parse_error(_('Unexpected start tag head in existing head. Ignored'))
     end
 
     def startTagTitle(name, attributes)
       element = @tree.createElement(name, attributes)
       appendToHead(element)
-      @tree.openElements.push(element)
-      @parser.tokenizer.contentModelFlag = :RCDATA
+      @tree.open_elements.push(element)
+      @parser.tokenizer.content_model_flag = :RCDATA
     end
 
     def startTagStyle(name, attributes)
       element = @tree.createElement(name, attributes)
-      if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
+      if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements.last.appendChild(element)
+        @tree.open_elements.last.appendChild(element)
       end
-      @tree.openElements.push(element)
-      @parser.tokenizer.contentModelFlag = :CDATA
+      @tree.open_elements.push(element)
+      @parser.tokenizer.content_model_flag = :CDATA
     end
 
     def startTagNoscript(name, attributes)
       # XXX Need to decide whether to implement the scripting disabled case.
       element = @tree.createElement(name, attributes)
-      if @tree.headPointer !=nil and @parser.phase == @parser.phases[:inHead]
+      if @tree.head_pointer !=nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements.last.appendChild(element)
+        @tree.open_elements.last.appendChild(element)
       end
-      @tree.openElements.push(element)
-      @parser.tokenizer.contentModelFlag = :CDATA
+      @tree.open_elements.push(element)
+      @parser.tokenizer.content_model_flag = :CDATA
     end
 
     def startTagScript(name, attributes)
       #XXX Inner HTML case may be wrong
       element = @tree.createElement(name, attributes)
       element._flags.push("parser-inserted")
-      if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
+      if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements.last.appendChild(element)
+        @tree.open_elements.last.appendChild(element)
       end
-      @tree.openElements.push(element)
-      @parser.tokenizer.contentModelFlag = :CDATA
+      @tree.open_elements.push(element)
+      @parser.tokenizer.content_model_flag = :CDATA
     end
 
     def startTagBaseLinkMeta(name, attributes)
       element = @tree.createElement(name, attributes)
-      if @tree.headPointer != nil and @parser.phase == @parser.phases[:inHead]
+      if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
-        @tree.openElements.last.appendChild(element)
+        @tree.open_elements.last.appendChild(element)
       end
     end
 
@@ -90,10 +90,10 @@ module HTML5
     end
 
     def endTagHead(name)
-      if @tree.openElements.last.name == 'head'
-        @tree.openElements.pop
+      if @tree.open_elements.last.name == 'head'
+        @tree.open_elements.pop
       else
-        @parser.parseError(_("Unexpected end tag (head). Ignored."))
+        parse_error(_("Unexpected end tag (head). Ignored."))
       end
       @parser.phase = @parser.phases[:afterHead]
     end
@@ -104,19 +104,19 @@ module HTML5
     end
 
     def endTagTitleStyleScriptNoscript(name)
-      if @tree.openElements.last.name == name
-        @tree.openElements.pop
+      if @tree.open_elements.last.name == name
+        @tree.open_elements.pop
       else
-        @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
+        parse_error(_("Unexpected end tag (#{name}). Ignored."))
       end
     end
 
     def endTagOther(name)
-      @parser.parseError(_("Unexpected end tag (#{name}). Ignored."))
+      parse_error(_("Unexpected end tag (#{name}). Ignored."))
     end
 
     def anythingElse
-      if @tree.openElements.last.name == 'head'
+      if @tree.open_elements.last.name == 'head'
         endTagHead('head')
       else
         @parser.phase = @parser.phases[:afterHead]
@@ -126,11 +126,11 @@ module HTML5
     protected
 
     def appendToHead(element)
-      if @tree.headPointer.nil?
-        assert @parser.innerHTML
-        @tree.openElements.last.appendChild(element)
+      if @tree.head_pointer.nil?
+        assert @parser.inner_html
+        @tree.open_elements.last.appendChild(element)
       else
-        @tree.headPointer.appendChild(element)
+        @tree.head_pointer.appendChild(element)
       end
     end
 

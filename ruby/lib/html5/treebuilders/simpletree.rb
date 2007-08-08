@@ -174,7 +174,7 @@ module HTML5
           node.printTree
         end
 
-        def getFragment
+        def get_fragment
           @document = super
           @document.childNodes
         end

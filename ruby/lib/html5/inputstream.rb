@@ -27,11 +27,11 @@ module HTML5
     # parseMeta - Look for a <meta> element containing encoding information
 
     def initialize(source, options = {})
-      @encoding = nil
+      @encoding   = nil
       @parse_meta = true
-      @chardet = true
+      @chardet    = true
 
-      options.each { |name, value| instance_variable_set("@#{name}", value) }
+      options.each {|name, value| instance_variable_set("@#{name}", value) }
 
       # Raw Stream
       @raw_stream = open_stream(source)

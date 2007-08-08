@@ -52,10 +52,9 @@ module HTML5
 
             elsif token[:name].downcase == "head" && !meta_found
               # insert meta into empty head
-              yield(:type => :StartTag, :name => "head", :data => token[:data])
-              yield(:type => :EmptyTag, :name => "meta",
-                    :data => [["charset", @encoding]])
-              yield(:type => :EndTag, :name => "head")
+              yield :type => :StartTag, :name => "head", :data => token[:data]
+              yield :type => :EmptyTag, :name => "meta", :data => [["charset", @encoding]]
+              yield :type => :EndTag,   :name => "head"
               meta_found = true
               next
             end
@@ -64,7 +63,7 @@ module HTML5
             if token[:name].downcase == "head" && pending.any?
               # insert meta into head (if necessary) and flush pending queue
               yield pending.shift
-              yield(:type => :EmptyTag, :name => "meta", :data => [["charset", @encoding]]) if !meta_found
+              yield :type => :EmptyTag, :name => "meta", :data => [["charset", @encoding]] if !meta_found
               yield pending.shift while pending.any?
               meta_found = true
               state = :post_head

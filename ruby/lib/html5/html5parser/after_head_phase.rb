@@ -5,9 +5,9 @@ module HTML5
 
     handle_start 'html', 'body', 'frameset', %w( base link meta script style title ) => 'FromHead'
 
-    def processEOF
+    def process_eof
       anythingElse
-      @parser.phase.processEOF
+      @parser.phase.process_eof
     end
 
     def processCharacters(data)
@@ -16,17 +16,17 @@ module HTML5
     end
 
     def startTagBody(name, attributes)
-      @tree.insertElement(name, attributes)
+      @tree.insert_element(name, attributes)
       @parser.phase = @parser.phases[:inBody]
     end
 
     def startTagFrameset(name, attributes)
-      @tree.insertElement(name, attributes)
+      @tree.insert_element(name, attributes)
       @parser.phase = @parser.phases[:inFrameset]
     end
 
     def startTagFromHead(name, attributes)
-      @parser.parseError(_("Unexpected start tag (#{name}) that can be in head. Moved."))
+      parse_error(_("Unexpected start tag (#{name}) that can be in head. Moved."))
       @parser.phase = @parser.phases[:inHead]
       @parser.phase.processStartTag(name, attributes)
     end
@@ -42,7 +42,7 @@ module HTML5
     end
 
     def anythingElse
-      @tree.insertElement('body', {})
+      @tree.insert_element('body', {})
       @parser.phase = @parser.phases[:inBody]
     end
 
