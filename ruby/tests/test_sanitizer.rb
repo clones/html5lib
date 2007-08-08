@@ -12,17 +12,17 @@ class SanitizeTest < Test::Unit::TestCase
   include HTML5
 
   def sanitize_xhtml stream
-    XHTMLParser.parseFragment(stream, {:tokenizer => HTMLSanitizer, :encoding => 'utf-8', :lowercase_element_name => false, :lowercase_attr_name => false}).to_s
+    XHTMLParser.parse_fragment(stream, {:tokenizer => HTMLSanitizer, :encoding => 'utf-8', :lowercase_element_name => false, :lowercase_attr_name => false}).to_s
   end
 
   def sanitize_html stream
-    HTMLParser.parseFragment(stream, {:tokenizer => HTMLSanitizer, :encoding => 'utf-8', :lowercase_element_name => false, :lowercase_attr_name => false}).to_s
+    HTMLParser.parse_fragment(stream, {:tokenizer => HTMLSanitizer, :encoding => 'utf-8', :lowercase_element_name => false, :lowercase_attr_name => false}).to_s
   end
 
   def sanitize_rexml stream
     require 'rexml/document'
     doc = REXML::Document.new("<div xmlns='http://www.w3.org/1999/xhtml'>#{stream}</div>")
-    tokens = TreeWalkers.getTreeWalker('rexml').new(doc)
+    tokens = TreeWalkers.get_tree_walker('rexml').new(doc)
     XHTMLSerializer.serialize(tokens, {:encoding=>'utf-8',
       :quote_char => "'",
       :inject_meta_charset => false,

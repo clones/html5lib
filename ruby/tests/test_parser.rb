@@ -26,7 +26,7 @@ class Html5ParserTestCase < Test::Unit::TestCase
     test_name = File.basename(test_file).sub('.dat', '')
 
     TestData.new(test_file, %w(data errors document-fragment document)).
-      each_with_index do |(input, errors, innerHTML, expected), index|
+      each_with_index do |(input, errors, inner_html, expected), index|
 
       errors = errors.split("\n")
       expected = expected.gsub("\n| ","\n")[2..-1]
@@ -36,8 +36,8 @@ class Html5ParserTestCase < Test::Unit::TestCase
 
           parser = HTMLParser.new(:tree => TreeBuilders[tree_name])
         
-          if innerHTML
-            parser.parseFragment(input, innerHTML)
+          if inner_html
+            parser.parse_fragment(input, inner_html)
           else
             parser.parse(input)
           end

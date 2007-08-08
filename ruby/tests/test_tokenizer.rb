@@ -65,9 +65,9 @@ class Html5TokenizerTestCase < Test::Unit::TestCase
       assert_nothing_raised message do
         tokenizer = HTML5::HTMLTokenizer.new(data['input'])
 
-        tokenizer.contentModelFlag = content_model_flag.to_sym
+        tokenizer.content_model_flag = content_model_flag.to_sym
 
-        tokenizer.currentToken = {:type => :startTag, :name => data['lastStartTag']} if data.has_key?('lastStartTag')
+        tokenizer.current_token = {:type => :startTag, :name => data['lastStartTag']} if data.has_key?('lastStartTag')
 
         tokens = TokenizerTestParser.new(tokenizer).parse
 
