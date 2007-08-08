@@ -45,6 +45,7 @@ lib/html5/treewalkers/base.rb
 lib/html5/treewalkers/hpricot.rb
 lib/html5/treewalkers/rexml.rb
 lib/html5/treewalkers/simpletree.rb
+lib/html5/version.rb
 parse.rb
 tests/preamble.rb
 tests/test_encoding.rb
