@@ -14,5 +14,4 @@ Hoe.new("html5", HTML5::VERSION) do |p|
 
   p.extra_deps << ['chardet', '>= 0.9.0']
   p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
-  p p.paragraphs_of('History.txt', 0..1).join("\n\n")
 end
