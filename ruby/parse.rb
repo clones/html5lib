@@ -50,7 +50,7 @@ def parse(opts, args)
     Profiler__::stop_profile
     Profiler__::print_profile($stderr)
   elsif opts.time
-    require 'time'
+    require 'time' # TODO: switch to benchmark
     t0 = Time.new
     document = p.send(opts.parsemethod, *args)
     t1 = Time.new
@@ -115,7 +115,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on("-f", "--fragment", "Parse as a fragment") do |parse|
-    options.parsemethod = :parseFragment
+    options.parsemethod = :parse_fragment
   end
 
   opts.separator ""
