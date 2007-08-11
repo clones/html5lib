@@ -1,4 +1,5 @@
 require 'rake'
+require 'rubygems'
 require 'hoe'
 require 'lib/html5/version'
 
