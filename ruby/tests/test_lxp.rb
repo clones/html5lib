@@ -260,4 +260,20 @@ EOX1
 EOX2
   end
 
+  def test_tagsoup
+    assert_xhtml_equal <<EOX1, <<EOX2.strip
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>TAGSOUP</title></head>
+<body>
+<u><blockquote><p></u>
+</body></html>
+EOX1
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>TAGSOUP</title></head>
+<body>
+<u/><blockquote><u/><p><u/>
+</p></blockquote></body></html>
+EOX2
+  end
+
 end
