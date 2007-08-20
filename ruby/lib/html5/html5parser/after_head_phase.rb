@@ -6,12 +6,12 @@ module HTML5
     handle_start 'html', 'body', 'frameset', %w( base link meta script style title ) => 'FromHead'
 
     def process_eof
-      anythingElse
+      anything_else
       @parser.phase.process_eof
     end
 
     def processCharacters(data)
-      anythingElse
+      anything_else
       @parser.phase.processCharacters(data)
     end
 
@@ -32,16 +32,16 @@ module HTML5
     end
 
     def startTagOther(name, attributes)
-      anythingElse
+      anything_else
       @parser.phase.processStartTag(name, attributes)
     end
 
     def processEndTag(name)
-      anythingElse
+      anything_else
       @parser.phase.processEndTag(name)
     end
 
-    def anythingElse
+    def anything_else
       @tree.insert_element('body', {})
       @parser.phase = @parser.phases[:inBody]
     end

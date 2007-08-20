@@ -15,7 +15,7 @@ module HTML5
         parse_error(_("Unexpected end of file. Expected end tag (#{name})."))
         @tree.open_elements.pop
       end
-      anythingElse
+      anything_else
       @parser.phase.process_eof
     end
 
@@ -23,7 +23,7 @@ module HTML5
       if %w[title style script noscript].include?(@tree.open_elements.last.name)
         @tree.insertText(data)
       else
-        anythingElse
+        anything_else
         @parser.phase.processCharacters(data)
       end
     end
@@ -85,7 +85,7 @@ module HTML5
     end
 
     def startTagOther(name, attributes)
-      anythingElse
+      anything_else
       @parser.phase.processStartTag(name, attributes)
     end
 
@@ -99,7 +99,7 @@ module HTML5
     end
 
     def endTagImplyAfterHead(name)
-      anythingElse
+      anything_else
       @parser.phase.processEndTag(name)
     end
 
@@ -115,7 +115,7 @@ module HTML5
       parse_error(_("Unexpected end tag (#{name}). Ignored."))
     end
 
-    def anythingElse
+    def anything_else
       if @tree.open_elements.last.name == 'head'
         endTagHead('head')
       else
