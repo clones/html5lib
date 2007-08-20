@@ -2,7 +2,8 @@ require File.join(File.dirname(__FILE__), 'preamble')
 require "html5/sniffer"
 
 class TestFeedTypeSniffer < Test::Unit::TestCase
-  include HTML5::TestSupport
+  include HTML5
+  include TestSupport
   include Sniffer
   
   html5_test_files('sniffer').each do |test_file|
