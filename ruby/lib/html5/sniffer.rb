@@ -22,6 +22,7 @@ module Sniffer
           until s[pos] == 0x3E or pos >= s.length # ">"
             pos += 1 
           end
+          pos += 1
         elsif s[pos] == 0x3F # "?"
           until s[pos..pos+1] == "?>" or pos >= s.length # [0x3F, 0x3E]
             pos +=  1
