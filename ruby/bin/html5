@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
-# 
-# Parse a document to a simpletree tree, with optional profiling
 
-$:.unshift File.dirname(__FILE__),'lib'
+$:.unshift File.dirname(__FILE__), 'lib'
 
 def parse(opts, args)
   encoding = nil
@@ -31,7 +29,7 @@ def parse(opts, args)
 
   if opts.output == :xml
     require 'html5/liberalxmlparser'
-    p = HTML5::XHTMLParser.new(:tree=>treebuilder)
+    p = HTML5::XMLParser.new(:tree=>treebuilder)
   else
     require 'html5/html5parser'
     p = HTML5::HTMLParser.new(:tree=>treebuilder)
@@ -54,16 +52,16 @@ def parse(opts, args)
     t0 = Time.new
     document = p.send(opts.parsemethod, *args)
     t1 = Time.new
-    printOutput(p, document, opts)
+    print_output(p, document, opts)
     t2 = Time.new
     puts "\n\nRun took: %fs (plus %fs to print the output)"%[t1-t0, t2-t1]
   else
     document = p.send(opts.parsemethod, *args)
-    printOutput(p, document, opts)
+    print_output(p, document, opts)
   end
 end
 
-def printOutput(parser, document, opts)
+def print_output(parser, document, opts)
   puts "Encoding: #{parser.tokenizer.stream.char_encoding}" if opts.encoding
 
   case opts.output
