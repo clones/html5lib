@@ -50,7 +50,7 @@ module HTML5
 
       when :EndTag
         if token[:data]
-           parse_error(_("End tag contains unexpected attributes."))
+           parse_error("attributes-in-end-tag")
         end
 
       when :Comment
