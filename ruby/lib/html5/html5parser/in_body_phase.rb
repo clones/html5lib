@@ -319,7 +319,7 @@ module HTML5
     def startTagNew(name, attributes)
       # New HTML5 elements, "event-source", "section", "nav",
       # "article", "aside", "header", "footer", "datagrid", "command"
-      sys.stderr.write("Warning: Undefined behaviour for start tag #{name}")
+      # $stderr.puts("Warning: Undefined behaviour for start tag #{name}")
       startTagOther(name, attributes)
       #raise NotImplementedError
     end
@@ -575,7 +575,7 @@ module HTML5
     def endTagNew(name)
       # New HTML5 elements, "event-source", "section", "nav",
       # "article", "aside", "header", "footer", "datagrid", "command"
-      STDERR.puts "Warning: Undefined behaviour for end tag #{name}"
+      # STDERR.puts "Warning: Undefined behaviour for end tag #{name}"
       endTagOther(name)
       #raise NotImplementedError
     end
