@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-ISO_LANG =
-  {'aa' => 'Afar',
+ISO_LANG = {
+   'aa' => 'Afar',
    'ab' => 'Abkhazian',
    'ae' => 'Avestan',
    'af' => 'Afrikaans',
@@ -740,7 +740,7 @@ ISO_LANG =
    'zha' => 'Zhuang',
    'zul' => 'Zulu',
    'zun' => 'Zuni'
-  }
+}
 
 def is_valid_lang_code(value)
   if value.include? '-'

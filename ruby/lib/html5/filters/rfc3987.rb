@@ -29,31 +29,30 @@ iana_schemes = [ # http://www.iana.org/assignments/uri-schemes.html
   "urn", "go", "h323", "ipp", "tftp", "mupdate", "pres", "im", "mtqp",
   "iris.beep", "dict", "snmp", "crid", "tag", "dns", "info"
 ]
-allowed_schemes = iana_schemes + ['javascript']
+ALLOWED_SCHEMES = iana_schemes + ['javascript']
 
-rfc2396_re = Regexp.new("([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}" +
-            "[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]*$")
-rfc2396_full_re = Regexp.new("[a-zA-Z][0-9a-zA-Z+\\-\\.]*:(//)?" +
-               "[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]+$")
-urn_re = Regexp.new("^[Uu][Rr][Nn]:[a-zA-Z0-9][a-zA-Z0-9-]{1,31}:([a-zA-Z0-9()+,\.:=@;$_!*'\-]|%[0-9A-Fa-f]{2})+$")
-tag_re = Regexp.new("^tag:([a-z0-9\\-\._]+?@)?[a-z0-9\.\-]+?,\d{4}(-\d{2}(-\d{2})?)?:[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*(#[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*)?$")
+RFC2396      = Regexp.new("^([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]*$", Regexp::MULTILINE)
+rfc2396_full = Regexp.new("[a-zA-Z][0-9a-zA-Z+\\-\\.]*:(//)?[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]+$")
+URN = Regexp.new("^[Uu][Rr][Nn]:[a-zA-Z0-9][a-zA-Z0-9-]{1,31}:([a-zA-Z0-9()+,\.:=@;$_!*'\-]|%[0-9A-Fa-f]{2})+$")
+TAG = Regexp.new("^tag:([a-z0-9\\-\._]+?@)?[a-z0-9\.\-]+?,\d{4}(-\d{2}(-\d{2})?)?:[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*(#[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*)?$")
 
-def isValidURI(value, uriPattern=rfc2396_re)
-  scheme = value.split(':')[0].lower()
+def isValidURI(value, uriPattern = RFC2396)
+  scheme = value.split(':').first
+  scheme.downcase! if scheme
   if scheme == 'tag'
-    if not tag_re.match(value)
+    if !TAG.match(value)
       return false, "invalid-tag-uri"
     end
   elsif scheme == "urn"
-    if not urn_re.match(value)
+    if !URN.match(value)
       return false, "invalid-urn"
     end
-  elsif not uriPattern.match(value)
-    urichars_re = Regexp.new("[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]")
+  elsif uriPattern.match(value).to_a.reject{|i| i == ''}.compact.length == 0 || uriPattern.match(value)[0] != value
+    urichars = Regexp.new("^[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]$", Regexp::MULTILINE)
     if value.length > 0
-      for c in value
-        if ord(c) < 128 and not urichars_re.match(c)
-          return False, "invalid-uri-char"
+      value.each_byte do |b|
+        if b < 128 and !urichars.match([b].pack('c*'))
+          return false, "invalid-uri-char"
         end
       end
     else
@@ -62,15 +61,14 @@ def isValidURI(value, uriPattern=rfc2396_re)
           return false, "uri-not-iri"
         end
       rescue
-        pass
       end
       return false, "invalid-uri"
     end
   elsif ['http','ftp'].include?(scheme)
-    if not re.match('^\w+://[^/].*',value)
+    if !value.match(%r{^\w+://[^/].*})
       return false, "invalid-http-or-ftp-uri"
     end
-  elsif value.find(':') >= 0 and scheme.isalpha() and not allowed_schemes.include?(scheme)
+  elsif value.index(':') && scheme.match(/^[a-z]+$/) && !ALLOWED_SCHEMES.include?(scheme)
     return false, "invalid-scheme"
   end
   return true, ""
@@ -78,15 +76,14 @@ end
 
 def isValidIRI(value)
   begin
-    if value
+    if value.length > 0
       value = value.encode('idna')
     end
   rescue
-    pass
   end
-  return isValidURI(value)
+  isValidURI(value)
 end
 
 def isValidFullyQualifiedURI(value)
-  isValidURI(value, rfc2396_full_re)
+  isValidURI(value, rfc2396_full)
 end

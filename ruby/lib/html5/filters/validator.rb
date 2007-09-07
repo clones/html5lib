@@ -48,7 +48,7 @@ HTML5::E.update({
     _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
   "invalid-boolean-value" =>
     _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
-  "contextmenu-must-point-to-men" =>
+  "contextmenu-must-point-to-menu" =>
     _("The contextmenu attribute must point to an ID defined on a <menu> element."),
   "invalid-lang-code" =>
     _("Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
@@ -81,168 +81,168 @@ HTML5::E.update({
 
 class HTMLConformanceChecker < HTML5::Filters::Base
 
-  @@globalAttributes = ['class', 'contenteditable', 'contextmenu', 'dir',
-    'draggable', 'id', 'irrelevant', 'lang', 'ref', 'tabindex', 'template', 
-    'title', 'onabort', 'onbeforeunload', 'onblur', 'onchange', 'onclick',
-    'oncontextmenu', 'ondblclick', 'ondrag', 'ondragend', 'ondragenter',
-    'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 
-    'onfocus', 'onkeydown', 'onkeypress', 'onkeyup', 'onload', 'onmessage',
-    'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup',
-    'onmousewheel', 'onresize', 'onscroll', 'onselect', 'onsubmit', 'onunload']
+  @@globalAttributes = %w[class contenteditable contextmenu dir
+    draggable id irrelevant lang ref tabindex template
+    title onabort onbeforeunload onblur onchange onclick
+    oncontextmenu ondblclick ondrag ondragend ondragenter
+    ondragleave ondragover ondragstart ondrop onerror
+    onfocus onkeydown onkeypress onkeyup onload onmessage
+    onmousedown onmousemove onmouseout onmouseover onmouseup
+    onmousewheel onresize onscroll onselect onsubmit onunload]
   # XXX lang in HTML only, xml:lang in XHTML only
   # XXX validate ref, template
 
   @@allowedAttributeMap = {
-    'html' => ['xmlns'],
-    'head' => [],
-    'title' => [],
-    'base' => ['href', 'target'],
-    'link' => ['href', 'rel', 'media', 'hreflang', 'type'],
-    'meta' => ['name', 'http-equiv', 'content', 'charset'], # XXX charset in HTML only
-    'style' => ['media', 'type', 'scoped'],
-    'body' => [],
-    'section' => [],
-    'nav' => [],
-    'article' => [],
-    'blockquote' => ['cite',],
-    'aside' => [],
-    'h1' => [],
-    'h2' => [],
-    'h3' => [],
-    'h4' => [],
-    'h5' => [],
-    'h6' => [],
-    'header' => [],
-    'footer' => [],
-    'address' => [],
-    'p' => [],
-    'hr' => [],
-    'br' => [],
-    'dialog' => [],
-    'pre' => [],
-    'ol' => ['start',],
-    'ul' => [],
-    'li' => ['value',], # XXX depends on parent
-    'dl' => [],
-    'dt' => [],
-    'dd' => [],
-    'a' => ['href', 'target', 'ping', 'rel', 'media', 'hreflang', 'type'],
-    'q' => ['cite',],
-    'cite' => [],
-    'em' => [],
-    'strong' => [],
-    'small' => [],
-    'm' => [],
-    'dfn' => [],
-    'abbr' => [],
-    'time' => ['datetime',],
-    'meter' => ['value', 'min', 'low', 'high', 'max', 'optimum'],
-    'progress' => ['value', 'max'],
-    'code' => [],
-    'var' => [],
-    'samp' => [],
-    'kbd' => [],
-    'sup' => [],
-    'sub' => [],
-    'span' => [],
-    'i' => [],
-    'b' => [],
-    'bdo' => [],
-    'ins' => ['cite', 'datetime'],
-    'del' => ['cite', 'datetime'],
-    'figure' => [],
-    'img' => ['alt', 'src', 'usemap', 'ismap', 'height', 'width'], # XXX ismap depends on parent
-    'iframe' => ['src',],
+    'html'         => %w[xmlns],
+    'head'         => [],
+    'title'        => [],
+    'base'         => %w[href target],
+    'link'         => %w[href rel media hreflang type],
+    'meta'         => %w[name http-equiv content charset], # XXX charset in HTML only
+    'style'        => %w[media type scoped],
+    'body'         => [],
+    'section'      => [],
+    'nav'          => [],
+    'article'      => [],
+    'blockquote'   => %w[cite],
+    'aside'        => [],
+    'h1'           => [],
+    'h2'           => [],
+    'h3'           => [],
+    'h4'           => [],
+    'h5'           => [],
+    'h6'           => [],
+    'header'       => [],
+    'footer'       => [],
+    'address'      => [],
+    'p'            => [],
+    'hr'           => [],
+    'br'           => [],
+    'dialog'       => [],
+    'pre'          => [],
+    'ol'           => %w[start],
+    'ul'           => [],
+    'li'           => %w[value], # XXX depends on parent
+    'dl'           => [],
+    'dt'           => [],
+    'dd'           => [],
+    'a'            => %w[href target ping rel media hreflang type],
+    'q'            => %w[cite],
+    'cite'         => [],
+    'em'           => [],
+    'strong'       => [],
+    'small'        => [],
+    'm'            => [],
+    'dfn'          => [],
+    'abbr'         => [],
+    'time'         => %w[datetime],
+    'meter'        => %w[value min low high max optimum],
+    'progress'     => %w[value max],
+    'code'         => [],
+    'var'          => [],
+    'samp'         => [],
+    'kbd'          => [],
+    'sup'          => [],
+    'sub'          => [],
+    'span'         => [],
+    'i'            => [],
+    'b'            => [],
+    'bdo'          => [],
+    'ins'          => %w[cite datetime],
+    'del'          => %w[cite datetime],
+    'figure'       => [],
+    'img'          => %w[alt src usemap ismap height width], # XXX ismap depends on parent
+    'iframe'       => %w[src],
     # <embed> handled separately
-    'object' => ['data', 'type', 'usemap', 'height', 'width'],
-    'param' => ['name', 'value'],
-    'video' => ['src', 'autoplay', 'start', 'loopstart', 'loopend', 'end',
-          'loopcount', 'controls'],
-    'audio' => ['src', 'autoplay', 'start', 'loopstart', 'loopend', 'end',
-          'loopcount', 'controls'],
-    'source' => ['src', 'type', 'media'],
-    'canvas' => ['height', 'width'],
-    'map' => [],
-    'area' => ['alt', 'coords', 'shape', 'href', 'target', 'ping', 'rel',
-         'media', 'hreflang', 'type'],
-    'table' => [],
-    'caption' => [],
-    'colgroup' => ['span',], # XXX only if element contains no <col> elements
-    'col' => ['span',],
-    'tbody' => [],
-    'thead' => [],
-    'tfoot' => [],
-    'tr' => [],
-    'td' => ['colspan', 'rowspan'],
-    'th' => ['colspan', 'rowspan', 'scope'],
+    'object'       => %w[data type usemap height width],
+    'param'        => %w[name value],
+    'video'        => %w[src autoplay start loopstart loopend end loopcount controls],
+    'audio'        => %w[src autoplay start loopstart loopend end loopcount controls],
+    'source'       => %w[src type media],
+    'canvas'       => %w[height width],
+    'map'          => [],
+    'area'         => %w[alt coords shape href target ping rel media hreflang type],
+    'table'        => [],
+    'caption'      => [],
+    'colgroup'     => %w[span], # XXX only if element contains no <col> elements
+    'col'          => %w[span],
+    'tbody'        => [],
+    'thead'        => [],
+    'tfoot'        => [],
+    'tr'           => [],
+    'td'           => %w[colspan rowspan],
+    'th'           => %w[colspan rowspan scope],
     # all possible <input> attributes are listed here but <input> is really handled separately
-    'input' => ['accept', 'accesskey', 'action', 'alt', 'autocomplete', 'autofocus', 'checked', 'disabled', 'enctype', 'form', 'inputmode', 'list', 'maxlength', 'method', 'min', 'max', 'name', 'pattern', 'step', 'readonly', 'replace', 'required', 'size', 'src', 'tabindex', 'target', 'template', 'value'],
-    'form' => ['action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
-         'onreset', 'accept-charset', 'data', 'replace'],
-    'button' => ['action', 'enctype', 'method', 'replace', 'template', 'name', 'value', 'type', 'disabled', 'form', 'autofocus'], # XXX may need matrix of acceptable attributes based on value of type attribute (like input)
-    'select' => ['name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
-           'form', 'autofocus'],
-    'optgroup' => ['disabled', 'label'],
-    'option' => ['selected', 'disabled', 'label', 'value'],
-    'textarea' => ['maxlength', 'name', 'rows', 'cols', 'disabled', 'readonly', 'required', 'form', 'autofocus', 'wrap', 'accept'],
-    'label' => ['for', 'accesskey', 'form'],
-    'fieldset' => ['disabled', 'form'],
-    'output' => ['form', 'name', 'for', 'onforminput', 'onformchange'],
-    'datalist' => ['data'],
-  #  # XXX repetition model for repeating form controls
-    'script' => ['src', 'defer', 'async', 'type'],
-    'noscript' => [],
-    'noembed' => [],
-    'event-source' => ['src',],
-    'details' => ['open',],
-    'datagrid' => ['multiple', 'disabled'],
-    'command' => ['type', 'label', 'icon', 'hidden', 'disabled', 'checked',
-          'radiogroup', 'default'],
-    'menu' => ['type', 'label', 'autosubmit'],
+    'input'        => %w[accept accesskey action alt autocomplete autofocus checked
+                         disabled enctype form inputmode list maxlength method min 
+                         max name pattern step readonly replace required size src
+                         tabindex target template value
+    ],
+    'form'         => %w[action method enctype accept name onsubmit onreset accept-charset
+                         data replace
+    ],
+    'button'       => %w[action enctype method replace template name value type disabled form autofocus], # XXX may need matrix of acceptable attributes based on value of type attribute (like input)
+    'select'       => %w[name size multiple disabled data accesskey form autofocus],
+    'optgroup'     => %w[disabled label],
+    'option'       => %w[selected disabled label value],
+    'textarea'     => %w[maxlength name rows cols disabled readonly required form autofocus wrap accept],
+    'label'        => %w[for accesskey form],
+    'fieldset'     => %w[disabled form],
+    'output'       => %w[form name for onforminput onformchange],
+    'datalist'     => %w[data],
+     # XXX repetition model for repeating form controls
+    'script'       => %w[src defer async type],
+    'noscript'     => [],
+    'noembed'      => [],
+    'event-source' => %w[src],
+    'details'      => %w[open],
+    'datagrid'     => %w[multiple disabled],
+    'command'      => %w[type label icon hidden disabled checked radiogroup default],
+    'menu'         => %w[type label autosubmit],
     'datatemplate' => [],
-    'rule' => [],
-    'nest' => [],
-    'legend' => [],
-    'div' => [],
-    'font' => ['style',]
+    'rule'         => [],
+    'nest'         => [],
+    'legend'       => [],
+    'div'          => [],
+    'font'         => %w[style]
   }
 
   @@requiredAttributeMap = {
-    'link' => ['href', 'rel'],
-    'bdo' => ['dir',],
-    'img' => ['src',],
-    'embed' => ['src',],
+    'link'   => %w[href rel],
+    'bdo'    => %w[dir],
+    'img'    => %w[src],
+    'embed'  => %w[src],
     'object' => [], # XXX one of 'data' or 'type' is required
-    'param' => ['name', 'value'],
-    'source' => ['src',],
-    'map' => ['id',]
+    'param'  => %w[name value],
+    'source' => %w[src],
+    'map'    => %w[id]
   }
 
   @@inputTypeAllowedAttributeMap = {
-    'text' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'size', 'tabindex', 'value'],
-    'password' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'size', 'tabindex', 'value'],
-    'checkbox' => ['accesskey', 'autofocus', 'checked', 'disabled', 'form', 'name', 'required', 'tabindex', 'value'],
-    'radio' => ['accesskey', 'autofocus', 'checked', 'disabled', 'form', 'name', 'required', 'tabindex', 'value'],
-    'button' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'value'],
-    'submit' => ['accesskey', 'action', 'autofocus', 'disabled', 'enctype', 'form', 'method', 'name', 'replace', 'tabindex', 'target', 'value'],
-    'reset' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'value'],
-    'add' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'template', 'value'],
-    'remove' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'value'],
-    'move-up' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'value'],
-    'move-down' => ['accesskey', 'autofocus', 'disabled', 'form', 'name', 'tabindex', 'value'],
-    'file' => ['accept', 'accesskey', 'autofocus', 'disabled', 'form', 'min', 'max', 'name', 'required', 'tabindex'],
-    'hidden' => ['disabled', 'form', 'name', 'value'],
-    'image' => ['accesskey', 'action', 'alt', 'autofocus', 'disabled', 'enctype', 'form', 'method', 'name', 'replace', 'src', 'tabindex', 'target'],
-    'datetime' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'datetime-local' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'date' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'month' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'week' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'time' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'number' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'range' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value'],
-    'email' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'tabindex', 'value'],
-    'url' => ['accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'tabindex', 'value']
+    'text'           => %w[accesskey autocomplete autofocus disabled form inputmode list maxlength name pattern readonly required size tabindex value],
+    'password'       => %w[accesskey autocomplete autofocus disabled form inputmode maxlength name pattern readonly required size tabindex value],
+    'checkbox'       => %w[accesskey autofocus checked disabled form name required tabindex value],
+    'radio'          => %w[accesskey autofocus checked disabled form name required tabindex value],
+    'button'         => %w[accesskey autofocus disabled form name tabindex value],
+    'submit'         => %w[accesskey action autofocus disabled enctype form method name replace tabindex target value],
+    'reset'          => %w[accesskey autofocus disabled form name tabindex value],
+    'add'            => %w[accesskey autofocus disabled form name tabindex template value],
+    'remove'         => %w[accesskey autofocus disabled form name tabindex value],
+    'move-up'        => %w[accesskey autofocus disabled form name tabindex value],
+    'move-down'      => %w[accesskey autofocus disabled form name tabindex value],
+    'file'           => %w[accept accesskey autofocus disabled form min max name required tabindex],
+    'hidden'         => %w[disabled form name value],
+    'image'          => %w[accesskey action alt autofocus disabled enctype form method name replace src tabindex target],
+    'datetime'       => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'datetime-local' => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'date'           => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'month'          => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'week'           => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'time'           => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'number'         => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'range'          => %w[accesskey autocomplete autofocus disabled form list min max name step readonly required tabindex value],
+    'email'          => %w[accesskey autocomplete autofocus disabled form inputmode list maxlength name pattern readonly required tabindex value],
+    'url'            => %w[accesskey autocomplete autofocus disabled form inputmode list maxlength name pattern readonly required tabindex value],
   }
 
   @@inputTypeDeprecatedAttributeMap = {
@@ -250,8 +250,8 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     'password' => ['size']
   }
 
-  @@linkRelValues = ['alternate', 'archive', 'archives', 'author', 'contact', 'feed', 'first', 'begin', 'start', 'help', 'icon', 'index', 'top', 'contents', 'toc', 'last', 'end', 'license', 'copyright', 'next', 'pingback', 'prefetch', 'prev', 'previous', 'search', 'stylesheet', 'sidebar', 'tag', 'up']
-  @@aRelValues    = ['alternate', 'archive', 'archives', 'author', 'contact', 'feed', 'first', 'begin', 'start', 'help', 'index', 'top', 'contents', 'toc', 'last', 'end', 'license', 'copyright', 'next', 'prev', 'previous', 'search', 'sidebar', 'tag', 'up', 'bookmark', 'external', 'nofollow']
+  @@linkRelValues = %w[alternate archive archives author contact feed first begin start help icon index top contents toc last end license copyright next pingback prefetch prev previous search stylesheet sidebar tag up]
+  @@aRelValues    = %w[alternate archive archives author contact feed first begin start help index top contents toc last end license copyright next prev previous search sidebar tag up bookmark external nofollow]
 
   def initialize(stream, *args)
     super(HTML5::HTMLTokenizer.new(stream, *args))
@@ -262,14 +262,11 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   
   def each
     __getobj__.each do |token|
-      fakeToken = {:type => token.fetch(:type, "-"),:name => token.fetch(:name, "-").capitalize}
-      method = "validate#{token.fetch(:type, '-')}s#{token.fetch(:name, '-').capitalize}s"
-      # p method
+      method = "validate#{token.fetch(:type, '-')}#{token.fetch(:name, '-').capitalize}"
       if respond_to?(method)
-        (send(method, token) || []).each{|t| yield t }
+        send(method, token){|t| yield t }
       else
         method = "validate#{token.fetch(:type, '-')}"
-        # p method
         if respond_to?(method)
           send(method, token) do |t|
             yield t
@@ -278,7 +275,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
       end
       yield token
     end
-    for t in self.eof() or []
+    eof do |t|
       yield t
     end
   end
@@ -288,7 +285,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   ##########################################################################
 
   def validateStartTag(token)
-    checkUnknownStartTag(token){|t| p t; yield t}
+    checkUnknownStartTag(token){|t| yield t}
     checkStartTagRequiredAttributes(token) do |t|
       yield t
     end
@@ -301,10 +298,10 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   end
 
   def validateStartTagEmbed(token)
-    for t in checkStartTagRequiredAttributes(token) or []
+    checkStartTagRequiredAttributes(token) do |t|
       yield t
     end
-    for t in checkAttributeValues(token) or []
+    checkAttributeValues(token) do |t|
       yield t
     end
     # spec says "any attributes w/o namespace"
@@ -312,18 +309,18 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   end
 
   def validateStartTagInput(token)
-    for t in checkAttributeValues(token) or []
+    checkAttributeValues(token) do |t|
       yield t
     end
-    # attrDict = dict([(name.downcase, value) for name, value in token.fetch(:data, [])])
-    inputType = attrDict.fetch(:type, "text")
+    attrDict = Hash[*token[:data].collect{|(name, value)| [name.downcase, value]}.flatten]
+    inputType = attrDict.fetch('type', "text")
     if !@@inputTypeAllowedAttributeMap.keys().include?(inputType)
       yield({:type => "ParseError",
            :data => "unknown-input-type",
            :datavars => {:attrValue => inputType}})
     end
     allowedAttributes = @@inputTypeAllowedAttributeMap.fetch(inputType, [])
-    for attrName, attrValue in attrDict.items()
+    attrDict.each do |attrName, attrValue|
       if !@@allowedAttributeMap['input'].include?(attrName)
         yield({:type => "ParseError",
              :data => "unknown-attribute",
@@ -335,7 +332,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
              :datavars => {"attributeName" => attrName,
                   "inputType" => inputType}})
       end
-      if inputTypeDeprecatedAttributeMap[inputType].include?(attrName)
+      if @@inputTypeDeprecatedAttributeMap.fetch(inputType, []).include?(attrName)
         yield({:type => "ParseError",
              :data => "deprecated-attribute",
              :datavars => {"attributeName" => attrName,
@@ -343,25 +340,26 @@ class HTMLConformanceChecker < HTML5::Filters::Base
       end
     end
   end
+
   ##########################################################################
   # Start tag validation helpers
   ##########################################################################
 
   def checkUnknownStartTag(token)
     # check for recognized tag name
-    name = token.fetch(:name, "").downcase
-    if !@@allowedAttributeMap.keys().include?(name)
-      yield( {:type => "ParseError",
-           :data => "unknown-start-tag",
-           :datavars => {"tagName" => name}})
+    name = (token[:name] || "").downcase
+    if !@@allowedAttributeMap.keys.include?(name)
+      yield({:type => "ParseError",
+             :data => "unknown-start-tag",
+             :datavars => {"tagName" => name}})
     end
   end
 
   def checkStartTagRequiredAttributes(token)
     # check for presence of required attributes
-    name = token.fetch(:name, "").downcase
+    name = (token[:name] || "").downcase
     if @@requiredAttributeMap.keys().include?(name)
-      attrsPresent = token.fetch(:data, []).collect{|t| t[0]}
+      attrsPresent = (token[:data] || []).collect{|t| t[0]}
       for attrName in @@requiredAttributeMap[name]
         if !attrsPresent.include?(attrName)
           yield( {:type => "ParseError",
@@ -375,7 +373,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
 
   def checkStartTagUnknownAttributes(token)
     # check for recognized attribute names
-    name = token.fetch(:name).downcase
+    name = token[:name].downcase
     allowedAttributes = @@globalAttributes | @@allowedAttributeMap.fetch(name, [])
     for attrName, attrValue in token.fetch(:data, [])
       if !allowedAttributes.include?(attrName.downcase())
@@ -404,37 +402,37 @@ class HTMLConformanceChecker < HTML5::Filters::Base
 #                "attributeName" => attrName}}
 
   def checkIRI(token, tagName, attrName, attrValue)
-    isValid, errorCode = rfc3987.isValidIRI(attrValue)
+    isValid, errorCode = isValidIRI(attrValue)
     if !isValid
-      yield( {:type => "ParseError",
-           :data => errorCode,
-           :datavars => {"tagName" => tagName,
+      yield({:type => "ParseError",
+             :data => errorCode,
+             :datavars => {"tagName" => tagName,
                 "attributeName" => attrName}})
-      yield( {:type => "ParseError",
-           :data => "invalid-attribute-value",
-           :datavars => {"tagName" => tagName,
+      yield({:type => "ParseError",
+             :data => "invalid-attribute-value",
+             :datavars => {"tagName" => tagName,
                 "attributeName" => attrName}})
     end
   end
 
-  def checkID(token, tagName, attrName, attrValue)
-    p :id
-    if !attrValue
-      yield( {:type => "ParseError",
-           :data => "attribute-value-can-not-be-blank",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+  def checkID(token, tag_name, attr_name, attr_value)
+    if !attr_value || attr_value.length == 0
+      yield({:type => "ParseError",
+              :data => "attribute-value-can-not-be-blank",
+              :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
-    for c in attrValue
-      if spaceCharacters.include?(c)
+    attr_value.each_byte do |b|
+      c = [b].pack('c*')
+      if HTML5::SPACE_CHARACTERS.include?(c)
         yield( {:type => "ParseError",
              :data => "space-in-id",
-             :datavars => {"tagName" => tagName,
-                  "attributeName" => attrName}})
+             :datavars => {"tagName" => tag_name,
+                  "attributeName" => attr_name}})
         yield( {:type => "ParseError",
              :data => "invalid-attribute-value",
-             :datavars => {"tagName" => tagName,
-                  "attributeName" => attrName}})
+             :datavars => {"tagName" => tag_name,
+                  "attributeName" => attr_name}})
         break
       end
     end
@@ -443,58 +441,58 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   def parseTokenList(value)
     valueList = []
     currentValue = ''
-    for c in value + ' '
-      if spaceCharacters.include?(c)
-        if currentValue
-          valueList.append(currentValue)
+    (value + ' ').each_byte do |b|
+      c = [b].pack('c*')
+      if HTML5::SPACE_CHARACTERS.include?(c)
+        if currentValue.length > 0
+          valueList << currentValue
           currentValue = ''
         end
       else
         currentValue += c
       end
     end
-    if currentValue
-      valueList.append(currentValue)
+    if currentValue.length > 0
+      valueList << currentValue
     end
     valueList
   end
-    
-  def checkTokenList(tagName, attrName, attrValue)
+
+  def checkTokenList(tag_name, attr_name, attr_value)
     # The "token" in the method name refers to tokens in an attribute value
     # i.e. http://www.whatwg.org/specs/web-apps/current-work/#set-of
     # but the "token" parameter refers to the token generated from
     # HTMLTokenizer.  Sorry for the confusion.
-    valueList = parseTokenList(attrValue)
-    valueDict = {}
-    for currentValue in valueList
-      if valueDict.has_key(currentValue)
-        yield( {:type => "ParseError",
+    value_list = parseTokenList(attr_value)
+    value_dict = {}
+    for current_value in value_list
+      if value_dict.has_key?(current_value)
+        yield({:type => "ParseError",
              :data => "duplicate-value-in-token-list",
-             :datavars => {"tagName" => tagName,
-                  "attributeName" => attrName,
-                  "attributeValue" => currentValue}})
+             :datavars => {"tagName" => tag_name,
+                  "attributeName" => attr_name,
+                  "attributeValue" => current_value}})
         break
       end
-      valueDict[currentValue] = 1
+      value_dict[current_value] = 1
     end
   end
 
-  def checkEnumeratedValue(token, tagName, attrName, attrValue, enumeratedValues)
-    p :enum
-    if !attrValue and (!enumeratedValues.include?(''))
+  def checkEnumeratedValue(token, tagName, attrName, attr_value, enumeratedValues)
+    if !attr_value || attr_value.length == 0
       yield( {:type => "ParseError",
            :data => "attribute-value-can-not-be-blank",
            :datavars => {"tagName" => tagName,
                 "attributeName" => attrName}})
       return
     end
-    attrValue = attrValue.downcase
-    if !enumeratedValues.include?(attrValue)
+    attr_value.downcase!
+    if !enumeratedValues.include?(attr_value)
       yield( {:type => "ParseError",
            :data => "invalid-enumerated-value",
            :datavars => {"tagName" => tagName,
                 "attributeName" => attrName,
-                "enumeratedValues" => tuple(enumeratedValues)}})
+                "enumeratedValues" => enumeratedValues}})
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
            :datavars => {"tagName" => tagName,
@@ -509,7 +507,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
            :data => "invalid-boolean-value",
            :datavars => {"tagName" => tagName,
                 "attributeName" => attrName,
-                "enumeratedValues" => tuple(enumeratedValues)}})
+                "enumeratedValues" => enumeratedValues}})
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
            :datavars => {"tagName" => tagName,
@@ -567,18 +565,17 @@ class HTMLConformanceChecker < HTML5::Filters::Base
 
   def checkFloatingPointNumber(token, tagName, attrName, attrValue)
     # XXX
-    pass
   end
 
-  def checkBrowsingContext(token, tagName, attrName, attrValue)
-    return if not attrValue
-    return if attrValue[0] != '_'
-    attrValue = attrValue.downcase
-    return if ['_self', '_parent', '_top', '_blank'].include?(attrValue)
-    yield( {:type => "ParseError",
+  def checkBrowsingContext(token, tag_name, attr_name, attr_value)
+    return if not attr_value
+    return if attr_value[0] != ?_
+    attr_value.downcase!
+    return if ['_self', '_parent', '_top', '_blank'].include?(attr_value)
+    yield({:type => "ParseError",
          :data => "invalid-browsing-context",
-         :datavars => {"tagName" => tagName,
-              "attributeName" => attrName}})
+         :datavars => {"tagName" => tag_name,
+              "attributeName" => attr_name}})
   end
 
   def checkLangCode(token, tagName, attrName, attrValue)
@@ -600,7 +597,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
            :datavars => {"tagName" => tagName,
                 "attributeName" => attrName}})
     end
-    if not rfc2046.isValidMIMEType(attrValue)
+    if not isValidMIMEType(attrValue)
       yield( {:type => "ParseError",
            :data => "invalid-mime-type",
            :datavars => {"tagName" => tagName,
@@ -611,15 +608,14 @@ class HTMLConformanceChecker < HTML5::Filters::Base
 
   def checkMediaQuery(token, tagName, attrName, attrValue)
     # XXX
-    pass
   end
 
   def checkLinkRelation(token, tagName, attrName, attrValue)
-    for t in self.checkTokenList(tagName, attrName, attrValue) or []
+    checkTokenList(tagName, attrName, attrValue) do |t|
       yield t
     end
     valueList = self.parseTokenList(attrValue)
-    allowedValues = (tagName == 'link') and @@linkRelValues or @@aRelValues
+    allowedValues = tagName == 'link' ? @@linkRelValues : @@aRelValues
     for currentValue in valueList
       if !allowedValues.include?(currentValue)
         yield({:type => "ParseError",
@@ -635,7 +631,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     state = 'begin' # ('begin', '...
 #    for c in attrValue
 #      if state == 'begin' =>
-#        if spaceCharacters.include?(c)
+#        if SPACE_CHARACTERS.include?(c)
 #          continue
 #        elsif digits.include?(c)
 #          state = ...
@@ -651,8 +647,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     for attrName, attrValue in token.fetch(:data, [])
       attrName = attrName.downcase
       fakeToken["attributeName"] = attrName.capitalize
-      method = "validateAttributeValue#{fakeToken["tagName"]}s#{fakeToken["attributeName"]}s"
-
+      method = "validateAttributeValue#{fakeToken["tagName"]}#{fakeToken["attributeName"]}"
       if respond_to?(method)
         send(method, token, tagName, attrName, attrValue) do |t|
           yield t
@@ -669,7 +664,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   end
 
   def validateAttributeValueClass(token, tagName, attrName, attrValue)
-    for t in self.checkTokenList(tagName, attrName, attrValue) or []
+    checkTokenList(tagName, attrName, attrValue) do |t|
       yield t
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
@@ -679,19 +674,19 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   end
 
   def validateAttributeValueContenteditable(token, tagName, attrName, attrValue)
-    for t in checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false', '']) or []
+    checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false', '']) do |t|
       yield t
     end
   end
 
   def validateAttributeValueDir(token, tagName, attrName, attrValue)
-    for t in checkEnumeratedValue(token, tagName, attrName, attrValue, ['ltr', 'rtl']) or []
+    checkEnumeratedValue(token, tagName, attrName, attrValue, ['ltr', 'rtl']) do |t|
       yield t
     end
   end
 
   def validateAttributeValueDraggable(token, tagName, attrName, attrValue)
-    for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false']) or []
+    checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false']) do |t|
       yield t
     end
   end
@@ -701,41 +696,39 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   alias validateAttributeValueLang checkLangCode
 
   def validateAttributeValueContextmenu(token, tagName, attrName, attrValue)
-    for t in checkID(token, tagName, attrName, attrValue) or []
+    checkID(token, tagName, attrName, attrValue) do |t|
       yield t
     end
-    thingsThatPointToAnID.append(token)
+    @thingsThatPointToAnID << token
   end
 
   def validateAttributeValueId(token, tagName, attrName, attrValue)
     # This method has side effects.  It adds 'token' to the list of
-    # things that define an ID (self.thingsThatDefineAnID) so that we can
+    # things that define an ID (@thingsThatDefineAnID) so that we can
     # later check 1) whether an ID is duplicated, and 2) whether all the
     # things that point to something else by ID (like <label for> or
     # <span contextmenu>) point to an ID that actually exists somewhere.
-    for t in checkID(token, tagName, attrName, attrValue) or []
+    checkID(token, tagName, attrName, attrValue) do |t|
       yield t
     end
     return if not attrValue
-    if self.IDsWeHaveKnownAndLoved.include?(attrValue)
+    if @IDsWeHaveKnownAndLoved.include?(attrValue)
       yield( {:type => "ParseError",
            :data => "duplicate-id",
            :datavars => {"tagName" => tagName}})
     end
-    IDsWeHaveKnownAndLoved.append(attrValue)
-    thingsThatDefineAnID.append(token)
+    @IDsWeHaveKnownAndLoved << attrValue
+    @thingsThatDefineAnID << token
   end
 
   alias validateAttributeValueTabindex checkInteger
 
   def validateAttributeValueRef(token, tagName, attrName, attrValue)
     # XXX
-    pass
   end
 
   def validateAttributeValueTemplate(token, tagName, attrName, attrValue)
     # XXX
-    pass
   end
 
   def validateAttributeValueHtmlXmlns(token, tagName, attrName, attrValue)
@@ -768,7 +761,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   def validateAttributeValueAPing(token, tagName, attrName, attrValue)
     valueList = self.parseTokenList(attrValue)
     for currentValue in valueList
-      for t in self.checkIRI(token, tagName, attrName, attrValue) or []
+      checkIRI(token, tagName, attrName, attrValue) do |t|
         yield t
       end
     end
@@ -802,15 +795,15 @@ class HTMLConformanceChecker < HTML5::Filters::Base
       tagName = token.fetch(:name, "").downcase
       attrsDict = token[:data] # by now html5parser has "normalized" the attrs list into a dict.
                     # hooray for obscure side effects!
-      attrValue = attrsDict.fetch("contextmen", "")
-      if attrValue and (!IDsWeHaveKnownAndLoved.include?(attrValue))
+      attrValue = attrsDict.fetch("contextmenu", "")
+      if attrValue and (!@IDsWeHaveKnownAndLoved.include?(attrValue))
         yield( {:type => "ParseError",
              :data => "id-does-not-exist",
              :datavars => {"tagName" => tagName,
-                  "attributeName" => "contextmen",
+                  "attributeName" => "contextmenu",
                   "attributeValue" => attrValue}})
       else
-        for refToken in self.thingsThatDefineAnID
+        for refToken in @thingsThatDefineAnID
           id = refToken.fetch(:data, {}).fetch("id", "")
           if not id
             continue
@@ -818,7 +811,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
           if id == attrValue
             if refToken.fetch(:name, "").downcase != "men"
               yield( {:type => "ParseError",
-                   :data => "contextmenu-must-point-to-men"})
+                   :data => "contextmenu-must-point-to-menu"})
             end
             break
           end
