@@ -199,7 +199,7 @@ module HTML5
             @token_queue << {:type => :ParseError, :data => "named-entity-without-semicolon"}
           end
 
-          if char_stack[-1] != ";" and from_attribute and
+          if entityName[-1] != ";" and from_attribute and
              (ASCII_LETTERS.include?(char_stack[entityName.length]) or
               DIGITS.include?(char_stack[entityName.length]))
             @stream.unget(char_stack)
