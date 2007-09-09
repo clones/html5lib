@@ -856,7 +856,7 @@ module HTML5
       "expected-closing-tag-but-got-eof" =>
          _("Expected closing tag. Unexpected end of file."),
       "expected-closing-tag-but-got-char" =>
-         _("Expected closing tag. Unexpected character '%(data)s' found."),
+         _("Expected closing tag. Unexpected character '%(data)' found."),
       "eof-in-tag-name" =>
          _("Unexpected end of file in the tag name."),
       "expected-attribute-name-but-got-eof" =>
@@ -900,7 +900,7 @@ module HTML5
       "eof-in-doctype" =>
          _("Unexpected end of file in DOCTYPE."),
       "expected-space-or-right-bracket-in-doctype" =>
-         _("Expected space or '>'. Got '%(data)s'"),
+         _("Expected space or '>'. Got '%(data)'"),
       "unexpected-end-of-doctype" =>
          _("Unexpected end of DOCTYPE."),
       "unexpected-char-in-doctype" =>
@@ -920,124 +920,124 @@ module HTML5
       "expected-doctype-but-got-chars" =>
          _("Unexpected non-space characters. Expected DOCTYPE."),
       "expected-doctype-but-got-start-tag" =>
-         _("Unexpected start tag (%(name)s). Expected DOCTYPE."),
+         _("Unexpected start tag (%(name)). Expected DOCTYPE."),
       "expected-doctype-but-got-end-tag" =>
-         _("Unexpected end tag (%(name)s). Expected DOCTYPE."),
+         _("Unexpected end tag (%(name)). Expected DOCTYPE."),
       "end-tag-after-implied-root" =>
-         _("Unexpected end tag (%(name)s) after the (implied) root element."),
+         _("Unexpected end tag (%(name)) after the (implied) root element."),
       "expected-named-closing-tag-but-got-eof" =>
-         _("Unexpected end of file. Expected end tag (%(name)s)."),
+         _("Unexpected end of file. Expected end tag (%(name))."),
       "two-heads-are-not-better-than-one" =>
          _("Unexpected start tag head in existing head. Ignored."),
       "unexpected-end-tag" =>
-         _("Unexpected end tag (%(name)s). Ignored."),
+         _("Unexpected end tag (%(name)). Ignored."),
       "unexpected-start-tag-out-of-my-head" =>
-         _("Unexpected start tag (%(name)s) that can be in head. Moved."),
+         _("Unexpected start tag (%(name)) that can be in head. Moved."),
       "unexpected-start-tag" =>
-         _("Unexpected start tag (%(name)s)."),
+         _("Unexpected start tag (%(name))."),
       "missing-end-tag" =>
-         _("Missing end tag (%(name)s)."),
+         _("Missing end tag (%(name))."),
       "missing-end-tags" =>
-         _("Missing end tags (%(name)s)."),
+         _("Missing end tags (%(name))."),
       "unexpected-start-tag-implies-end-tag" =>
-         _("Unexpected start tag (%(startName)s) " +
-           "implies end tag (%(endName)s)."),
+         _("Unexpected start tag (%(startName)) " +
+           "implies end tag (%(endName))."),
       "unexpected-start-tag-treated-as" =>
-         _("Unexpected start tag (%(originalName)s). Treated as %(newName)s."),
+         _("Unexpected start tag (%(originalName)). Treated as %(newName)."),
       "deprecated-tag" =>
-         _("Unexpected start tag %(name)s. Don't use it!"),
+         _("Unexpected start tag %(name). Don't use it!"),
       "unexpected-start-tag-ignored" =>
-         _("Unexpected start tag %(name)s. Ignored."),
+         _("Unexpected start tag %(name). Ignored."),
       "expected-one-end-tag-but-got-another" =>
-         _("Unexpected end tag (%(gotName)s). " +
-           "Missing end tag (%(expectedName)s)."),
+         _("Unexpected end tag (%(gotName)). " +
+           "Missing end tag (%(expectedName))."),
       "end-tag-too-early" =>
-         _("End tag (%(name)s) seen too early. Expected other end tag."),
+         _("End tag (%(name)) seen too early. Expected other end tag."),
       "end-tag-too-early-named" =>
-         _("Unexpected end tag (%(gotName)s). Expected end tag (%(expectedName)s)."),
+         _("Unexpected end tag (%(gotName)). Expected end tag (%(expectedName))."),
       "end-tag-too-early-ignored" =>
-         _("End tag (%(name)s) seen too early. Ignored."),
+         _("End tag (%(name)) seen too early. Ignored."),
       "adoption-agency-1.1" =>
-         _("End tag (%(name)s) violates step 1, " +
+         _("End tag (%(name)) violates step 1, " +
            "paragraph 1 of the adoption agency algorithm."),
       "adoption-agency-1.2" =>
-         _("End tag (%(name)s) violates step 1, " +
+         _("End tag (%(name)) violates step 1, " +
            "paragraph 2 of the adoption agency algorithm."),
       "adoption-agency-1.3" =>
-         _("End tag (%(name)s) violates step 1, " +
+         _("End tag (%(name)) violates step 1, " +
            "paragraph 3 of the adoption agency algorithm."),
       "unexpected-end-tag-treated-as" =>
-         _("Unexpected end tag (%(originalName)s). Treated as %(newName)s."),
+         _("Unexpected end tag (%(originalName)). Treated as %(newName)."),
       "no-end-tag" =>
-         _("This element (%(name)s) has no end tag."),
+         _("This element (%(name)) has no end tag."),
       "unexpected-implied-end-tag-in-table" =>
-         _("Unexpected implied end tag (%(name)s) in the table phase."),
+         _("Unexpected implied end tag (%(name)) in the table phase."),
       "unexpected-implied-end-tag-in-table-body" =>
-         _("Unexpected implied end tag (%(name)s) in the table body phase."),
+         _("Unexpected implied end tag (%(name)) in the table body phase."),
       "unexpected-char-implies-table-voodoo" =>
          _("Unexpected non-space characters in " +
            "table context caused voodoo mode."),
       "unexpected-start-tag-implies-table-voodoo" =>
-         _("Unexpected start tag (%(name)s) in " +
+         _("Unexpected start tag (%(name)) in " +
            "table context caused voodoo mode."),
       "unexpected-end-tag-implies-table-voodoo" =>
-         _("Unexpected end tag (%(name)s) in " +
+         _("Unexpected end tag (%(name)) in " +
            "table context caused voodoo mode."),
       "unexpected-cell-in-table-body" =>
-         _("Unexpected table cell start tag (%(name)s) " +
+         _("Unexpected table cell start tag (%(name)) " +
            "in the table body phase."),
       "unexpected-cell-end-tag" =>
-         _("Got table cell end tag (%(name)s) " +
+         _("Got table cell end tag (%(name)) " +
            "while required end tags are missing."),
       "unexpected-end-tag-in-table-body" =>
-         _("Unexpected end tag (%(name)s) in the table body phase. Ignored."),
+         _("Unexpected end tag (%(name)) in the table body phase. Ignored."),
       "unexpected-implied-end-tag-in-table-row" =>
-         _("Unexpected implied end tag (%(name)s) in the table row phase."),
+         _("Unexpected implied end tag (%(name)) in the table row phase."),
       "unexpected-end-tag-in-table-row" =>
-         _("Unexpected end tag (%(name)s) in the table row phase. Ignored."),
+         _("Unexpected end tag (%(name)) in the table row phase. Ignored."),
       "unexpected-select-in-select" =>
          _("Unexpected select start tag in the select phase " +
            "implies select start tag."),
       "unexpected-start-tag-in-select" =>
-         _("Unexpected start tag token (%(name)s in the select phase. " +
+         _("Unexpected start tag token (%(name) in the select phase. " +
            "Ignored."),
       "unexpected-end-tag-in-select" =>
-         _("Unexpected end tag (%(name)s) in the select phase. Ignored."),
+         _("Unexpected end tag (%(name)) in the select phase. Ignored."),
       "unexpected-char-after-body" =>
          _("Unexpected non-space characters in the after body phase."),
       "unexpected-start-tag-after-body" =>
-         _("Unexpected start tag token (%(name)s)" +
+         _("Unexpected start tag token (%(name))" +
            " in the after body phase."),
       "unexpected-end-tag-after-body" =>
-         _("Unexpected end tag token (%(name)s)" +
+         _("Unexpected end tag token (%(name))" +
            " in the after body phase."),
       "unexpected-char-in-frameset" =>
          _("Unepxected characters in the frameset phase. Characters ignored."),
       "unexpected-start-tag-in-frameset" =>
-         _("Unexpected start tag token (%(name)s)" +
+         _("Unexpected start tag token (%(name))" +
            " in the frameset phase. Ignored."),
       "unexpected-frameset-in-frameset-innerhtml" =>
          _("Unexpected end tag token (frameset) " +
            "in the frameset phase (innerHTML)."),
       "unexpected-end-tag-in-frameset" =>
-         _("Unexpected end tag token (%(name)s)" +
+         _("Unexpected end tag token (%(name))" +
            " in the frameset phase. Ignored."),
       "unexpected-char-after-frameset" =>
          _("Unexpected non-space characters in the " +
            "after frameset phase. Ignored."),
       "unexpected-start-tag-after-frameset" =>
-         _("Unexpected start tag (%(name)s)" +
+         _("Unexpected start tag (%(name))" +
            " in the after frameset phase. Ignored."),
       "unexpected-end-tag-after-frameset" =>
-         _("Unexpected end tag (%(name)s)" +
+         _("Unexpected end tag (%(name))" +
            " in the after frameset phase. Ignored."),
       "expected-eof-but-got-char" =>
          _("Unexpected non-space characters. Expected end of file."),
       "expected-eof-but-got-start-tag" =>
-         _("Unexpected start tag (%(name)s)" +
+         _("Unexpected start tag (%(name))" +
            ". Expected end of file."),
       "expected-eof-but-got-end-tag" =>
-         _("Unexpected end tag (%(name)s)" +
+         _("Unexpected end tag (%(name))" +
            ". Expected end of file."),
   }
 

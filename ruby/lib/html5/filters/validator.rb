@@ -21,61 +21,61 @@ def _(str); str; end
 
 HTML5::E.update({
   "unknown-start-tag" =>
-    _("Unknown start tag <%(tagName)s>."),
+    _("Unknown start tag <%(tagName)>."),
   "unknown-attribute" =>
-    _("Unknown '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Unknown '%(attributeName)' attribute on <%(tagName)>."),
   "missing-required-attribute" =>
-    _("The '%(attributeName)s' attribute is required on <%(tagName)s>."),
+    _("The '%(attributeName)' attribute is required on <%(tagName)>."),
   "unknown-input-type" =>
-    _("Illegal value for attribute on <input type='%(inputType)s'>."),
+    _("Illegal value for attribute on <input type='%(inputType)'>."),
   "attribute-not-allowed-on-this-input-type" =>
-    _("The '%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
+    _("The '%(attributeName)' attribute is not allowed on <input type=%(inputType)>."),
   "deprecated-attribute" =>
-    _("This attribute is deprecated: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("This attribute is deprecated: '%(attributeName)' attribute on <%(tagName)>."),
   "duplicate-value-in-token-list" =>
-    _("Duplicate value in token list: '%(attributeValue)s' in '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Duplicate value in token list: '%(attributeValue)' in '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-attribute-value" =>
-    _("Invalid attribute value: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid attribute value: '%(attributeName)' attribute on <%(tagName)>."),
   "space-in-id" =>
-    _("Whitespace is not allowed here: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Whitespace is not allowed here: '%(attributeName)' attribute on <%(tagName)>."),
   "duplicate-id" =>
-    _("This ID was already defined earlier: 'id' attribute on <%(tagName)s>."),
+    _("This ID was already defined earlier: 'id' attribute on <%(tagName)>."),
   "attribute-value-can-not-be-blank" =>
-    _("This value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("This value can not be blank: '%(attributeName)' attribute on <%(tagName)>."),
   "id-does-not-exist" =>
-    _("This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("This value refers to a non-existent ID: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-enumerated-value" =>
-    _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
+    _("Value must be one of %(enumeratedValues): '%(attributeName)' attribute on <%tagName)>."),
   "invalid-boolean-value" =>
-    _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
+    _("Value must be one of %(enumeratedValues): '%(attributeName)' attribute on <%tagName)>."),
   "contextmenu-must-point-to-menu" =>
     _("The contextmenu attribute must point to an ID defined on a <menu> element."),
   "invalid-lang-code" =>
-    _("Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
+    _("Invalid language code: '%(attributeName)' attibute on <%(tagName)>."),
   "invalid-integer-value" =>
-    _("Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
+    _("Value must be an integer: '%(attributeName)' attribute on <%tagName)>."),
   "invalid-root-namespace" =>
     _("Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
   "invalid-browsing-context" =>
-    _("Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_' => '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_' => '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-tag-uri" =>
-    _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid URI: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-urn" =>
-    _("Invalid URN: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid URN: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-uri-char" =>
-    _("Illegal character in URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Illegal character in URI: '%(attributeName)' attribute on <%(tagName)>."),
   "uri-not-iri" =>
-    _("Expected a URI but found an IRI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Expected a URI but found an IRI: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-uri" =>
-    _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid URI: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-http-or-ftp-uri" =>
-    _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid URI: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-scheme" =>
-    _("Unregistered URI scheme: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Unregistered URI scheme: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-rel" =>
-    _("Invalid link relation: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid link relation: '%(attributeName)' attribute on <%(tagName)>."),
   "invalid-mime-type" =>
-    _("Invalid MIME type: '%(attributeName)s' attribute on <%(tagName)s>."),
+    _("Invalid MIME type: '%(attributeName)' attribute on <%(tagName)>."),
 })
 
 
