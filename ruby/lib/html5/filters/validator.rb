@@ -19,6 +19,17 @@ require 'html5/filters/rfc2046'
 
 def _(str); str; end
 
+class String
+  # lifted from rails
+  def underscore()
+     self.gsub(/::/, '/').
+       gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+       gsub(/([a-z\d])([A-Z])/,'\1_\2').
+       tr("-", "_").
+       downcase
+   end
+end
+
 HTML5::E.update({
   "unknown-start-tag" =>
     _("Unknown start tag <%(tagName)>."),
@@ -81,7 +92,7 @@ HTML5::E.update({
 
 class HTMLConformanceChecker < HTML5::Filters::Base
 
-  @@globalAttributes = %w[class contenteditable contextmenu dir
+  @@global_attributes = %w[class contenteditable contextmenu dir
     draggable id irrelevant lang ref tabindex template
     title onabort onbeforeunload onblur onchange onclick
     oncontextmenu ondblclick ondrag ondragend ondragenter
@@ -92,7 +103,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   # XXX lang in HTML only, xml:lang in XHTML only
   # XXX validate ref, template
 
-  @@allowedAttributeMap = {
+  @@allowed_attribute_map = {
     'html'         => %w[xmlns],
     'head'         => [],
     'title'        => [],
@@ -207,7 +218,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     'font'         => %w[style]
   }
 
-  @@requiredAttributeMap = {
+  @@required_attribute_map = {
     'link'   => %w[href rel],
     'bdo'    => %w[dir],
     'img'    => %w[src],
@@ -218,7 +229,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     'map'    => %w[id]
   }
 
-  @@inputTypeAllowedAttributeMap = {
+  @@input_type_allowed_attribute_map = {
     'text'           => %w[accesskey autocomplete autofocus disabled form inputmode list maxlength name pattern readonly required size tabindex value],
     'password'       => %w[accesskey autocomplete autofocus disabled form inputmode maxlength name pattern readonly required size tabindex value],
     'checkbox'       => %w[accesskey autofocus checked disabled form name required tabindex value],
@@ -245,28 +256,28 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     'url'            => %w[accesskey autocomplete autofocus disabled form inputmode list maxlength name pattern readonly required tabindex value],
   }
 
-  @@inputTypeDeprecatedAttributeMap = {
+  @@input_type_deprecated_attribute_map = {
     'text'     => ['size'],
     'password' => ['size']
   }
 
-  @@linkRelValues = %w[alternate archive archives author contact feed first begin start help icon index top contents toc last end license copyright next pingback prefetch prev previous search stylesheet sidebar tag up]
-  @@aRelValues    = %w[alternate archive archives author contact feed first begin start help index top contents toc last end license copyright next prev previous search sidebar tag up bookmark external nofollow]
+  @@link_rel_values = %w[alternate archive archives author contact feed first begin start help icon index top contents toc last end license copyright next pingback prefetch prev previous search stylesheet sidebar tag up]
+  @@a_rel_values    = %w[alternate archive archives author contact feed first begin start help index top contents toc last end license copyright next prev previous search sidebar tag up bookmark external nofollow]
 
   def initialize(stream, *args)
     super(HTML5::HTMLTokenizer.new(stream, *args))
-    @thingsThatDefineAnID   = []
-    @thingsThatPointToAnID  = []
-    @IDsWeHaveKnownAndLoved = []
+    @things_that_define_an_id    = []
+    @things_that_point_to_an_id  = []
+    @ids_we_have_known_and_loved = []
   end
   
   def each
     __getobj__.each do |token|
-      method = "validate#{token.fetch(:type, '-')}#{token.fetch(:name, '-').capitalize}"
+      method = "validate_#{token.fetch(:type, '-').to_s.underscore}_#{token.fetch(:name, '-').to_s.underscore}"
       if respond_to?(method)
         send(method, token){|t| yield t }
       else
-        method = "validate#{token.fetch(:type, '-')}"
+        method = "validate_#{token.fetch(:type, '-').to_s.underscore}"
         if respond_to?(method)
           send(method, token) do |t|
             yield t
@@ -284,59 +295,59 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   # Start tag validation
   ##########################################################################
 
-  def validateStartTag(token)
-    checkUnknownStartTag(token){|t| yield t}
-    checkStartTagRequiredAttributes(token) do |t|
+  def validate_start_tag(token)
+    check_unknown_start_tag(token){|t| yield t}
+    check_start_tag_required_attributes(token) do |t|
       yield t
     end
-    checkStartTagUnknownAttributes(token) do |t|
+    check_start_tag_unknown_attributes(token) do |t|
       yield t
     end
-    checkAttributeValues(token) do |t|
+    check_attribute_values(token) do |t|
       yield t
     end
   end
 
-  def validateStartTagEmbed(token)
-    checkStartTagRequiredAttributes(token) do |t|
+  def validate_start_tag_embed(token)
+    check_start_tag_required_attributes(token) do |t|
       yield t
     end
-    checkAttributeValues(token) do |t|
+    check_attribute_values(token) do |t|
       yield t
     end
     # spec says "any attributes w/o namespace"
-    # so don't call checkStartTagUnknownAttributes
+    # so don't call check_start_tag_unknown_attributes
   end
 
-  def validateStartTagInput(token)
-    checkAttributeValues(token) do |t|
+  def validate_start_tag_input(token)
+    check_attribute_values(token) do |t|
       yield t
     end
-    attrDict = Hash[*token[:data].collect{|(name, value)| [name.downcase, value]}.flatten]
-    inputType = attrDict.fetch('type', "text")
-    if !@@inputTypeAllowedAttributeMap.keys().include?(inputType)
+    attr_dict = Hash[*token[:data].collect{|(name, value)| [name.downcase, value]}.flatten]
+    input_type = attr_dict.fetch('type', "text")
+    if !@@input_type_allowed_attribute_map.keys().include?(input_type)
       yield({:type => "ParseError",
            :data => "unknown-input-type",
-           :datavars => {:attrValue => inputType}})
+           :datavars => {:attrValue => input_type}})
     end
-    allowedAttributes = @@inputTypeAllowedAttributeMap.fetch(inputType, [])
-    attrDict.each do |attrName, attrValue|
-      if !@@allowedAttributeMap['input'].include?(attrName)
+    allowed_attributes = @@input_type_allowed_attribute_map.fetch(input_type, [])
+    attr_dict.each do |attr_name, attr_value|
+      if !@@allowed_attribute_map['input'].include?(attr_name)
         yield({:type => "ParseError",
              :data => "unknown-attribute",
              :datavars => {"tagName" => "input",
-                  "attributeName" => attrName}})
-      elsif !allowedAttributes.include?(attrName)
+                  "attributeName" => attr_name}})
+      elsif !allowed_attributes.include?(attr_name)
         yield({:type => "ParseError",
              :data => "attribute-not-allowed-on-this-input-type",
-             :datavars => {"attributeName" => attrName,
-                  "inputType" => inputType}})
+             :datavars => {"attributeName" => attr_name,
+                  "inputType" => input_type}})
       end
-      if @@inputTypeDeprecatedAttributeMap.fetch(inputType, []).include?(attrName)
+      if @@input_type_deprecated_attribute_map.fetch(input_type, []).include?(attr_name)
         yield({:type => "ParseError",
              :data => "deprecated-attribute",
-             :datavars => {"attributeName" => attrName,
-                  "inputType" => inputType}})
+             :datavars => {"attributeName" => attr_name,
+                  "inputType" => input_type}})
       end
     end
   end
@@ -345,42 +356,42 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   # Start tag validation helpers
   ##########################################################################
 
-  def checkUnknownStartTag(token)
+  def check_unknown_start_tag(token)
     # check for recognized tag name
     name = (token[:name] || "").downcase
-    if !@@allowedAttributeMap.keys.include?(name)
+    if !@@allowed_attribute_map.keys.include?(name)
       yield({:type => "ParseError",
              :data => "unknown-start-tag",
              :datavars => {"tagName" => name}})
     end
   end
 
-  def checkStartTagRequiredAttributes(token)
+  def check_start_tag_required_attributes(token)
     # check for presence of required attributes
     name = (token[:name] || "").downcase
-    if @@requiredAttributeMap.keys().include?(name)
-      attrsPresent = (token[:data] || []).collect{|t| t[0]}
-      for attrName in @@requiredAttributeMap[name]
-        if !attrsPresent.include?(attrName)
+    if @@required_attribute_map.keys().include?(name)
+      attrs_present = (token[:data] || []).collect{|t| t[0]}
+      for attr_name in @@required_attribute_map[name]
+        if !attrs_present.include?(attr_name)
           yield( {:type => "ParseError",
                :data => "missing-required-attribute",
                :datavars => {"tagName" => name,
-                    "attributeName" => attrName}})
+                    "attributeName" => attr_name}})
         end
       end
     end
   end
 
-  def checkStartTagUnknownAttributes(token)
+  def check_start_tag_unknown_attributes(token)
     # check for recognized attribute names
     name = token[:name].downcase
-    allowedAttributes = @@globalAttributes | @@allowedAttributeMap.fetch(name, [])
-    for attrName, attrValue in token.fetch(:data, [])
-      if !allowedAttributes.include?(attrName.downcase())
+    allowed_attributes = @@global_attributes | @@allowed_attribute_map.fetch(name, [])
+    for attr_name, attr_value in token.fetch(:data, [])
+      if !allowed_attributes.include?(attr_name.downcase())
         yield( {:type => "ParseError",
              :data => "unknown-attribute",
              :datavars => {"tagName" => name,
-                  "attributeName" => attrName}})
+                  "attributeName" => attr_name}})
       end
     end
   end
@@ -389,33 +400,33 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   # Attribute validation helpers
   ##########################################################################
 
-#  def checkURI(token, tagName, attrName, attrValue)
-#    isValid, errorCode = rfc3987.isValidURI(attrValue)
-#    if not isValid
+#  def checkURI(token, tag_name, attr_name, attr_value)
+#    is_valid, error_code = rfc3987.is_valid_uri(attr_value)
+#    if not is_valid
 #      yield {:type => "ParseError",
-#           :data => errorCode,
-#           :datavars => {"tagName" => tagName,
-#                "attributeName" => attrName}}
+#           :data => error_code,
+#           :datavars => {"tagName" => tag_name,
+#                "attributeName" => attr_name}}
 #      yield {:type => "ParseError",
 #           :data => "invalid-attribute-value",
-#           :datavars => {"tagName" => tagName,
-#                "attributeName" => attrName}}
+#           :datavars => {"tagName" => tag_name,
+#                "attributeName" => attr_name}}
 
-  def checkIRI(token, tagName, attrName, attrValue)
-    isValid, errorCode = isValidIRI(attrValue)
-    if !isValid
+  def check_iri(token, tag_name, attr_name, attr_value)
+    is_valid, error_code = is_valid_iri(attr_value)
+    if !is_valid
       yield({:type => "ParseError",
-             :data => errorCode,
-             :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+             :data => error_code,
+             :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
       yield({:type => "ParseError",
              :data => "invalid-attribute-value",
-             :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+             :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  def checkID(token, tag_name, attr_name, attr_value)
+  def check_id(token, tag_name, attr_name, attr_value)
     if !attr_value || attr_value.length == 0
       yield({:type => "ParseError",
               :data => "attribute-value-can-not-be-blank",
@@ -438,7 +449,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     end
   end
 
-  def parseTokenList(value)
+  def parse_token_list(value)
     valueList = []
     currentValue = ''
     (value + ' ').each_byte do |b|
@@ -458,12 +469,12 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     valueList
   end
 
-  def checkTokenList(tag_name, attr_name, attr_value)
+  def check_token_list(tag_name, attr_name, attr_value)
     # The "token" in the method name refers to tokens in an attribute value
     # i.e. http://www.whatwg.org/specs/web-apps/current-work/#set-of
     # but the "token" parameter refers to the token generated from
     # HTMLTokenizer.  Sorry for the confusion.
-    value_list = parseTokenList(attr_value)
+    value_list = parse_token_list(attr_value)
     value_dict = {}
     for current_value in value_list
       if value_dict.has_key?(current_value)
@@ -478,53 +489,53 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     end
   end
 
-  def checkEnumeratedValue(token, tagName, attrName, attr_value, enumeratedValues)
+  def check_enumerated_value(token, tag_name, attr_name, attr_value, enumerated_values)
     if !attr_value || attr_value.length == 0
       yield( {:type => "ParseError",
            :data => "attribute-value-can-not-be-blank",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
       return
     end
     attr_value.downcase!
-    if !enumeratedValues.include?(attr_value)
+    if !enumerated_values.include?(attr_value)
       yield( {:type => "ParseError",
            :data => "invalid-enumerated-value",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName,
-                "enumeratedValues" => enumeratedValues}})
+           :datavars => {"tagName" => tag_name,
+                "attribute_name" => attr_name,
+                "enumeratedValues" => enumerated_values}})
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  def checkBoolean(token, tagName, attrName, attrValue)
-    enumeratedValues = [attrName, '']
-    if !enumeratedValues.include?(attrValue)
+  def check_boolean(token, tag_name, attr_name, attr_value)
+    enumerated_values = [attr_name, '']
+    if !enumerated_values.include?(attr_value)
       yield( {:type => "ParseError",
            :data => "invalid-boolean-value",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName,
-                "enumeratedValues" => enumeratedValues}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name,
+                "enumeratedValues" => enumerated_values}})
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  def checkInteger(token, tagName, attrName, attrValue)
+  def check_integer(token, tag_name, attr_name, attr_value)
     sign = 1
-    numberString = ''
+    number_string = ''
     state = 'begin' # ('begin', 'initial-number', 'number', 'trailing-junk')
     error = {:type => "ParseError",
          :data => "invalid-integer-value",
-         :datavars => {"tagName" => tagName,
-                "attributeName" => attrName,
-                "attributeValue" => attrValue}}
-    attrValue.scan(/./) do |c|
+         :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name,
+                "attributeValue" => attr_value}}
+    attr_value.scan(/./) do |c|
       if state == 'begin'
         if HTML5::SPACE_CHARACTERS.include?(c)
           next
@@ -532,7 +543,7 @@ class HTMLConformanceChecker < HTML5::Filters::Base
           sign  = -1
           state = 'initial-number'
         elsif HTML5::DIGITS.include?(c)
-          numberString += c
+          number_string += c
           state = 'in-number'
         else
           yield error
@@ -543,11 +554,11 @@ class HTMLConformanceChecker < HTML5::Filters::Base
           yield error
           return
         end
-        numberString += c
+        number_string += c
         state = 'in-number'
       elsif state == 'in-number'
         if HTML5::DIGITS.include?(c)
-          numberString += c
+          number_string += c
         else
           state = 'trailing-junk'
         end
@@ -555,19 +566,19 @@ class HTMLConformanceChecker < HTML5::Filters::Base
         next
       end
     end
-    if numberString.length == 0
+    if number_string.length == 0
       yield( {:type => "ParseError",
            :data => "attribute-value-can-not-be-blank",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  def checkFloatingPointNumber(token, tagName, attrName, attrValue)
+  def check_floating_point_number(token, tag_name, attr_name, attr_value)
     # XXX
   end
 
-  def checkBrowsingContext(token, tag_name, attr_name, attr_value)
+  def check_browsing_context(token, tag_name, attr_name, attr_value)
     return if not attr_value
     return if attr_value[0] != ?_
     attr_value.downcase!
@@ -578,58 +589,58 @@ class HTMLConformanceChecker < HTML5::Filters::Base
               "attributeName" => attr_name}})
   end
 
-  def checkLangCode(token, tagName, attrName, attrValue)
-    return if !attrValue || attrValue == '' # blank is OK
-    if not is_valid_lang_code(attrValue)
+  def check_lang_code(token, tag_name, attr_name, attr_value)
+    return if !attr_value || attr_value == '' # blank is OK
+    if not is_valid_lang_code(attr_value)
       yield( {:type => "ParseError",
            :data => "invalid-lang-code",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName,
-                "attributeValue" => attrValue}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name,
+                "attributeValue" => attr_value}})
     end
   end
   
-  def checkMIMEType(token, tagName, attrName, attrValue)
+  def check_mime_type(token, tag_name, attr_name, attr_value)
     # XXX needs tests
-    if not attrValue
+    if not attr_value
       yield( {:type => "ParseError",
            :data => "attribute-value-can-not-be-blank",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
-    if not isValidMIMEType(attrValue)
+    if not is_valid_mime_type(attr_value)
       yield( {:type => "ParseError",
            :data => "invalid-mime-type",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName,
-                "attributeValue" => attrValue}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name,
+                "attributeValue" => attr_value}})
     end
   end
 
-  def checkMediaQuery(token, tagName, attrName, attrValue)
+  def check_media_query(token, tag_name, attr_name, attr_value)
     # XXX
   end
 
-  def checkLinkRelation(token, tagName, attrName, attrValue)
-    checkTokenList(tagName, attrName, attrValue) do |t|
+  def check_link_relation(token, tag_name, attr_name, attr_value)
+    check_token_list(tag_name, attr_name, attr_value) do |t|
       yield t
     end
-    valueList = self.parseTokenList(attrValue)
-    allowedValues = tagName == 'link' ? @@linkRelValues : @@aRelValues
-    for currentValue in valueList
-      if !allowedValues.include?(currentValue)
+    value_list = parse_token_list(attr_value)
+    allowed_values = tag_name == 'link' ? @@link_rel_values : @@a_rel_values
+    for current_value in value_list
+      if !allowed_values.include?(current_value)
         yield({:type => "ParseError",
              :data => "invalid-rel",
-             :datavars => {"tagName" => tagName,
-                  "attributeName" => attrName}})
+             :datavars => {"tagName" => tag_name,
+                  "attributeName" => attr_name}})
       end
     end
   end
 
-  def checkDateTime(token, tagName, attrName, attrValue)
+  def check_date_time(token, tag_name, attr_name, attr_value)
     # XXX
     state = 'begin' # ('begin', '...
-#    for c in attrValue
+#    for c in attr_value
 #      if state == 'begin' =>
 #        if SPACE_CHARACTERS.include?(c)
 #          continue
@@ -641,21 +652,19 @@ class HTMLConformanceChecker < HTML5::Filters::Base
   # Attribute validation
   ##########################################################################
 
-  def checkAttributeValues(token)
-    tagName = token.fetch(:name, "")
-    fakeToken = {"tagName" => tagName.capitalize}
-    for attrName, attrValue in token.fetch(:data, [])
-      attrName = attrName.downcase
-      fakeToken["attributeName"] = attrName.capitalize
-      method = "validateAttributeValue#{fakeToken["tagName"]}#{fakeToken["attributeName"]}"
+  def check_attribute_values(token)
+    tag_name = token.fetch(:name, "")
+    for attr_name, attr_value in token.fetch(:data, [])
+      attr_name = attr_name.downcase
+      method = "validate_attribute_value_#{tag_name.to_s.underscore}_#{attr_name.to_s.underscore}"
       if respond_to?(method)
-        send(method, token, tagName, attrName, attrValue) do |t|
+        send(method, token, tag_name, attr_name, attr_value) do |t|
           yield t
         end
       else
-        method = "validateAttributeValue#{fakeToken["attributeName"]}"
+        method = "validate_attribute_value_#{attr_name.to_s.underscore}"
         if respond_to?(method)
-          send(method, token, tagName, attrName, attrValue) do |t|
+          send(method, token, tag_name, attr_name, attr_value) do |t|
             yield t
           end
         end
@@ -663,153 +672,152 @@ class HTMLConformanceChecker < HTML5::Filters::Base
     end
   end
 
-  def validateAttributeValueClass(token, tagName, attrName, attrValue)
-    checkTokenList(tagName, attrName, attrValue) do |t|
+  def validate_attribute_value_class(token, tag_name, attr_name, attr_value)
+    check_token_list(tag_name, attr_name, attr_value) do |t|
       yield t
       yield( {:type => "ParseError",
            :data => "invalid-attribute-value",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  def validateAttributeValueContenteditable(token, tagName, attrName, attrValue)
-    checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false', '']) do |t|
+  def validate_attribute_value_contenteditable(token, tag_name, attr_name, attr_value)
+    check_enumerated_value(token, tag_name, attr_name, attr_value, ['true', 'false', '']) do |t|
       yield t
     end
   end
 
-  def validateAttributeValueDir(token, tagName, attrName, attrValue)
-    checkEnumeratedValue(token, tagName, attrName, attrValue, ['ltr', 'rtl']) do |t|
+  def validate_attribute_value_dir(token, tag_name, attr_name, attr_value)
+    check_enumerated_value(token, tag_name, attr_name, attr_value, ['ltr', 'rtl']) do |t|
       yield t
     end
   end
 
-  def validateAttributeValueDraggable(token, tagName, attrName, attrValue)
-    checkEnumeratedValue(token, tagName, attrName, attrValue, ['true', 'false']) do |t|
+  def validate_attribute_value_draggable(token, tag_name, attr_name, attr_value)
+    check_enumerated_value(token, tag_name, attr_name, attr_value, ['true', 'false']) do |t|
       yield t
     end
   end
 
-  alias validateAttributeValueIrrelevant checkBoolean
+  alias validate_attribute_value_irrelevant check_boolean
+  alias validate_attribute_value_lang       check_lang_code
 
-  alias validateAttributeValueLang checkLangCode
-
-  def validateAttributeValueContextmenu(token, tagName, attrName, attrValue)
-    checkID(token, tagName, attrName, attrValue) do |t|
+  def validate_attribute_value_contextmenu(token, tag_name, attr_name, attr_value)
+    check_id(token, tag_name, attr_name, attr_value) do |t|
       yield t
     end
-    @thingsThatPointToAnID << token
+    @things_that_point_to_an_id << token
   end
 
-  def validateAttributeValueId(token, tagName, attrName, attrValue)
+  def validate_attribute_value_id(token, tag_name, attr_name, attr_value)
     # This method has side effects.  It adds 'token' to the list of
-    # things that define an ID (@thingsThatDefineAnID) so that we can
+    # things that define an ID (@things_that_define_an_id) so that we can
     # later check 1) whether an ID is duplicated, and 2) whether all the
     # things that point to something else by ID (like <label for> or
     # <span contextmenu>) point to an ID that actually exists somewhere.
-    checkID(token, tagName, attrName, attrValue) do |t|
+    check_id(token, tag_name, attr_name, attr_value) do |t|
       yield t
     end
-    return if not attrValue
-    if @IDsWeHaveKnownAndLoved.include?(attrValue)
+    return if not attr_value
+    if @ids_we_have_known_and_loved.include?(attr_value)
       yield( {:type => "ParseError",
            :data => "duplicate-id",
-           :datavars => {"tagName" => tagName}})
+           :datavars => {"tagName" => tag_name}})
     end
-    @IDsWeHaveKnownAndLoved << attrValue
-    @thingsThatDefineAnID << token
+    @ids_we_have_known_and_loved << attr_value
+    @things_that_define_an_id << token
   end
 
-  alias validateAttributeValueTabindex checkInteger
+  alias validate_attribute_value_tabindex check_integer
 
-  def validateAttributeValueRef(token, tagName, attrName, attrValue)
+  def validate_attribute_value_ref(token, tag_name, attr_name, attr_value)
     # XXX
   end
 
-  def validateAttributeValueTemplate(token, tagName, attrName, attrValue)
+  def validate_attribute_value_template(token, tag_name, attr_name, attr_value)
     # XXX
   end
 
-  def validateAttributeValueHtmlXmlns(token, tagName, attrName, attrValue)
-    if attrValue != "http://www.w3.org/1999/xhtml"
+  def validate_attribute_value_html_xmlns(token, tag_name, attr_name, attr_value)
+    if attr_value != "http://www.w3.org/1999/xhtml"
       yield( {:type => "ParseError",
            :data => "invalid-root-namespace",
-           :datavars => {"tagName" => tagName,
-                "attributeName" => attrName}})
+           :datavars => {"tagName" => tag_name,
+                "attributeName" => attr_name}})
     end
   end
 
-  alias validateAttributeValueBaseHref       checkIRI
-  alias validateAttributeValueBaseTarget     checkBrowsingContext
-  alias validateAttributeValueLinkHref       checkIRI
-  alias validateAttributeValueLinkRel        checkLinkRelation
-  alias validateAttributeValueLinkMedia      checkMediaQuery
-  alias validateAttributeValueLinkHreflang   checkLangCode
-  alias validateAttributeValueLinkType       checkMIMEType
+  alias validate_attribute_value_base_href       check_iri
+  alias validate_attribute_value_base_target     check_browsing_context
+  alias validate_attribute_value_link_href       check_iri
+  alias validate_attribute_value_link_rel        check_link_relation
+  alias validate_attribute_value_link_media      check_media_query
+  alias validate_attribute_value_link_hreflang   check_lang_code
+  alias validate_attribute_value_link_type       check_mime_type
   # XXX <meta> attributes
-  alias validateAttributeValueStyleMedia     checkMediaQuery
-  alias validateAttributeValueStyleType      checkMIMEType
-  alias validateAttributeValueStyleScoped    checkBoolean
-  alias validateAttributeValueBlockquoteCite checkIRI
-  alias validateAttributeValueOlStart        checkInteger
-  alias validateAttributeValueLiValue        checkInteger
+  alias validate_attribute_value_style_media     check_media_query
+  alias validate_attribute_value_style_type      check_mime_type
+  alias validate_attribute_value_style_scoped    check_boolean
+  alias validate_attribute_value_blockquote_cite check_iri
+  alias validate_attribute_value_ol_start        check_integer
+  alias validate_attribute_value_li_value        check_integer
   # XXX need tests from here on
-  alias validateAttributeValueAHref          checkIRI
-  alias validateAttributeValueATarget        checkBrowsingContext
+  alias validate_attribute_value_a_href          check_iri
+  alias validate_attribute_value_a_target        check_browsing_context
 
-  def validateAttributeValueAPing(token, tagName, attrName, attrValue)
-    valueList = self.parseTokenList(attrValue)
-    for currentValue in valueList
-      checkIRI(token, tagName, attrName, attrValue) do |t|
+  def validate_attribute_value_a_ping(token, tag_name, attr_name, attr_value)
+    value_list = parse_token_list(attr_value)
+    for current_value in value_list
+      checkIRI(token, tag_name, attr_name, attr_value) do |t|
         yield t
       end
     end
   end
 
-  alias validateAttributeValueARel           checkLinkRelation
-  alias validateAttributeValueAMedia         checkMediaQuery
-  alias validateAttributeValueAHreflang      checkLangCode
-  alias validateAttributeValueAType          checkMIMEType
-  alias validateAttributeValueQCite          checkIRI
-  alias validateAttributeValueTimeDatetime   checkDateTime
-  alias validateAttributeValueMeterValue     checkFloatingPointNumber
-  alias validateAttributeValueMeterMin       checkFloatingPointNumber
-  alias validateAttributeValueMeterLow       checkFloatingPointNumber
-  alias validateAttributeValueMeterHigh      checkFloatingPointNumber
-  alias validateAttributeValueMeterMax       checkFloatingPointNumber
-  alias validateAttributeValueMeterOptimum   checkFloatingPointNumber
-  alias validateAttributeValueProgressValue  checkFloatingPointNumber
-  alias validateAttributeValueProgressMax    checkFloatingPointNumber
-  alias validateAttributeValueInsCite        checkIRI
-  alias validateAttributeValueInsDatetime    checkDateTime
-  alias validateAttributeValueDelCite        checkIRI
-  alias validateAttributeValueDelDatetime    checkDateTime
+  alias validate_attribute_value_a_rel           check_link_relation
+  alias validate_attribute_value_a_media         check_media_query
+  alias validate_attribute_value_a_hreflang      check_lang_code
+  alias validate_attribute_value_a_type          check_mime_type
+  alias validate_attribute_value_q_cite          check_iri
+  alias validate_attribute_value_time_datetime   check_date_time
+  alias validate_attribute_value_meter_value     check_floating_point_number
+  alias validate_attribute_value_meter_min       check_floating_point_number
+  alias validate_attribute_value_meter_low       check_floating_point_number
+  alias validate_attribute_value_meter_high      check_floating_point_number
+  alias validate_attribute_value_meter_max       check_floating_point_number
+  alias validate_attribute_value_meter_optimum   check_floating_point_number
+  alias validate_attribute_value_progress_value  check_floating_point_number
+  alias validate_attribute_value_progress_max    check_floating_point_number
+  alias validate_attribute_value_ins_cite        check_iri
+  alias validate_attribute_value_ins_datetime    check_date_time
+  alias validate_attribute_value_del_cite        check_iri
+  alias validate_attribute_value_del_datetime    check_date_time
 
   ##########################################################################
   # Whole document validation (IDs, etc.)
   ##########################################################################
 
   def eof
-    for token in @thingsThatPointToAnID
-      tagName = token.fetch(:name, "").downcase
-      attrsDict = token[:data] # by now html5parser has "normalized" the attrs list into a dict.
+    for token in @things_that_point_to_an_id
+      tag_name = token.fetch(:name, "").downcase
+      attrs_dict = token[:data] # by now html5parser has "normalized" the attrs list into a dict.
                     # hooray for obscure side effects!
-      attrValue = attrsDict.fetch("contextmenu", "")
-      if attrValue and (!@IDsWeHaveKnownAndLoved.include?(attrValue))
+      attr_value = attrs_dict.fetch("contextmenu", "")
+      if attr_value and (!@ids_we_have_known_and_loved.include?(attr_value))
         yield( {:type => "ParseError",
              :data => "id-does-not-exist",
-             :datavars => {"tagName" => tagName,
+             :datavars => {"tagName" => tag_name,
                   "attributeName" => "contextmenu",
-                  "attributeValue" => attrValue}})
+                  "attributeValue" => attr_value}})
       else
-        for refToken in @thingsThatDefineAnID
-          id = refToken.fetch(:data, {}).fetch("id", "")
+        for ref_token in @things_that_define_an_id
+          id = ref_token.fetch(:data, {}).fetch("id", "")
           if not id
             continue
           end
-          if id == attrValue
-            if refToken.fetch(:name, "").downcase != "men"
+          if id == attr_value
+            if ref_token.fetch(:name, "").downcase != "men"
               yield( {:type => "ParseError",
                    :data => "contextmenu-must-point-to-menu"})
             end

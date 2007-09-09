@@ -36,7 +36,7 @@ rfc2396_full = Regexp.new("[a-zA-Z][0-9a-zA-Z+\\-\\.]*:(//)?[0-9a-zA-Z;/?:@&=+$\
 URN = Regexp.new("^[Uu][Rr][Nn]:[a-zA-Z0-9][a-zA-Z0-9-]{1,31}:([a-zA-Z0-9()+,\.:=@;$_!*'\-]|%[0-9A-Fa-f]{2})+$")
 TAG = Regexp.new("^tag:([a-z0-9\\-\._]+?@)?[a-z0-9\.\-]+?,\d{4}(-\d{2}(-\d{2})?)?:[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*(#[0-9a-zA-Z;/\?:@&=+$\.\-_!~*'\(\)%,]*)?$")
 
-def isValidURI(value, uriPattern = RFC2396)
+def is_valid_uri(value, uri_pattern = RFC2396)
   scheme = value.split(':').first
   scheme.downcase! if scheme
   if scheme == 'tag'
@@ -47,7 +47,7 @@ def isValidURI(value, uriPattern = RFC2396)
     if !URN.match(value)
       return false, "invalid-urn"
     end
-  elsif uriPattern.match(value).to_a.reject{|i| i == ''}.compact.length == 0 || uriPattern.match(value)[0] != value
+  elsif uri_pattern.match(value).to_a.reject{|i| i == ''}.compact.length == 0 || uri_pattern.match(value)[0] != value
     urichars = Regexp.new("^[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]$", Regexp::MULTILINE)
     if value.length > 0
       value.each_byte do |b|
@@ -57,7 +57,7 @@ def isValidURI(value, uriPattern = RFC2396)
       end
     else
       begin
-        if uriPattern.match(value.encode('idna'))
+        if uri_pattern.match(value.encode('idna'))
           return false, "uri-not-iri"
         end
       rescue
@@ -74,16 +74,16 @@ def isValidURI(value, uriPattern = RFC2396)
   return true, ""
 end
 
-def isValidIRI(value)
+def is_valid_iri(value)
   begin
     if value.length > 0
       value = value.encode('idna')
     end
   rescue
   end
-  isValidURI(value)
+  is_valid_uri(value)
 end
 
-def isValidFullyQualifiedURI(value)
-  isValidURI(value, rfc2396_full)
+def is_valid_fully_qualified_uri(value)
+  is_valid_uri(value, rfc2396_full)
 end

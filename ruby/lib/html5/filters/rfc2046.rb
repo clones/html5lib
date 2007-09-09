@@ -23,7 +23,7 @@
 
 # mime_re = Regexp.new('[^\s()<>,;:\\"/[\]?=]+/[^\s()<>,;:\\"/[\]?=]+(\s*;\s*[^\s()<>,;:\\"/[\]?=]+=("(\\"|[^"])*"|[^\s()<>,;:\\"/[\]?=]+))*$')
 
-def isValidMIMEType(value)
+def is_valid_mime_type(value)
   # !!mime_re.match(value)
   true
 end
