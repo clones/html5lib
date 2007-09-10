@@ -113,4 +113,25 @@ class TestTreeWalkers < Test::Unit::TestCase
       end
    end
   end
+
+  def test_all_tokens
+    expected = [
+        {:data => [], :type => :StartTag, :name => 'html'},
+        {:data => [], :type => :StartTag, :name => 'head'},
+        {:data => [], :type => :EndTag,   :name => 'head'},
+        {:data => [], :type => :StartTag, :name => 'body'},
+        {:data => [], :type => :EndTag,   :name => 'body'},
+        {:data => [], :type => :EndTag,   :name => 'html'}]
+    for treeName, tree_class in $tree_types_to_test
+      p = HTML5::HTMLParser.new(:tree => tree_class[:builder])
+      document = p.parse("<html></html>")
+      # document = tree_class.get(:adapter)(document)
+      output = tree_class[:walker].new(document)
+      expected.zip(output) do |expected_token, output_token|
+        assert_equal(expected_token, output_token)
+      end
+    end
+  end
+
+
 end
