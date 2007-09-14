@@ -200,7 +200,7 @@ module HTML5
 
       #TODO: huh?
       require 'delegate'
-      # @raw_stream = SimpleDelegator.new(@raw_stream)
+      @raw_stream = SimpleDelegator.new(@raw_stream)
 
       class << @raw_stream
         def read(chars=-1)
