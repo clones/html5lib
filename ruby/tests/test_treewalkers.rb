@@ -47,31 +47,29 @@ class TestTreeWalkers < Test::Unit::TestCase
     indent = 0
     concatenateCharacterTokens(tokens) do |token|
       case token[:type]
-        when :StartTag, :EmptyTag
-            output << "#{' '*indent}<#{token[:name]}>"
-            indent += 2
-            for name, value in token[:data].to_a.sort
-                next if name=='xmlns'
-                output << "#{' '*indent}#{name}=\"#{value}\""
-            end
-            indent -= 2 if token[:type] == :EmptyTag
-        when :EndTag
-            indent -= 2
-        when :Comment
-            output << "#{' '*indent}<!-- #{token[:data]} -->"
-        when :Doctype
-            if token[:name] and token[:name].any?
-              output << "#{' '*indent}<!DOCTYPE #{token[:name]}>"
-            else
-              output << "#{' '*indent}<!DOCTYPE >"
-            end
-        when :Characters, :SpaceCharacters
-            output << "#{' '*indent}\"#{token[:data]}\""
+      when :StartTag, :EmptyTag
+        output << "#{' '*indent}<#{token[:name]}>"
+        indent += 2
+        for name, value in token[:data].to_a.sort
+          next if name=='xmlns'
+          output << "#{' '*indent}#{name}=\"#{value}\""
+        end
+        indent -= 2 if token[:type] == :EmptyTag
+      when :EndTag
+        indent -= 2
+      when :Comment
+        output << "#{' '*indent}<!-- #{token[:data]} -->"
+      when :Doctype
+        if token[:name] and token[:name].any?
+          output << "#{' '*indent}<!DOCTYPE #{token[:name]}>"
         else
-            # TODO: what to do with errors?
+          output << "#{' '*indent}<!DOCTYPE >"
+        end
+      when :Characters, :SpaceCharacters
+        output << "#{' '*indent}\"#{token[:data]}\""
       end
     end
-    return output.join("\n")
+    output.join("\n")
   end
 
   html5_test_files('tree-construction').each do |test_file|
