@@ -107,7 +107,7 @@ module HTML5
     def startTagBody(name, attributes)
       parse_error("unexpected-start-tag", {"name" => "body"})
 
-      if (@tree.open_elements.length == 1 || @tree.open_elements[1].name != 'body')
+      if @tree.open_elements.length == 1 || @tree.open_elements[1].name != 'body'
         assert @parser.inner_html
       else
         attributes.each do |attr, value|
