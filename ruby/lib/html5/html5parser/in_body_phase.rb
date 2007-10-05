@@ -126,7 +126,7 @@ module HTML5
 
     def startTagForm(name, attributes)
       if @tree.formPointer
-        parse_error("Unexpected start tag (form). Ignored.")
+        parse_error("unexpected-start-tag", {"name" => name})
       else
         endTagP('p') if in_scope?('p')
         @tree.insert_element(name, attributes)
