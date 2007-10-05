@@ -178,7 +178,50 @@ module HTML5
     end
 
     def seek(buffer, n)
-      @raw_stream.seek(n)
+      if @raw_stream.respond_to?(:unget)
+        @raw_stream.unget(buffer[n..-1])
+        return
+      end
+
+      if @raw_stream.respond_to?(:seek)
+        begin
+          @raw_stream.seek(n)
+          return
+        rescue Errno::ESPIPE
+        end
+      end
+
+      #TODO: huh?
+      require 'delegate'
+      @raw_stream = SimpleDelegator.new(@raw_stream)
+
+      class << @raw_stream
+        def read(chars=-1)
+          if chars == -1 or chars > @data.length
+            result = @data
+            @data = ''
+            return result if __getobj__.eof?
+            return result + __getobj__.read if chars == -1
+            return result + __getobj__.read(chars-result.length)
+          elsif @data.empty?
+            return __getobj__.read(chars)
+          else
+            result = @data[1...chars]
+            @data = @data[chars..-1]
+            return result
+          end
+        end
+
+        def unget(data)
+          if !@data or @data.empty?
+            @data = data
+          else
+            @data += data
+          end
+        end
+      end
+
+      @raw_stream.unget(buffer[n .. -1])
     end
 
     # Report the encoding declared by the meta element
