@@ -1039,6 +1039,8 @@ module HTML5
       "expected-eof-but-got-end-tag" =>
          _("Unexpected end tag (%(name))" +
            ". Expected end of file."),
+      "unexpected-end-table-in-caption" =>
+        _("Unexpected end table tag in caption. Generates implied end caption.")
   }
 
 end
