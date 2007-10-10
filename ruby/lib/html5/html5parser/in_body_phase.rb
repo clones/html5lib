@@ -344,9 +344,9 @@ module HTML5
       # XXX Need to take open <p> tags into account here. We shouldn't imply
       # </p> but we should not throw a parse error either. Specification is
       # likely to be updated.
-      unless @tree.open_elements[1].name == 'body'
+      unless @tree.open_elements[1] && @tree.open_elements[1].name == 'body'
         # inner_html case
-        parse_error
+        parse_error "unexpected-end-tag", {:name => 'body'}
         return
       end
       unless @tree.open_elements.last.name == 'body'
