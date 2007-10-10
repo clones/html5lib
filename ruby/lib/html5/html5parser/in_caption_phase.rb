@@ -5,9 +5,9 @@ module HTML5
 
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
 
-    handle_start 'html', %w( caption col colgroup tbody td tfoot th thead tr ) => 'TableElement'
+    handle_start 'html', %w(caption col colgroup tbody td tfoot th thead tr) => 'TableElement'
 
-    handle_end 'caption', 'table', %w( body col colgroup html tbody td tfoot th thead tr ) => 'Ignore'
+    handle_end 'caption', 'table', %w(body col colgroup html tbody td tfoot th thead tr) => 'Ignore'
 
     def ignoreEndTagCaption
       !in_scope?('caption', true)
