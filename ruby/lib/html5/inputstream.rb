@@ -47,7 +47,7 @@ module HTML5
 
       #Encoding to use if no other information can be found
       @DEFAULT_ENCODING = 'windows-1252'
-    
+
       #Detect encoding iff no explicit "transport level" encoding is supplied
       if @encoding.nil? or not HTML5.is_valid_encoding(@encoding)
         @char_encoding = detect_encoding
@@ -434,7 +434,13 @@ module HTML5
         end
         break unless keep_parsing
       end
-      @encoding = @encoding.strip unless @encoding.nil?
+      unless @encoding.nil?
+        @encoding = @encoding.strip 
+        if ["UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE"].include?(@encoding.upcase)
+          @encoding = 'utf-8'
+        end
+      end
+      
       return @encoding
     end
 
