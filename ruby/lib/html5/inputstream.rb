@@ -235,14 +235,16 @@ module HTML5
     # Returns (line, col) of the current position in the stream.
     def position
       line, col = @line, @col
-      @queue.reverse.each do |c|
-        if c == "\n"
-          line -= 1
-          raise RuntimeError.new("col=#{col}") unless col == 0
-          col = @line_lengths[line]
-        else
-          col -= 1
-        end 
+      if @queue and @queue.last != :EOF
+        @queue.reverse.each do |c|
+          if c == "\n"
+            line -= 1
+            raise RuntimeError.new("col=#{col}") unless col == 0
+            col = @line_lengths[line]
+          else
+            col -= 1
+          end 
+        end
       end
       return [line + 1, col]
     end
