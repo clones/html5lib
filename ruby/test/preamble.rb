@@ -8,9 +8,8 @@ else
   TESTDATA_DIR = File.join(HTML5_BASE, 'testdata')
 end
 
-# $:.unshift File.join(File.dirname(File.dirname(__FILE__)), 'lib')
-
-# $:.unshift File.dirname(__FILE__)
+$:.unshift File.join(File.dirname(File.dirname(__FILE__)), 'lib')
+$:.unshift File.dirname(__FILE__)
 
 require 'core_ext/string'
 
