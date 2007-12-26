@@ -293,7 +293,7 @@ module HTML5
           end
 
         when 0xC0..0xFF
-          if instance_variables.include?("@win1252") && @win1252
+          if instance_variable_defined?("@win1252") && @win1252
             "\xC3" + (c - 64).chr # convert to utf-8
           # from http://www.w3.org/International/questions/qa-forms-utf-8.en.php
           elsif @buffer[@tell - 1..@tell + 3] =~ /^
