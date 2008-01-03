@@ -1,12 +1,3 @@
-/*
- *  inputstream.h
- *  chtml5lib
- *
- *  Created by James Graham on 27/12/2007.
- *  Copyright 2007 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "utils.h"
 
 #define BUF_SIZE 512 //preparse buffer size

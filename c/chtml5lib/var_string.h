@@ -1,12 +1,3 @@
-/*
- *  auto_string.h
- *  chtml5lib
- *
- *  Created by James Graham on 28/12/2007.
- *  Copyright 2007 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>

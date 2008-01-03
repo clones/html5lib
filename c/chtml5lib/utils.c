@@ -1,12 +1,3 @@
-/*
- *  utils.c
- *  chtml5lib
- *
- *  Created by James Graham on 02/01/2008.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "utils.h"
 
 int vstr_in_char_array(struct vstr *search_item, char *array[], int array_length) {

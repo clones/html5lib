@@ -1,12 +1,3 @@
-/*
- *  main.c
- *  chtml5lib
- *
- *  Created by James Graham on 01/01/2008.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "charset.h"
 
 int main(int argc, char* argv[]) {

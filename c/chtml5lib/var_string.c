@@ -1,12 +1,3 @@
-/*
- *  auto_string.c
- *  chtml5lib
- *
- *  Created by James Graham on 28/12/2007.
- *  Copyright 2007 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "var_string.h"
 
 struct vstr *vstr_new() {
@@ -37,7 +28,7 @@ void vstr_append(struct vstr *str, char *append_str) {
 void vstr_append_n(struct vstr *str, char *append_str, size_t n) {
     int new_size;
     //Check if we have enough space to allocate the string
-    new_size = pow(2, log(n + strlen(str->str)+1)/log(2));
+    new_size = n + strlen(str->str) + 1;
     if (new_size >= str->memsize) {
         vstr_setsize(str, 2*str->memsize);
     }
