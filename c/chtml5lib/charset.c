@@ -16,7 +16,7 @@ struct vstr *get_encoding(FILE *stream) {
     if (strncmp(buf, "\xfe\xff", 2) == 0) {
         vstr_append(encoding, "UTF-16BE");
     } else if(strncmp(buf, "\xff\xfe", 2) == 0) {
-        vstr_append(encoding, "UFT-16LE");
+        vstr_append(encoding, "UTF-16LE");
     } else if(strncmp(buf, "\xef\xbb\xbf", 3) == 0) {
         vstr_append(encoding, "UTF-8");
     } else {
