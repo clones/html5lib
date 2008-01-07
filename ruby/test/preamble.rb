@@ -12,8 +12,6 @@ end
 $:.unshift File.join(File.dirname(File.dirname(__FILE__)), 'lib')
 $:.unshift File.dirname(__FILE__)
 
-require 'core_ext/string'
-
 def html5_test_files(subdirectory)
   Dir[File.join(TESTDATA_DIR, subdirectory, '*.*')]
 end
