@@ -24,8 +24,7 @@ require 'test/test_parser'
 
 require 'test/test_serializer'
 
-# undebugged
-# require 'test/test_sniffer'
+require 'test/test_sniffer'
 
 require 'test/test_stream'
 
