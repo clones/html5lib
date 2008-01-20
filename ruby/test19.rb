@@ -13,8 +13,7 @@ require 'test/test_cli'
 
 require 'test/test_input_stream'
 
-# incompatible encoding regexp match
-# require 'test/test_lxp'
+require 'test/test_lxp'
 
 require 'test/test_parser'
 

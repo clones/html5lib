@@ -118,7 +118,7 @@ module HTML5
       end
 
       if 0 < charAsInt and charAsInt <= 1114111 and not (55296 <= charAsInt and charAsInt <= 57343)
-        char = [charAsInt].pack('U')
+        char = charAsInt.chr('utf-8')
       else
         char = [0xFFFD].pack('U')
         @token_queue << {:type => :ParseError, :data => "cant-convert-numeric-entity", :datavars => {"charAsInt" => charAsInt}}
