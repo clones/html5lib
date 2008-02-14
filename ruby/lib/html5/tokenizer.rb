@@ -824,6 +824,11 @@ module HTML5
       data = @stream.char
       if data == "\""
         @state = :after_doctype_public_identifier_state
+      elsif data == ">"
+        @token_queue << {:type => :ParseError, :data => "unexpected-end-of-doctype"}
+        @current_token[:correct] = false
+        @token_queue << @current_token
+        @state = :data_state
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
         @current_token[:correct] = false
@@ -839,6 +844,11 @@ module HTML5
       data = @stream.char
       if data == "'"
         @state = :after_doctype_public_identifier_state
+      elsif data == ">"
+        @token_queue << {:type => :ParseError, :data => "unexpected-end-of-doctype"}
+        @current_token[:correct] = false
+        @token_queue << @current_token
+        @state = :data_state
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
         @current_token[:correct] = false
@@ -904,6 +914,11 @@ module HTML5
       data = @stream.char
       if data == "\""
         @state = :after_doctype_system_identifier_state
+      elsif data == ">"
+        @token_queue << {:type => :ParseError, :data => "unexpected-end-of-doctype"}
+        @current_token[:correct] = false
+        @token_queue << @current_token
+        @state = :data_state
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
         @current_token[:correct] = false
@@ -919,6 +934,11 @@ module HTML5
       data = @stream.char
       if data == "'"
         @state = :after_doctype_system_identifier_state
+      elsif data == ">"
+        @token_queue << {:type => :ParseError, :data => "unexpected-end-of-doctype"}
+        @current_token[:correct] = false
+        @token_queue << @current_token
+        @state = :data_state
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
         @current_token[:correct] = false

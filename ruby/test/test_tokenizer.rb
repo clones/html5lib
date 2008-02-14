@@ -8,7 +8,7 @@ class Html5TokenizerTestCase < Test::Unit::TestCase
 
   def assert_tokens_match(expectedTokens, receivedTokens, ignoreErrorOrder, message)
     if !ignoreErrorOrder
-      return expectedTokens == receivedTokens
+      assert_equal expectedTokens, receivedTokens, message
     else
       #Sort the tokens into two groups; non-parse errors and parse errors
       expected = [[],[]]
