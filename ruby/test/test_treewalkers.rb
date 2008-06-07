@@ -102,7 +102,7 @@ class TestTreeWalkers < Test::Unit::TestCase
             assert_equal expected, output, [
               '', 'Input:', input,
               '', 'Expected:', expected,
-              '', 'Recieved:', output
+              '', 'Received:', output
             ].join("\n")
           rescue NotImplementedError
             # Amnesty for those that confess...

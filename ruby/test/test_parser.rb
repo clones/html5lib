@@ -41,7 +41,7 @@ class Html5ParserTestCase < Test::Unit::TestCase
           assert_equal sortattrs(expected), sortattrs(actual_output), [
             '', 'Input:', input,
             '', 'Expected:', expected,
-            '', 'Recieved:', actual_output
+            '', 'Received:', actual_output
           ].join("\n")
 
           actual_errors = parser.errors.map do |(line, col), message, datavars|
