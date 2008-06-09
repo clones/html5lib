@@ -84,9 +84,10 @@ class Html5TokenizerTestCase < Test::Unit::TestCase
     test_name = File.basename(test_file).sub('.test', '')
 
     tests = JSON.parse(File.read(test_file))['tests']
-
-    tests.each_with_index do |data, index|
-      define_method('test_%s_%d' % [test_name, index + 1]) { tokenizer_test data }
+    if tests != nil
+      tests.each_with_index do |data, index|
+        define_method('test_%s_%d' % [test_name, index + 1]) { tokenizer_test data }
+      end
     end
   end
 

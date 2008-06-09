@@ -221,7 +221,7 @@ module HTML5
 
     # This method replaces the need for "entityInAttributeValueState".
     def process_entity_in_attribute
-      entity = consume_entity()
+      entity = consume_entity(true)
       if entity
         @current_token[:data][-1][1] += entity
       else
