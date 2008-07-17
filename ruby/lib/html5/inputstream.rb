@@ -54,7 +54,7 @@ module HTML5
       @DEFAULT_ENCODING = 'windows-1252'
 
       #Detect encoding iff no explicit "transport level" encoding is supplied
-      if @encoding.nil? or not HTML5.is_valid_encoding(@encoding)
+      if @encoding.nil?
         @char_encoding = detect_encoding
       else
         @char_encoding = @encoding
@@ -454,7 +454,10 @@ module HTML5
 
   # Mini parser for detecting character encoding from meta elements
   class EncodingParser
-
+    ASCII_PUNCTUATION = %r{[\x09-\x0D\x20-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]}
+    # a (hopefully) temporary hack to deal with the fact that ruby doesn't have a built in encodings
+    #   library
+    ENCODINGS = ['euc_jp', 'utf-8', "iso8859-2", "iso-8859-1", "utf-16", "UTF-16LE", "UTF-16BE"].inject({}){|m, v| m[v.downcase.gsub(ASCII_PUNCTUATION, '')] = v; m}
     # string - the data to work on for encoding detection
     def initialize(data)
       @data = EncodingBytes.new(data.to_s)
@@ -481,9 +484,10 @@ module HTML5
         end
         break unless keep_parsing
       end
+
       unless @encoding.nil?
-        @encoding = @encoding.strip 
-        if ["UTF-16", "UTF-16BE", "UTF-16LE", "UTF-32", "UTF-32BE", "UTF-32LE"].include?(@encoding.upcase)
+        @encoding = @encoding.strip
+        if ["utf16", "utf16be", "utf16le", "utf32", "utf32be", "utf32le"].include?(@encoding.downcase.gsub(ASCII_PUNCTUATION, ''))
           @encoding = 'utf-8'
         end
       end
@@ -506,18 +510,19 @@ module HTML5
         attr = get_attribute
 
         return true if attr.nil?
-        
         if attr[0] == 'charset'
           tentative_encoding = attr[1]
-          if HTML5.is_valid_encoding(tentative_encoding)
-            @encoding = tentative_encoding  
+          codec = codec_name(tentative_encoding)
+          if codec
+            @encoding = codec
             return false
           end
         elsif attr[0] == 'content'
           content_parser = ContentAttrParser.new(EncodingBytes.new(attr[1]))
           tentative_encoding = content_parser.parse
-          if HTML5.is_valid_encoding(tentative_encoding)
-            @encoding = tentative_encoding
+          codec = codec_name(tentative_encoding)
+          if codec
+            @encoding = codec
             return false
           end
         end
@@ -644,6 +649,17 @@ module HTML5
         end
       end
     end
+
+    def codec_name(encoding)
+      if (!encoding.nil? && encoding.kind_of?(String))
+        canonical_name = encoding.downcase.gsub(ASCII_PUNCTUATION, '')
+        ENCODINGS[canonical_name]
+        # p encoding
+        # encoding
+      else
+        nil
+      end
+    end
   end
 
   class ContentAttrParser
@@ -691,11 +707,6 @@ module HTML5
         return nil
       end
     end
-  end
-
-  # Determine if a string is a supported encoding
-  def self.is_valid_encoding(encoding)
-    (not encoding.nil? and encoding.kind_of?(String) and ENCODINGS.include?(encoding.downcase.strip))
   end
 
 end
