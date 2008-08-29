@@ -287,7 +287,7 @@ module HTML5
       else
         chars = @stream.chars_until(["&", "<", ">", "-"])
         @token_queue << {:type => :Characters, :data => data + chars}
-        @lastFourChars += (chars[(-4 || chars.length), 4] || '').scan(/./)
+        @lastFourChars += (chars[chars.length > 4 ? -4 : -chars.length, 4] || '').scan(/./)
         @lastFourChars = @lastFourChars[(@lastFourChars.length > 4 ? -4 : -@lastFourChars.length), 4] || []
       end
       return true
