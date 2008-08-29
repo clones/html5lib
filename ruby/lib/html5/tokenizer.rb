@@ -138,10 +138,11 @@ module HTML5
       return char
     end
 
-    def consume_entity(from_attribute=false)
+    def consume_entity(allowed_char=nil, from_attribute=false)
       char = nil
       char_stack = [@stream.char]
-      if SPACE_CHARACTERS.include?(char_stack[0]) or [:EOF, '<', '&'].include?(char_stack[0])
+      if SPACE_CHARACTERS.include?(char_stack[0]) or [:EOF, '<', '&'].include?(char_stack[0]) ||
+         (allowed_char && allowed_char == char_stack[0]):
         @stream.unget(char_stack)
       elsif char_stack[0] == '#'
         # We might have a number entity here.
@@ -220,8 +221,8 @@ module HTML5
     end
 
     # This method replaces the need for "entityInAttributeValueState".
-    def process_entity_in_attribute
-      entity = consume_entity(true)
+    def process_entity_in_attribute allowed_char
+      entity = consume_entity(allowed_char, true)
       if entity
         @current_token[:data][-1][1] += entity
       else
@@ -254,8 +255,8 @@ module HTML5
       data = @stream.char
 
       if @content_model_flag == :CDATA or @content_model_flag == :RCDATA
+        @lastFourChars.shift if @lastFourChars.length == 4
         @lastFourChars << data
-        @lastFourChars.shift if @lastFourChars.length > 4
       end
 
       if data == "&" and [:PCDATA,:RCDATA].include?(@content_model_flag) and !@escapeFlag
@@ -284,7 +285,10 @@ module HTML5
         # characters.
         @token_queue << {:type => :SpaceCharacters, :data => data + @stream.chars_until(SPACE_CHARACTERS, true)}
       else
-        @token_queue << {:type => :Characters, :data => data + @stream.chars_until(%w[& < > -])}
+        chars = @stream.chars_until(["&", "<", ">", "-"])
+        @token_queue << {:type => :Characters, :data => data + chars}
+        @lastFourChars += (chars[-4, 4] || '').scan(/./)
+        @lastFourChars = @lastFourChars[-4, 4] || []
       end
       return true
     end
@@ -302,6 +306,7 @@ module HTML5
 
     def tag_open_state
       data = @stream.char
+
       if @content_model_flag == :PCDATA
         if data == "!"
           @state = :markup_declaration_open_state
@@ -438,6 +443,10 @@ module HTML5
         emit_current_token
       elsif data == "/"
         process_solidus_in_tag
+      elsif data == "'" || data == '"' || data == "=":
+        @token_queue.push({:type => :ParseError, :data => "invalid-character-in-attribute-name"})
+        @current_token[:data].push([data, ""])
+        @state = :attribute_name_state
       else
         @current_token[:data].push([data, ""])
         @state = :attribute_name_state
@@ -468,6 +477,10 @@ module HTML5
       elsif data == "/"
         process_solidus_in_tag
         @state = :before_attribute_name_state
+     elsif data == "'" or data == '"':
+        @token_queue.push({:type => :ParseError, :data => "invalid-character-in-attribute-name"})
+        @current_token[:data][-1][0] += data
+        leavingThisState = false
       else
         @current_token[:data][-1][0] += data
         leavingThisState = false
@@ -529,6 +542,10 @@ module HTML5
         @state = :attribute_value_single_quoted_state
       elsif data == ">"
         emit_current_token
+      elsif data == "=":
+        @token_queue.push({:type => :ParseError, :data => "equals-in-unquoted-attribute-value"})
+          @current_token[:data][-1][1] += data
+          @state = :attribute_value_unquoted_state
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "expected-attribute-value-but-got-eof"}
         emit_current_token
@@ -542,9 +559,9 @@ module HTML5
     def attribute_value_double_quoted_state
       data = @stream.char
       if data == "\""
-        @state = :before_attribute_name_state
+        @state = :after_attribute_value_state
       elsif data == "&"
-        process_entity_in_attribute
+        process_entity_in_attribute('"')
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-attribute-value-double-quote"}
         emit_current_token
@@ -557,9 +574,9 @@ module HTML5
     def attribute_value_single_quoted_state
       data = @stream.char
       if data == "'"
-        @state = :before_attribute_name_state
+        @state = :after_attribute_value_state
       elsif data == "&"
-        process_entity_in_attribute
+        process_entity_in_attribute("'")
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-attribute-value-single-quote"}
         emit_current_token
@@ -578,6 +595,9 @@ module HTML5
         process_entity_in_attribute
       elsif data == ">"
         emit_current_token
+      elsif data == '"' || data == "'" || data == "=":
+        @token_queue.push({:type => :ParseError, :data => "unexpected-character-in-unquoted-attribute-value"})
+        @current_token[:data][-1][1] += data
       elsif data == :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-attribute-value-no-quotes"}
         emit_current_token
@@ -585,6 +605,24 @@ module HTML5
         @current_token[:data][-1][1] += data +  @stream.chars_until(["&", ">","<"] + SPACE_CHARACTERS)
       end
       return true
+    end
+
+    def after_attribute_value_state
+      data = self.stream.char()
+      if SPACE_CHARACTERS.include? data
+        @state = :before_attribute_name_state
+      elsif data == ">"
+        emit_current_token
+        @state = :data_state
+      elsif data == "/"
+        process_solidus_in_tag
+        @state = :before_attribute_name_state
+      else
+        @tokenQueue.push({:type => :ParseError, :data => "unexpected-character-after-attribute-value"})
+        @stream.unget(data)
+        @state = :before_attribute_name
+      end
+      true
     end
 
     def bogus_comment_state
@@ -621,22 +659,22 @@ module HTML5
     end
 
     def comment_start_state
-        data = @stream.char
-        if data == "-"
-            @state = :comment_start_dash_state
-        elsif data == ">"
-            @token_queue << {:type => :ParseError, :data => "incorrect-comment"}
-            @token_queue << @current_token
-            @state = :data_state
-        elsif data == :EOF
-            @token_queue << {:type => :ParseError, :data => "eof-in-comment"}
-            @token_queue << @current_token
-            @state = :data_state
-        else
-            @current_token[:data] += data + @stream.chars_until("-")
-            @state = :comment_state
-        end
-        return true
+      data = @stream.char
+      if data == "-"
+        @state = :comment_start_dash_state
+      elsif data == ">"
+        @token_queue << {:type => :ParseError, :data => "incorrect-comment"}
+        @token_queue << @current_token
+        @state = :data_state
+      elsif data == :EOF
+        @token_queue << {:type => :ParseError, :data => "eof-in-comment"}
+        @token_queue << @current_token
+        @state = :data_state
+      else
+        @current_token[:data] += data + @stream.chars_until("-")
+        @state = :comment_state
+      end
+      return true
     end
     
     def comment_start_dash_state
