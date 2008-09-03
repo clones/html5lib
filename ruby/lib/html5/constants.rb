@@ -12,6 +12,7 @@ module HTML5
   ]
 
   SCOPING_ELEMENTS = %w[
+      applet
       button
       caption
       html
@@ -977,6 +978,8 @@ module HTML5
       "unexpected-char-implies-table-voodoo" =>
          _("Unexpected non-space characters in " +
            "table context caused voodoo mode."),
+       "unpexted-hidden-input-in-table" =>
+        _("Unexpected input with type hidden in table context."),
       "unexpected-start-tag-implies-table-voodoo" =>
          _("Unexpected start tag (%(name)) in " +
            "table context caused voodoo mode."),
@@ -997,12 +1000,18 @@ module HTML5
          _("Unexpected end tag (%(name)) in the table row phase. Ignored."),
       "unexpected-select-in-select" =>
          _("Unexpected select start tag in the select phase " +
-           "implies select start tag."),
+            "treated as select end tag."),
+      "unexpected-input-in-select" =>
+         _("Unexpected input start tag in the select phase."),
       "unexpected-start-tag-in-select" =>
          _("Unexpected start tag token (%(name)) in the select phase. " +
            "Ignored."),
       "unexpected-end-tag-in-select" =>
          _("Unexpected end tag (%(name)) in the select phase. Ignored."),
+      "unexpected-table-element-start-tag-in-select-in-table" =>
+         _("Unexpected table element start tag (%(name)s) in the select in table phase."),
+      "unexpected-table-element-end-tag-in-select-in-table" =>
+       _("Unexpected table element end tag (%(name)s) in the select in table phase."),
       "unexpected-char-after-body" =>
          _("Unexpected non-space characters in the after body phase."),
       "unexpected-start-tag-after-body" =>

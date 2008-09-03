@@ -6,12 +6,11 @@ module HTML5
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
 
     handle_start 'html'
-    handle_start %w(base link meta script style) => 'ProcessInHead'
-    handle_start 'title'
+    handle_start %w(base link meta script style title) => 'ProcessInHead'
 
     handle_start 'body', 'form', 'plaintext', 'a', 'button', 'xmp', 'table', 'hr', 'image'
 
-    handle_start 'input', 'textarea', 'select', 'isindex', %w(marquee object)
+    handle_start 'input', 'textarea', 'select', 'isindex', %w(applet marquee object)
 
     handle_start %w(li dd dt) => 'ListItem'
 
@@ -28,7 +27,7 @@ module HTML5
 
     handle_start %w(event-source section nav article aside header footer datagrid command) => 'New'
 
-    handle_end 'p', 'body', 'html', 'form', %w(button marquee object), %w(dd dt li) => 'ListItem'
+    handle_end 'p', 'body', 'html', 'form', %w(applet button marquee object), %w(dd dt li) => 'ListItem'
 
     handle_end %w(address blockquote center div dl fieldset listing menu ol pre ul) => 'Block'
 
@@ -64,7 +63,7 @@ module HTML5
       end
       
       if (data.length > 0 and data[0] == ?\n && 
-        %w[pre textarea].include?(@tree.open_elements.last.name) && !@tree.open_elements.last.hasContent)
+        %w[listing pre textarea].include?(@tree.open_elements.last.name) && !@tree.open_elements.last.hasContent)
         data = data[1..-1]
       end
 
@@ -91,11 +90,6 @@ module HTML5
       @parser.phases[:inHead].processStartTag(name, attributes)
     end
 
-    def startTagTitle(name, attributes)
-      parse_error("unexpected-start-tag-out-of-my-head", {"name" => name})
-      @parser.phases[:inHead].processStartTag(name, attributes)
-    end
-
     def startTagBody(name, attributes)
       parse_error("unexpected-start-tag", {"name" => "body"})
 
@@ -113,7 +107,7 @@ module HTML5
     def startTagCloseP(name, attributes)
       endTagP('p') if in_scope?('p')
       @tree.insert_element(name, attributes)
-      if name == 'pre'
+      if ['pre', 'listing'].include?(name) 
         class << self
           remove_method :processSpaceCharacters rescue nil
           alias processSpaceCharacters processSpaceCharactersDropNewline
@@ -220,7 +214,7 @@ module HTML5
       end
     end
 
-    def startTagMarqueeObject(name, attributes)
+    def startTagAppletMarqueeObject(name, attributes)
       @tree.reconstructActiveFormattingElements
       @tree.insert_element(name, attributes)
       @tree.activeFormattingElements.push(Marker)
@@ -303,7 +297,14 @@ module HTML5
     def startTagSelect(name, attributes)
       @tree.reconstructActiveFormattingElements
       @tree.insert_element(name, attributes)
-      @parser.phase = @parser.phases[:inSelect]
+      
+      if [@parser.phases[:inTable], @parser.phases[:inCaption],
+        @parser.phases[:inColumnGroup], @parser.phases[:inTableBody], @parser.phases[:inRow],
+        @parser.phases[:inCell]].include?(@parser.phase)
+        @parser.phase = @parser.phases[:inSelectInTable]
+      else
+        @parser.phase = @parser.phases[:inSelect]
+      end
     end
 
     def startTagMisplaced(name, attributes)
@@ -528,7 +529,7 @@ module HTML5
       end
     end
 
-    def endTagButtonMarqueeObject(name)
+    def endTagAppletButtonMarqueeObject(name)
       @tree.generateImpliedEndTags if in_scope?(name)
 
       unless @tree.open_elements.last.name == name

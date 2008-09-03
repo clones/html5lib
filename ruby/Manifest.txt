@@ -31,7 +31,7 @@ lib/html5/html5parser/in_table_body_phase.rb
 lib/html5/html5parser/in_table_phase.rb
 lib/html5/html5parser/initial_phase.rb
 lib/html5/html5parser/phase.rb
-lib/html5/html5parser/root_element_phase.rb
+lib/html5/html5parser/before_html_phase.rb
 lib/html5/html5parser/trailing_end_phase.rb
 lib/html5/inputstream.rb
 lib/html5/liberalxmlparser.rb

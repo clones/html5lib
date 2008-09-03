@@ -6,7 +6,7 @@ module HTML5
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
 
     handle_start 'html', 'option', 'optgroup', 'select'
-
+    handle_start 'input'
     handle_end 'option', 'optgroup', 'select', %w( caption table tbody tfoot thead tr td th ) => 'TableElements'
 
     def processCharacters(data)
@@ -30,6 +30,11 @@ module HTML5
       endTagSelect('select')
     end
 
+    def startTagInput(name, attributes)
+      @parser.parse_error("unexpected-input-in-select")
+      endTagSelect("select")
+      @parser.phase.processStartTag(name, attributes)
+    end
     def startTagOther(name, attributes)
       parse_error("unexpected-start-tag-in-select", {"name" => name})
     end

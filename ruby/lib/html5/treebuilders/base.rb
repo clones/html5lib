@@ -21,12 +21,12 @@ module HTML5
         attr_accessor :childNodes
 
         # A list of miscellaneous flags that can be set on the node
-        attr_accessor :_flags
+        attr_accessor :flags
 
         def initialize(name)
           @parent     = nil
           @childNodes = []
-          @_flags     = []
+          @flags     = []
         end
 
         # Insert node as a child of the current node
@@ -86,6 +86,7 @@ module HTML5
 
         attr_accessor :formPointer
 
+        attr_reader :insert_from_table
         # Class to use for document root
         documentClass = nil
 
@@ -240,7 +241,9 @@ module HTML5
         def insert_elementTable(name, attributes)
           element = @elementClass.new(name)
           element.attributes = attributes
-          if TABLE_INSERT_MODE_ELEMENTS.include?(@open_elements.last.name)
+          if !TABLE_INSERT_MODE_ELEMENTS.include?(@open_elements.last.name)
+            return insert_elementNormal(name, attributes)
+          else
             #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
             parent, insertBefore = getTableMisnestedNodePosition
@@ -250,8 +253,6 @@ module HTML5
               parent.insertBefore(element, insertBefore)
             end
             @open_elements.push(element)
-          else
-            return insert_elementNormal(name, attributes)
           end
           return element
         end

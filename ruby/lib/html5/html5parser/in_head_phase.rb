@@ -33,20 +33,24 @@ module HTML5
     end
 
     def startTagTitle(name, attributes)
-      element = @tree.createElement(name, attributes)
-      appendToHead(element)
-      @tree.open_elements.push(element)
+      if @tree.head_pointer != nil# && @parser.phase == @parser.phases[:inHead]
+        element = @tree.createElement(name, attributes)
+        appendToHead(element)
+        @tree.open_elements << element
+      else
+        @tree.insert_element(name, attributes)
+      end
       @parser.tokenizer.content_model_flag = :RCDATA
     end
 
     def startTagStyle(name, attributes)
-      element = @tree.createElement(name, attributes)
       if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
+        element = @tree.createElement(name, attributes)
         appendToHead(element)
+        @tree.open_elements.push(element)
       else
-        @tree.open_elements.last.appendChild(element)
+        @tree.insert_element(name, attributes)
       end
-      @tree.open_elements.push(element)
       @parser.tokenizer.content_model_flag = :CDATA
     end
 
@@ -65,7 +69,7 @@ module HTML5
     def startTagScript(name, attributes)
       #XXX Inner HTML case may be wrong
       element = @tree.createElement(name, attributes)
-      element._flags.push("parser-inserted")
+      element.flags.push("parser-inserted")
       if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
         appendToHead(element)
       else
@@ -76,11 +80,12 @@ module HTML5
     end
 
     def startTagBaseLinkMeta(name, attributes)
-      element = @tree.createElement(name, attributes)
       if @tree.head_pointer != nil and @parser.phase == @parser.phases[:inHead]
+        element = @tree.createElement(name, attributes)
         appendToHead(element)
       else
-        @tree.open_elements.last.appendChild(element)
+        @tree.insert_element(name, attributes)
+        @tree.open_elements.pop
       end
     end
 

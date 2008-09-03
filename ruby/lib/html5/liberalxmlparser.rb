@@ -71,7 +71,7 @@ module HTML5
     def initialize(options = {})
       super options
       @phases[:initial] = InitialPhase.new(self, @tree)
-      @phases[:rootElement] = XhmlRootPhase.new(self, @tree)
+      @phases[:beforeHtml] = XhmlRootPhase.new(self, @tree)
     end
 
     def normalize_token(token)
@@ -101,7 +101,7 @@ module HTML5
     end
   end
 
-  class XhmlRootPhase < RootElementPhase
+  class XhmlRootPhase < BeforeHtmlPhase
     def insert_html_element
       element = @tree.createElement("html", {'xmlns' => 'http://www.w3.org/1999/xhtml'})
       @tree.open_elements.push(element)

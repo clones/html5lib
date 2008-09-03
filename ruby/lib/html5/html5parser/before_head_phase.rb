@@ -12,6 +12,9 @@ module HTML5
       @parser.phase.process_eof
     end
 
+    def processSpaceCharacters(data)
+    end
+
     def processCharacters(data)
       startTagHead('head', {})
       @parser.phase.processCharacters(data)

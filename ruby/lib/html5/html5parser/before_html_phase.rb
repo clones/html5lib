@@ -1,7 +1,7 @@
 require 'html5/html5parser/phase'
 
 module HTML5
-  class RootElementPhase < Phase
+  class BeforeHtmlPhase < Phase
 
     def process_eof
       insert_html_element

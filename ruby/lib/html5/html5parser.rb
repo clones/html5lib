@@ -31,8 +31,8 @@ module HTML5
       new(options).parse_fragment(stream, container, encoding)
     end
 
-    @@phases = %w( initial rootElement beforeHead inHead afterHead inBody inTable inCaption
-      inColumnGroup inTableBody inRow inCell inSelect afterBody inFrameset afterFrameset trailingEnd )
+    @@phases = %w( initial beforeHtml beforeHead inHead afterHead inBody inTable inCaption
+      inColumnGroup inTableBody inRow inCell inSelect inSelectInTable afterBody inFrameset afterFrameset trailingEnd )
 
     # :strict - raise an exception when a parse error is encountered
     # :tree - a treebuilder class controlling the type of tree that will be
@@ -80,7 +80,7 @@ module HTML5
           @tokenizer.content_model_flag = :PCDATA
         end
       
-        @phase = @phases[:rootElement]
+        @phase = @phases[:beforeHtml]
         @phase.insert_html_element
         reset_insertion_mode
       else
