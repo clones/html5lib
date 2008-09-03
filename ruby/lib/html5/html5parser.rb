@@ -32,7 +32,8 @@ module HTML5
     end
 
     @@phases = %w( initial beforeHtml beforeHead inHead afterHead inBody inTable inCaption
-      inColumnGroup inTableBody inRow inCell inSelect inSelectInTable afterBody inFrameset afterFrameset trailingEnd )
+      inColumnGroup inTableBody inRow inCell inSelect inSelectInTable afterBody inFrameset
+      afterFrameset afterAfterBody afterAfterFrameset)
 
     # :strict - raise an exception when a parse error is encountered
     # :tree - a treebuilder class controlling the type of tree that will be
@@ -92,8 +93,6 @@ module HTML5
       # relevant ... need others too
       @last_phase = nil
 
-      # XXX This is temporary for the moment so there isn't any other
-      # changes needed for the parser to work with the iterable tokenizer
       @tokenizer.each do |token|
         token = normalize_token(token)
 

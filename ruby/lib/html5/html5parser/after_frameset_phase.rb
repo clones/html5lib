@@ -23,7 +23,7 @@ module HTML5
 
     def endTagHtml(name)
       @parser.last_phase = @parser.phase
-      @parser.phase      = @parser.phases[:trailingEnd]
+      @parser.phase      = @parser.phases[:afterAfterFrameset]
     end
 
     def endTagOther(name)

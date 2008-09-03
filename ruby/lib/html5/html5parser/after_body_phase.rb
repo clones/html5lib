@@ -32,7 +32,7 @@ module HTML5
         # instead. No need for extra parse errors if there's something after </html>.
         # Try "<!doctype html>X</html>X" for instance.
         @parser.last_phase = @parser.phase
-        @parser.phase      = @parser.phases[:trailingEnd]
+        @parser.phase      = @parser.phases[:afterAfterBody]
       end
     end
 
