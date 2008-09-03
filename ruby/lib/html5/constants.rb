@@ -1041,7 +1041,8 @@ module HTML5
            ". Expected end of file."),
       "unexpected-end-table-in-caption" =>
         _("Unexpected end table tag in caption. Generates implied end caption."),
-      "end-html-in-innerhtml" => _("Unexpected html end tag in inner html mode.")
+      "end-html-in-innerhtml" => _("Unexpected html end tag in inner html mode."),
+      "expected-self-closing-tag" => _("Expected a > after the /.")
   }
 
 end

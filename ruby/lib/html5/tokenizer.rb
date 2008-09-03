@@ -428,8 +428,7 @@ module HTML5
       elsif data == ">"
         emit_current_token
       elsif data == "/"
-        process_solidus_in_tag
-        @state = :before_attribute_name_state
+        @state = :self_closing_tag_state
       else
         @current_token[:name] += data
       end
@@ -627,6 +626,11 @@ module HTML5
         if !process_solidus_in_tag
           @state = :before_attribute_name_state
         end
+      elsif data == :EOF
+        @token_queue << {:type =>  :ParseError, :data => "unexpected-EOF-after-attribute-value"}
+        emit_current_token
+        @stream.unget(data)
+        @state = :data_state
       else
         @token_queue.push({:type => :ParseError, :data => "unexpected-character-after-attribute-value"})
         @stream.unget(data)
@@ -635,6 +639,25 @@ module HTML5
       true
     end
 
+    def self_closing_tag_state
+      c = @stream.char
+      case c
+      when ">"
+        emit_current_token
+        @current_token[:self_closing] = true
+        @state = :data_state
+      when :EOF
+        @token_queue << {:type => :ParseError, :data => "eof-in-tag-name"}
+        @stream.unget(c)
+        @state = :data_state
+      else
+        @token_queue << {:type => :ParseError, :data => "expected-self-closing-tag"}
+        @stream.unget(c)
+        @state = :before_attribute_name_state
+      end
+      true
+    end
+    
     def bogus_comment_state
       # Make a new comment token and give it as value all the characters
       # until the first > or :EOF (chars_until checks for :EOF automatically)

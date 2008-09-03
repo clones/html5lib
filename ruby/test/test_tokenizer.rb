@@ -63,7 +63,7 @@ class Html5TokenizerTestCase < Test::Unit::TestCase
         '' ] * "\n"
 
       assert_nothing_raised message do
-        tokenizer = HTML5::HTMLTokenizer.new(data['input'])
+        tokenizer = HTML5::HTMLTokenizer.new(data['input'], :encoding => 'utf-8')
 
         tokenizer.content_model_flag = content_model_flag.to_sym
 
