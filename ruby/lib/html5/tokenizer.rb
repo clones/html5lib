@@ -65,9 +65,14 @@ module HTML5
 
       # We need to consume another character to make sure it's a ">"
       data = @stream.char
-
+      rv = false
       if @current_token[:type] == :StartTag and data == ">"
         @current_token[:type] = :EmptyTag
+      elsif data == :EOF
+        @token_queue << ({:type => :ParseError, :data => "eof-following-solidus"})
+        @state = :data_state
+        emit_current_token
+        rv = true
       else
         @token_queue << {:type => :ParseError, :data => "incorrectly-placed-solidus"}
       end
@@ -75,6 +80,7 @@ module HTML5
       # The character we just consumed need to be put back on the stack so it
       # doesn't get lost...
       @stream.unget(data)
+      rv
     end
 
     # This function returns either U+FFFD or the character based on the
@@ -117,7 +123,8 @@ module HTML5
         charAsInt = ENTITIES_WINDOWS1252[charAsInt - 128]
       end
 
-      if 0 < charAsInt and charAsInt <= 1114111 and not (55296 <= charAsInt and charAsInt <= 57343)
+      if 0 < charAsInt && charAsInt <= 1114111 && !(55296 <= charAsInt && charAsInt <= 57343) &&
+        ![0x10FFFF].include?(charAsInt) # TODO add more entity replacements here
         if String.method_defined? :force_encoding
           char = charAsInt.chr('utf-8')
         else
@@ -475,8 +482,9 @@ module HTML5
       elsif SPACE_CHARACTERS.include? data
         @state = :after_attribute_name_state
       elsif data == "/"
-        process_solidus_in_tag
-        @state = :before_attribute_name_state
+        if !process_solidus_in_tag
+          @state = :before_attribute_name_state
+        end
      elsif data == "'" or data == '"':
         @token_queue.push({:type => :ParseError, :data => "invalid-character-in-attribute-name"})
         @current_token[:data][-1][0] += data
@@ -520,8 +528,9 @@ module HTML5
         @current_token[:data].push([data, ""])
         @state = :attribute_name_state
       elsif data == "/"
-        process_solidus_in_tag
-        @state = :before_attribute_name_state
+        if !process_solidus_in_tag
+          @state = :before_attribute_name_state
+        end
       else
         @current_token[:data].push([data, ""])
         @state = :attribute_name_state
@@ -592,7 +601,7 @@ module HTML5
       if SPACE_CHARACTERS.include? data
         @state = :before_attribute_name_state
       elsif data == "&"
-        process_entity_in_attribute
+        process_entity_in_attribute ''
       elsif data == ">"
         emit_current_token
       elsif data == '"' || data == "'" || data == "=":
@@ -615,12 +624,13 @@ module HTML5
         emit_current_token
         @state = :data_state
       elsif data == "/"
-        process_solidus_in_tag
-        @state = :before_attribute_name_state
+        if !process_solidus_in_tag
+          @state = :before_attribute_name_state
+        end
       else
-        @tokenQueue.push({:type => :ParseError, :data => "unexpected-character-after-attribute-value"})
+        @token_queue.push({:type => :ParseError, :data => "unexpected-character-after-attribute-value"})
         @stream.unget(data)
-        @state = :before_attribute_name
+        @state = :before_attribute_name_state
       end
       true
     end
@@ -629,7 +639,7 @@ module HTML5
       # Make a new comment token and give it as value all the characters
       # until the first > or :EOF (chars_until checks for :EOF automatically)
       # and emit it.
-      @token_queue << {:type => :Comment, :data => @stream.chars_until((">"))}
+      @token_queue << {:type => :Comment, :data => @stream.chars_until([">"])}
 
       # Eat the character directly after the bogus comment which is either a
       # ">" or an :EOF.
@@ -824,6 +834,7 @@ module HTML5
         else
           @stream.unget(char_stack)
           @token_queue << {:type => :ParseError, :data => "expected-space-or-right-bracket-in-doctype", "datavars" => {"data" => data}}
+          @current_token[:correct] = false
           @state = :bogus_doctype_state
         end
       end
@@ -852,6 +863,7 @@ module HTML5
         @state = :data_state
       else
         @token_queue << {:type => :ParseError, :data => "unexpected-char-in-doctype"}
+        @current_token[:correct] = false
         @state = :bogus_doctype_state
       end
 
@@ -917,6 +929,7 @@ module HTML5
         @state = :data_state
       else
         @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
+        @current_token[:correct] = false
         @state = :bogus_doctype_state
       end
       return true
@@ -943,6 +956,7 @@ module HTML5
         @state = :data_state
       else
         @token_queue << {:type => :ParseError, :data => "unexpected-char-in-doctype"}
+        @current_token[:correct] = false
         @state = :bogus_doctype_state
       end
       return true
@@ -1008,15 +1022,11 @@ module HTML5
 
     def bogus_doctype_state
       data = @stream.char
-      @current_token[:correct] = false
       if data == ">"
         @token_queue << @current_token
         @state = :data_state
       elsif data == :EOF
-        # XXX EMIT
         @stream.unget(data)
-        @token_queue << {:type => :ParseError, :data => "eof-in-doctype"}
-        @current_token[:correct] = false
         @token_queue << @current_token
         @state = :data_state
       end
