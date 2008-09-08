@@ -247,6 +247,10 @@ module HTML5
         if @lowercase_element_name
           token[:name] = token[:name].downcase
         end
+        
+        if token[:type] == :EndTag && token[:self_closing]
+          @token_queue << {:type => :ParseError, :data => "self-closing-end-tag"}
+        end
         @token_queue << token
         @state = :data_state
       end
@@ -643,8 +647,8 @@ module HTML5
       c = @stream.char
       case c
       when ">"
-        emit_current_token
         @current_token[:self_closing] = true
+        emit_current_token
         @state = :data_state
       when :EOF
         @token_queue << {:type => :ParseError, :data => "eof-in-tag-name"}
