@@ -23,7 +23,9 @@ module HTML5
 
     handle_start %w(iframe noembed noframes noscript) => 'Cdata', HEADING_ELEMENTS => 'Heading'
 
-    handle_start %w(caption col colgroup frame frameset head option optgroup tbody td tfoot th thead tr) => 'Misplaced'
+    handle_start %w(caption col colgroup frame frameset head tbody td tfoot th thead tr) => 'Misplaced'
+
+    handle_start %w(option optgroup)
 
     handle_start %w(event-source section nav article aside header footer datagrid command) => 'New'
 
@@ -311,9 +313,17 @@ module HTML5
       # Elements that should be children of other elements that have a
       # different insertion mode; here they are ignored
       # "caption", "col", "colgroup", "frame", "frameset", "head",
-      # "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+      # "tbody", "td", "tfoot", "th", "thead",
       # "tr", "noscript"
       parse_error("unexpected-start-tag-ignored", {"name" => name})
+    end
+
+    def startTagOptionOptgroup(name, attributes)
+      if in_scope?('option')
+        endTagOther('option')
+      end
+      @tree.reconstructActiveFormattingElements
+      @tree.insert_element(name, attributes)
     end
 
     def startTagNew(name, attributes)

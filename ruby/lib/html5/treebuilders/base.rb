@@ -121,8 +121,8 @@ module HTML5
 
         def elementInScope(target, tableVariant=false)
           # Exit early when possible.
-          return true if @open_elements[-1].name == target
-
+          return true if @open_elements[-1] && @open_elements[-1].name == target
+          return false if @open_elements.length == 0
           # AT How about while true and simply set node to [-1] and set it to
           # [-2] at the end...
           @open_elements.reverse.each do |element|

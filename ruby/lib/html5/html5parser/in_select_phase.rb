@@ -35,6 +35,7 @@ module HTML5
       endTagSelect("select")
       @parser.phase.processStartTag(name, attributes)
     end
+
     def startTagOther(name, attributes)
       parse_error("unexpected-start-tag-in-select", {"name" => name})
     end
@@ -85,6 +86,5 @@ module HTML5
     def endTagOther(name)
       parse_error("unexpected-end-tag-in-select", {"name" => name})
     end
-
   end
 end
