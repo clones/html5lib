@@ -5,8 +5,7 @@ HTML5_BASE = File.dirname(File.dirname(File.dirname(File.expand_path(__FILE__)))
 if File.exists?(File.join(HTML5_BASE, 'ruby', 'testdata'))
   TESTDATA_DIR = File.join(HTML5_BASE, 'ruby', 'testdata')
 else
-  HTML5_BASE_RUBY = File.dirname(File.dirname(File.expand_path(__FILE__)))
-  TESTDATA_DIR = File.join(HTML5_BASE_RUBY, 'testdata')
+  TESTDATA_DIR = File.join(HTML5_BASE, 'testdata')
 end
 
 $:.unshift File.join(File.dirname(File.dirname(__FILE__)), 'lib')

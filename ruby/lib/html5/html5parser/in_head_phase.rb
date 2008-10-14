@@ -4,10 +4,10 @@ module HTML5
   class InHeadPhase < Phase
 
     handle_start 'html', 'head', 'title', 'style', 'script', 'noscript'
-    handle_start %w( base link meta )
+    handle_start %w( base link meta)
 
     handle_end 'head'
-    handle_end %w( html body br p ) => 'ImplyAfterHead'
+    handle_end %w( body br ) => 'ImplyAfterHead'
     handle_end %w( title style script noscript )
 
     def process_eof
@@ -33,7 +33,7 @@ module HTML5
     end
 
     def startTagTitle(name, attributes)
-      if @tree.head_pointer != nil# && @parser.phase == @parser.phases[:inHead]
+      if @tree.head_pointer != nil && @parser.phase == @parser.phases[:inHead]
         element = @tree.createElement(name, attributes)
         appendToHead(element)
         @tree.open_elements << element
@@ -88,7 +88,7 @@ module HTML5
         @tree.open_elements.pop
       end
     end
-
+    
     def startTagOther(name, attributes)
       anything_else
       @parser.phase.processStartTag(name, attributes)
