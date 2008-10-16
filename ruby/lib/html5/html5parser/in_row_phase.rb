@@ -74,6 +74,10 @@ module HTML5
       @parser.phases[:inTable].processEndTag(name)
     end
 
+    def process_eof
+      @parser.phases[:inTable].process_eof
+    end
+
     protected
 
     # XXX unify this with other table helper methods

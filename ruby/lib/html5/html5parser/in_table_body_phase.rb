@@ -17,6 +17,10 @@ module HTML5
       @parser.phases[:inTable].processSpaceCharacters(data)
     end
 
+    def process_eof
+      @parser.phases[:inTable].process_eof
+    end
+
     def startTagTr(name, attributes)
       clearStackToTableBodyContext
       @tree.insert_element(name, attributes)

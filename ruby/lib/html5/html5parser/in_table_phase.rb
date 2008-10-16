@@ -38,6 +38,14 @@ module HTML5
       end
     end
 
+    def process_eof
+      if @tree.open_elements.last.name != "html"
+        @parser.parse_error("eof-in-table")
+      else
+        assert @parser.innerHTML
+      end
+    end
+
     def startTagCaption(name, attributes)
       clear_stack_to_table_context
       @tree.activeFormattingElements.push(Marker)
