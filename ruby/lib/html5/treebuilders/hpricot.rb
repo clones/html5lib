@@ -151,17 +151,14 @@ module HTML5
         end
 
         def initialize(name, public_id, system_id)
-          begin
-            super(name)
-          rescue ArgumentError # needs 3...
-          end
-
-          @hpricot = ::Hpricot::DocType.new(name, public_id, system_id)
+          @hpricot = self.class.hpricot_class.new(name, public_id, system_id)
         end
 
         def printTree(indent=0)
           if hpricot.target and hpricot.target.any?
-            "\n|#{' ' * indent}<!DOCTYPE #{hpricot.target}>"
+            "\n|#{' ' * indent}<!DOCTYPE #{hpricot.target}" +
+              ([hpricot.public_id, hpricot.system_id].any? ? " \"#{hpricot.public_id}\" \"#{hpricot.system_id}\"" : '') +
+              '>'
           else
             "\n|#{' ' * indent}<!DOCTYPE >"
           end

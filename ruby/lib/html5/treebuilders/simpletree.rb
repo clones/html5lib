@@ -115,7 +115,7 @@ module HTML5
         attr_accessor :public_id, :system_id
 
         def to_s
-          "<!DOCTYPE #{name}>"
+          "<!DOCTYPE #{name}" + ([@public_id, @system_id].any? ? " \"#{@public_id}\" \"#{@system_id}\"" : '') + ">"
         end
 
         def initialize name

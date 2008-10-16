@@ -126,18 +126,18 @@ module HTML5
         end
 
         def initialize name, public_id, system_id
-            super(name)
-            if public_id
-              @rxobj = ::REXML::DocType.new [name, ::REXML::DocType::PUBLIC, public_id, system_id]
-            elsif system_id
-              @rxobj = ::REXML::DocType.new [name, ::REXML::DocType::SYSTEM, nil, system_id]
-            else
-              @rxobj = ::REXML::DocType.new name
-            end
+          super(name)
+          if public_id
+            @rxobj = ::REXML::DocType.new [name, ::REXML::DocType::PUBLIC, public_id, system_id]
+          elsif system_id
+            @rxobj = ::REXML::DocType.new [name, ::REXML::DocType::SYSTEM, nil, system_id]
+          else
+            @rxobj = ::REXML::DocType.new name
+          end
         end
 
         def printTree indent=0
-          "\n|#{' ' * indent}<!DOCTYPE #{name}>"
+          "\n|#{' ' * indent}<!DOCTYPE #{name}" + ([public_id, system_id].any? ? " \"#{public_id}\" \"#{system_id}\"" : "") + ">"
         end
       end
 

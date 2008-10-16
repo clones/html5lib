@@ -385,15 +385,15 @@ module HTML5
     end
 
     def endTagForm(name)
-      if in_scope?(name)
-        @tree.generateImpliedEndTags
-      end
-      if @tree.open_elements.last.name != name
-        parse_error("end-tag-too-early-ignored", {"name" => "form"})
-      else
-        @tree.open_elements.pop
-      end
       @tree.formPointer = nil
+      if !in_scope?(name)
+        # parse error
+      else
+        @tree.generateImpliedEndTags
+        parse_error("end-tag-too-early-ignored", {"name" => "form"}) if @tree.open_elements.last.name != name
+        until name == @tree.open_elements.pop.name
+        end
+      end
     end
 
     def endTagListItem(name)
