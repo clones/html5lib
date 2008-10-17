@@ -452,7 +452,7 @@ module HTML5
       elsif data == ">"
         emit_current_token
       elsif data == "/"
-        process_solidus_in_tag
+        @state = :self_closing_tag_state
       elsif data == "'" || data == '"' || data == "=":
         @token_queue.push({:type => :ParseError, :data => "invalid-character-in-attribute-name"})
         @current_token[:data].push([data, ""])
@@ -531,9 +531,7 @@ module HTML5
         @current_token[:data].push([data, ""])
         @state = :attribute_name_state
       elsif data == "/"
-        if !process_solidus_in_tag
-          @state = :before_attribute_name_state
-        end
+        @state = :self_closing_tag_state
       else
         @current_token[:data].push([data, ""])
         @state = :attribute_name_state

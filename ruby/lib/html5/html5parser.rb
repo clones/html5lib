@@ -94,9 +94,6 @@ module HTML5
       @last_phase = nil
 
       @tokenizer.each do |token|
-        p @phase.class.name
-        p token[:name]
-        p token[:self_closing]
         token = normalize_token(token)
 
         method = 'process%s' % token[:type]
