@@ -228,7 +228,7 @@ module HTML5::CLI
   class PythonicTemplate
     # convert Python format string into a Ruby string, ready to eval
     def initialize format
-      @format = format
+      @format = format.dup
       @format.gsub!('"', '\\"')
       @format.gsub!(/%\((\w+)\)/, '#{@_\1}')
       @format = '"' + @format + '"'

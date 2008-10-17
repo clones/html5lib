@@ -16,7 +16,7 @@ module HTML5
   #
   class HTMLParser
 
-    attr_accessor :phase, :first_start_tag, :inner_html, :last_phase, :insert_from_table
+    attr_accessor :phase, :first_start_tag, :inner_html, :last_phase, :insert_from_table, :secondary_phase
 
     attr_reader :phases, :tokenizer, :tree, :errors
 
@@ -33,7 +33,7 @@ module HTML5
 
     @@phases = %w( initial beforeHtml beforeHead inHead afterHead inBody inTable inCaption
       inColumnGroup inTableBody inRow inCell inSelect inSelectInTable afterBody inFrameset
-      afterFrameset afterAfterBody afterAfterFrameset)
+      afterFrameset afterAfterBody afterAfterFrameset inForeignContent)
 
     # :strict - raise an exception when a parse error is encountered
     # :tree - a treebuilder class controlling the type of tree that will be

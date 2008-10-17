@@ -64,14 +64,17 @@ module HTML5
       end
 
       class Element < Node
+        attr_reader :namespace
+
         def self.hpricot_class
           ::Hpricot::Elem
         end
 
-        def initialize(name)
+        def initialize(name, namespace=nil)
           super(name)
 
-          @hpricot = ::Hpricot::Elem.new(::Hpricot::STag.new(name))
+          @hpricot   = ::Hpricot::Elem.new(::Hpricot::STag.new(name))
+          @namespace = namespace
         end
 
         def name
@@ -119,7 +122,7 @@ module HTML5
         end
 
         def printTree(indent=0)
-          tree = "\n|#{' ' * indent}<#{name}>"
+          tree = "\n|#{' ' * indent}<#{!@namespace.nil? ? @namespace.to_s + ' ' : ''}#{name}>"
           indent += 2
           attributes.each do |name, value|
             next if name == 'xmlns'

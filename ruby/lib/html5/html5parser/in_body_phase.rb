@@ -29,6 +29,8 @@ module HTML5
 
     handle_start %w(event-source section nav article aside header footer datagrid command) => 'New'
 
+    handle_start %w[math] => 'ForeignContent'
+
     handle_end 'p', 'body', 'html', 'form', %w(applet button marquee object), %w(dd dt li) => 'ListItem'
 
     handle_end %w(address blockquote center div dl fieldset listing menu ol pre ul) => 'Block'
@@ -337,6 +339,20 @@ module HTML5
     def startTagOther(name, attributes)
       @tree.reconstructActiveFormattingElements
       @tree.insert_element(name, attributes)
+    end
+
+    def startTagForeignContent(name, attributes)
+      @tree.reconstructActiveFormattingElements
+      attributes = adjust_mathml_attributes(attributes)
+      attributes = adjust_foreign_attributes(attributes)
+      @tree.insert_foreign_element(name, attributes, :math)
+      if false
+        # If the token has its self-closing flag set, pop the current node off the stack
+        #  of open elements and acknowledge the token's self-closing flag.
+      else
+        @parser.secondary_phase = @parser.phase
+        @parser.phase = @parser.phases[:inForeignContent]
+      end
     end
 
     def endTagP(name)

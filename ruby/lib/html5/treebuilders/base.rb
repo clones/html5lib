@@ -210,7 +210,7 @@ module HTML5
           parent = @open_elements[-1] if parent.nil?
           parent.appendChild(@commentClass.new(data))
         end
-               
+
         # Create an element but don't insert it anywhere
         def createElement(name, attributes)
           element = @elementClass.new(name)
@@ -225,21 +225,25 @@ module HTML5
           @insert_element = value ? :insert_elementTable : :insert_elementNormal
         end
 
-        def insert_element(name, attributes)
-          send(@insert_element, name, attributes)
+        def insert_element(name, attributes, namespace = nil)
+          send(@insert_element, name, attributes, namespace)
+        end
+        
+        def insert_foreign_element(name, attributes, namespace)
+          insert_element(name, attributes, namespace)
         end
 
-        def insert_elementNormal(name, attributes)
-          element = @elementClass.new(name)
+        def insert_elementNormal(name, attributes, namespace=nil)
+          element = @elementClass.new(name, namespace)
           element.attributes = attributes
           @open_elements.last.appendChild(element)
           @open_elements.push(element)
-          return element
+          element
         end
 
         # Create an element and insert it into the tree
-        def insert_elementTable(name, attributes)
-          element = @elementClass.new(name)
+        def insert_elementTable(name, attributes, namespace=nil)
+          element = @elementClass.new(name, namespace)
           element.attributes = attributes
           if !TABLE_INSERT_MODE_ELEMENTS.include?(@open_elements.last.name)
             return insert_elementNormal(name, attributes)

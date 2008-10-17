@@ -58,12 +58,14 @@ module HTML5
       end
 
       class Element < Node
+        attr_reader :namespace
         def self.rxclass
           ::REXML::Element
         end
 
-        def initialize name
+        def initialize name, namespace=nil
           super name
+          @namespace = namespace
         end
 
         def cloneNode
@@ -77,7 +79,7 @@ module HTML5
         end
 
         def printTree indent=0
-          tree = "\n|#{' ' * indent}<#{name}>"
+          tree = "\n|#{' ' * indent}<#{namespace ? namespace.to_s + ' ' : ''}#{name}>"
           indent += 2
           for name, value in attributes
             next if name == 'xmlns'

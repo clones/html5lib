@@ -83,15 +83,14 @@ module HTML5
     end
 
     def startTagOther(name, attributes)
+      @parser.parse_error("unexpected-start-tag-implies-table-voodoo", {:name => name})
       if !current_table.flags.include?("tainted")
-        @parser.parse_error("unexpected-start-tag-implies-table-voodoo", {:name => name})
         current_table.flags.push("tainted")
       end
       @tree.insert_from_table = true
       # Process the start tag in the "in body" mode
       @parser.phases[:inBody].processStartTag(name, attributes)
       @tree.insert_from_table = false
-
     end
 
     def startTagStyleScript(name, attributes)

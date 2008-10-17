@@ -1053,7 +1053,9 @@ module HTML5
       "end-html-in-innerhtml" => _("Unexpected html end tag in inner html mode."),
       "expected-self-closing-tag" => _("Expected a > after the /."),
       "self-closing-end-tag" => _("Self closing end tag."),
-      "eof-in-table" => _("Unexpected end of file. Expected table content.")
+      "eof-in-table" => _("Unexpected end of file. Expected table content."),
+      "html-in-foreign-content" => _("HTML start tag \"%(name)\" in a foreign namespace context."),
+      "unexpected-start-tag-in-table" => _("Unexpected %(name). Expected table content."),
   }
 
 end

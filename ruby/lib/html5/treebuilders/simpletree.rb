@@ -76,8 +76,14 @@ module HTML5
       end
 
       class Element < Node
+        attr_accessor :namespace
+        def initialize(name, namespace=nil)
+          super(name)
+          @namespace = namespace
+        end
+
         def to_s
-           "<#{name}>"
+           "<#{namespace ? namespace.to_s + ' ' : ''}#{name}>"
         end
 
         def printTree indent=0

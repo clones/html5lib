@@ -150,5 +150,19 @@ module HTML5
       end
       return element
     end
+
+    def adjust_mathml_attributes(attributes)
+      attributes.collect do |a|
+        if a.first =='definitionurl'
+          ['definitionURL', a[1]]
+        else
+          a
+        end
+      end
+    end
+
+    def adjust_foreign_attributes(attributes)
+      attributes
+    end
   end
 end

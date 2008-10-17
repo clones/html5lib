@@ -4,20 +4,16 @@ module HTML5
 class InSelectInTablePhase < Phase
 
   handle_start %w(caption table tbody tfoot thead tr td th) => 'Table'
-  handle_end %w(caption table tbody tfoot thead tr td th) =>  'Table'
-
-  def initialize(parser, tree)
-    super(parser, tree)
-  end
+  handle_end   %w(caption table tbody tfoot thead tr td th) =>  'Table'
 
   def processCharacters(data)
     @parser.phases[:inSelect].processCharacters(data)
   end
 
   def startTagTable(name, attributes)
-     @parser.parse_error("unexpected-table-element-start-tag-in-select-in-table", {:name => name})
-     endTagOther("select")
-     @parser.phase.processStartTag(name, attributes)
+    @parser.parse_error("unexpected-table-element-start-tag-in-select-in-table", {:name => name})
+    endTagOther("select")
+    @parser.phase.processStartTag(name, attributes)
   end
 
   def startTagOther(name, attributes)
@@ -25,11 +21,11 @@ class InSelectInTablePhase < Phase
   end
 
   def endTagTable(name)
-     @parser.parse_error("unexpected-table-element-end-tag-in-select-in-table", {:name => name})
-     if self.tree.elementInScope(name)
-       endTagOther("select")
-       @parser.phase.processEndTag(name)
-     end
+    @parser.parse_error("unexpected-table-element-end-tag-in-select-in-table", {:name => name})
+    if @tree.elementInScope(name)
+      endTagOther("select")
+      @parser.phase.processEndTag(name)
+    end
   end
 
   def endTagOther(name)

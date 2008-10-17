@@ -21,7 +21,7 @@ class Html5ParserTestCase < Test::Unit::TestCase
     test_name = File.basename(test_file).sub('.dat', '')
 
     TestData.new(test_file, %w(data errors document-fragment document)).each_with_index do |(input, errors, inner_html, expected), index|
-      next if (input.downcase.include?('<svg') || input.downcase.include?('<math')) || input.downcase.include?('xlink:')
+      next if (input.downcase.include?('<svg')) || input.downcase.include?('xlink:')
       errors = errors.split("\n")
       expected = expected.gsub("\n| ","\n")[2..-1]
 
