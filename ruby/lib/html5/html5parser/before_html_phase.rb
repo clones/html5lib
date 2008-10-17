@@ -20,7 +20,7 @@ module HTML5
       @parser.phase.processCharacters(data)
     end
 
-    def processStartTag(name, attributes)
+    def processStartTag(name, attributes, self_closing=false)
       @parser.first_start_tag = true if name == 'html'
       insert_html_element
       @parser.phase.processStartTag(name, attributes)

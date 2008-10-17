@@ -17,7 +17,7 @@ module HTML5
       @parser.phase.processCharacters(data)
     end
 
-    def processStartTag(name, attributes)
+    def processStartTag(name, attributes, self_closing=false)
       parse_error("unexpected-start-tag-after-body", {"name" => name})
       @parser.phase = @parser.phases[:inBody]
       @parser.phase.processStartTag(name, attributes)

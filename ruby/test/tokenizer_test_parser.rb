@@ -23,7 +23,11 @@ class TokenizerTestParser
   end
 
   def processStartTag(token)
-    @outputTokens.push(["StartTag", token[:name], token[:data]])
+    if token[:self_closing]
+      @outputTokens.push(["StartTag", token[:name], token[:data], token[:self_closing]])
+    else
+      @outputTokens.push(["StartTag", token[:name], token[:data]])
+    end
   end
 
   def processEmptyTag(token)

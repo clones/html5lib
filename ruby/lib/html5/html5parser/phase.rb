@@ -14,7 +14,6 @@ module HTML5
   #     - endTag* methods
   #
   class Phase
-
     extend Forwardable
     def_delegators :@parser, :parse_error
 
@@ -112,8 +111,12 @@ module HTML5
       @tree.insertText(data)
     end
 
-    def processStartTag(name, attributes)
-      send self.class.start_tag_handlers[name], name, attributes
+    def processStartTag(name, attributes, self_closing=false)
+      if method(self.class.start_tag_handlers[name]).arity == 2
+        send self.class.start_tag_handlers[name], name, attributes
+      else
+        send self.class.start_tag_handlers[name], name, attributes, self_closing
+      end
     end
 
     def startTagHtml(name, attributes)

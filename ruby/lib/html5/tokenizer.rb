@@ -627,9 +627,7 @@ module HTML5
         emit_current_token
         @state = :data_state
       elsif data == "/"
-        if !process_solidus_in_tag
-          @state = :before_attribute_name_state
-        end
+        @state = :self_closing_tag_state
       elsif data == :EOF
         @token_queue << {:type =>  :ParseError, :data => "unexpected-EOF-after-attribute-value"}
         emit_current_token
