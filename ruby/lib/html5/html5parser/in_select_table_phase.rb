@@ -22,7 +22,7 @@ class InSelectInTablePhase < Phase
 
   def endTagTable(name)
     @parser.parse_error("unexpected-table-element-end-tag-in-select-in-table", {:name => name})
-    if @tree.elementInScope(name)
+    if @tree.elementInScope(name, true)
       endTagOther("select")
       @parser.phase.processEndTag(name)
     end
