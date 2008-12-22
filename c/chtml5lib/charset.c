@@ -1,15 +1,17 @@
 #include "charset.h"
 
-struct vstr *get_encoding(FILE *stream) {
+struct vstr *get_encoding(FILE *stream, num_bytes_meta) {
     
     //Read the first 512 bytes of the stream into an array
-    char buf[BUF_SIZE+1];
+    char buf[num_bytes_meta+1];
     int n;
     struct vstr *encoding;
     
-    encoding = vstr_new();
+    encoding = vstr_new(8);
     
     n = fread(buf, 1, BUF_SIZE, stream);
+    //Reset the buffer position
+    fseek(stream, -n, SEEK_CUR);
     buf[n] = '\0';
     
     //Check for byte order marks
@@ -136,8 +138,8 @@ char *get_attr(char *buf, struct attr *attr_value) {
     
     int spaces = 0; //Do the spaces step
     
-    attr_value->name = vstr_new();
-    attr_value->value = vstr_new();
+    attr_value->name = vstr_new(8);
+    attr_value->value = vstr_new(8);
     
     *(attr_value->name->str) = '\0';
     *(attr_value->value->str) = '\0';
@@ -225,7 +227,7 @@ struct vstr *handle_content_type(struct vstr *attr_value) {
     char *value;
     char *quote;
     
-    encoding = vstr_new();
+    encoding = vstr_new(8);
     value = attr_value->str;
     //Skip characters up to and including the first ;
     value = jump_to(value, ";");

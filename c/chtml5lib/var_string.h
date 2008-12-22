@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 struct vstr {
     char *str;
-    size_t memsize;
+    size_t size;
+	size_t pos;
 };
 
 #define DEFAULT_LENGTH 16
